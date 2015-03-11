@@ -15,18 +15,7 @@ data Type where
   _✴  : Type → Type               -- Указатель
   any : Type                      -- Любой другой тип
 
-module List-Helpers (A : Set) where
-  open Membership {A = A} _≡_
-
-  drop : ∀ {x xs} → x ∈ xs → Σ (List A) (flip _⊆_ xs)
-  drop {xs = x ∷ xs} (here pa) = xs , there
-  drop {xs = _ ∷ xs} (there x) with drop x
-  drop {x}  {y ∷ xs} (there _) | ys , ys⊆xs = y ∷ ys , ⊆-++-both-left [ y ] ys⊆xs
-
-open List-Helpers Type
-
 open Membership {A = Type} _≡_
-postulate ⊆-++ : ∀ {Γ Δ Γ' Δ'} → Γ' ⊆ Γ → Δ' ⊆ Δ → (Γ' ++ Δ') ⊆ (Γ ++ Δ)
 
 {-
   Я понятия не имею, как нормально заимплементить heap, и полагаюсь
@@ -124,22 +113,26 @@ open FixedHeap public
 -- они в итоге приводят к одному и тому же блоку с одинаковым контекстом
 -- исполнения
 data _∷_≅_ {Ψ : HeapTypes} (CC : CallCtx Ψ) : {Γ₁ Γ₂ Δ₁ Δ₂ : RegFileTypes} → Block Ψ Γ₁ Δ₁ → Block Ψ Γ₂ Δ₂ → Set where
-  eq : ∀ {Γ Δ} → {B : Block Ψ Γ Δ} → CC ∷ B ≅ B
-  nr : ∀ {Δ₁ Δ₂ Δ₃ Γ₁ Γ₂ Γ₃}
-     → {A : Block Ψ Γ₁ Δ₁} → {B : Block Ψ Γ₂ Δ₂} → {C : Block Ψ Γ₃ Δ₃}
-     → projr (exec-blk Ψ CC C) ≡ _ , _ , A
-     → CC ∷ A ≅ B
-     → CC ∷ C ≅ B
-  nl : ∀ {Δ₁ Δ₂ Δ₃ Γ₁ Γ₂ Γ₃}
-     → {A : Block Ψ Γ₁ Δ₁} → {B : Block Ψ Γ₂ Δ₂} → {C : Block Ψ Γ₃ Δ₃}
-     → projr (exec-blk Ψ CC C) ≡ _ , _ , B
-     → CC ∷ A ≅ B
-     → CC ∷ A ≅ C
-  cc : ∀ {Δ₁ Δ₂ Δ₁' Δ₂' Γ₁ Γ₂ Γ₁' Γ₂'}
-     → {B' : Block Ψ Γ₂' Δ₂'} → {A : Block Ψ Γ₁ Δ₁} → {B : Block Ψ Γ₂ Δ₂} {A' : Block Ψ Γ₁' Δ₁'}
-     → {CC' : CallCtx Ψ} → (exec-blk Ψ CC A) ≡ projl CC' , _ , _ , A' → exec-blk Ψ CC B ≡ projl CC' , _ , _ , B'
-     → CC' ∷ A' ≅ B'
-     → CC  ∷ A  ≅ B
+  equal  : ∀ {Γ Δ} → {B : Block Ψ Γ Δ} → CC ∷ B ≅ B
+  left   : ∀ {Δ₁ Δ₂ Δ₃ Γ₁ Γ₂ Γ₃}
+         → {A : Block Ψ Γ₁ Δ₁} → {B : Block Ψ Γ₂ Δ₂} → {C : Block Ψ Γ₃ Δ₃}
+         → projr (exec-blk Ψ CC C) ≡ _ , _ , A
+         → CC ∷ A ≅ B
+         → CC ∷ C ≅ B
+  right  : ∀ {Δ₁ Δ₂ Δ₃ Γ₁ Γ₂ Γ₃}
+         → {A : Block Ψ Γ₁ Δ₁} → {B : Block Ψ Γ₂ Δ₂} → {C : Block Ψ Γ₃ Δ₃}
+         → projr (exec-blk Ψ CC C) ≡ _ , _ , B
+         → CC ∷ A ≅ B
+         → CC ∷ A ≅ C
+  ⟨_⟩_≅_ : ∀ {Δ₁ Δ₂ Δ₁' Δ₂' Γ₁ Γ₂ Γ₁' Γ₂'}
+         → {CC' : CallCtx Ψ}
+         → {A' : Block Ψ Γ₁' Δ₁'} {B' : Block Ψ Γ₂' Δ₂'}
+         → CC' ∷ A' ≅ B'
+         → {A : Block Ψ Γ₁ Δ₁}
+         → exec-blk Ψ CC A ≡ projl CC' , _ , _ , A'
+         → {B : Block Ψ Γ₂ Δ₂} 
+         → exec-blk Ψ CC B ≡ projl CC' , _ , _ , B'
+         → CC  ∷ A  ≅ B
 
 module PLTize where
 
@@ -192,7 +185,7 @@ jmp[]-proof : ∀ {Ψ Γ Δ} → {CC : CallCtx Ψ}
            → (f : (blk Γ) ✴ ∈ Ψ)
            → loadblk Ψ (deref Ψ f) ≡ _ , _ , A
            → CC ∷ A ≅ (↝ jmp[ f ])
-jmp[]-proof {Ψ} {CC = CC} {A = A} f p = nl (loadblk-≡ Ψ (deref Ψ f)) eq
+jmp[]-proof {Ψ} {CC = CC} {A = A} f p = right (loadblk-≡ Ψ (deref Ψ f)) equal
 
 call-proof : ∀ {Ψ Γ} → (CC : CallCtx Ψ) → {A : NewBlk Ψ}
            → (f : (blk Γ) ∈ Ψ)
@@ -204,4 +197,5 @@ proof : ∀ {Γ Ψ}
       → (f : blk Γ ∈ Ψ)
       → (cc : CallCtx (pltize-heap Ψ))
       → cc ∷ wk-blk pltize-⊆ (↝ (call f)) ≅ ↝ (call (plt f))
-proof {Ψ = Ψ} f ctx = cc (call-proof ctx (∈-⊆ f pltize-⊆) (loadblk-≡ (pltize-heap Ψ) (∈-⊆ f pltize-⊆))) (call-proof ctx (plt f) (loadblk-≡ (pltize-heap Ψ) (plt f))) (jmp[]-proof (got f) (loadblk-≡ (pltize-heap Ψ) (deref (pltize-heap Ψ) (got f))))
+proof {Ψ = Ψ} f ctx = ⟨ (jmp[]-proof (got f) (loadblk-≡ (pltize-heap Ψ) (deref (pltize-heap Ψ) (got f)))) ⟩
+    call-proof ctx (∈-⊆ f pltize-⊆) (loadblk-≡ (pltize-heap Ψ) (∈-⊆ f pltize-⊆)) ≅ call-proof ctx (plt f) (loadblk-≡ (pltize-heap Ψ) (plt f))
