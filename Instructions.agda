@@ -59,17 +59,10 @@ module FixedHeap (Ψ : HeapTypes) where
     изменение контекста исполнения, а переходы между различными кусками
     кода, то есть блоками.
 
-    Блок задаёт, на какой контекст регистров он рассчитывает, и какие
-    новые регистры добавляет к этому контексту.
+    Блок задаёт, на какой контекст регистров Γ он рассчитывает, и какие
+    новые регистры Δ добавляет к этому контексту.
   -}
-  -- `Block` starts with registers Γ, all of them are
-  -- considered as free registers. Some of these
-  -- registers are bounded, so they are removed from
-  -- list of free registers. Result list of free
-  -- registers is Δ, which is obviously must be subset
-  -- of Γ. `Block` also can introduce some new registers.
-  data Block {Γ : RegFileTypes} : {Δ : RegFileTypes}
-    → (free : Δ ⊆ Γ) → (new : RegFileTypes) → Set
+  data Block (Γ : RegFileTypes) : (Δ : RegFileTypes) → Set
 
   {-
     Управляющая инструкция не добавляет никаких новых регистров, поэтому,
@@ -83,30 +76,26 @@ module FixedHeap (Ψ : HeapTypes) where
     jmp    : (f : blk Γ ∈ Ψ) → ControlInstr Γ
 
   data Value : Type → Set where
-    function : {free ss-free new : RegFileTypes} → {ss : ss-free ⊆ free} → Block ss new → Value (blk free)
+    function : {Γ Δ : RegFileTypes} → Block Γ Δ → Value (blk Γ)
     ptr      : ∀ {τ} → τ ∈ Ψ → Value (τ ✴)
 
-  data Instr {free : RegFileTypes} : {free' : RegFileTypes} → free' ⊆ free → (new : RegFileTypes) → Set where
-    any  : ∀ {Γ} Δ → (ss : Γ ⊆ free) → Instr ss Δ
-    mov  : ∀ {τ} → Value τ → Instr id [ τ ]
-    movr : ∀ {τ σ} → (r : τ ∈ free) → Value σ → Instr (projr (drop r)) [ σ ]
+  data Instr (Γ : RegFileTypes) : (Δ : RegFileTypes) → Set where
+    any  : ∀ Δ → Instr Γ Δ
+    mov  : ∀ {τ} → Value τ → Instr Γ [ τ ]
 
-  data Block {Γ : RegFileTypes} where
-    halt : Block id []
-    ↝    : ControlInstr Γ → Block id []
-    _∙_  : ∀ {new new' Δ Δ' Δ''}
-         → {ss   : Δ ⊆ Γ}           → Instr ss new
-         → {new-ss : Δ' ⊆ new} {old-ss : Δ'' ⊆ Δ} → Block (⊆-++ new-ss old-ss) new'
-         → Block (⊆-trans old-ss ss) (Δ' ++ new')
+  data Block (Γ : RegFileTypes) where
+    halt : Block Γ []
+    ↝    : ControlInstr Γ → Block Γ []
+    _∙_  : ∀ {Γ' Δ} → Instr Γ Γ' → Block (Γ ++ Γ') Δ → Block Γ (Δ ++ Γ')
 
-  NewBlk = Σ RegFileTypes (λ Γ → Σ RegFileTypes (λ Δ → Σ (Δ ⊆ Γ) (λ free → Σ RegFileTypes (Block free))))
+  NewBlk = Σ RegFileTypes (λ Γ → Σ RegFileTypes (λ Δ → Block Γ Δ))
 
   postulate deref : ∀ {l} → l ✴ ∈ Ψ → l ∈ Ψ
   postulate load : ∀ {l} → l ∈ Ψ → Value l
 
   loadblk : ∀ {Γ} → blk Γ ∈ Ψ → NewBlk
   loadblk f with load f
-  loadblk f | function x = _ , _ , _ , _ , x
+  loadblk f | function x = _ , _ , x
 
   postulate loadblk-≡ : ∀ {Γ A} → (f : blk Γ ∈ Ψ) → loadblk f ≡ Γ , A
 
@@ -124,22 +113,31 @@ module FixedHeap (Ψ : HeapTypes) where
   exec-control (cs , ret) jmp[ f ] = cs , loadblk (deref f)
   exec-control (cs , ret) (jmp f)  = cs , loadblk f
 
-  exec-blk : ∀ {Γ Δ Δ'} → {ss : Δ ⊆ Δ'} → CallCtx → Block ss Γ → CallCtx
-  exec-blk {Δ' = Γ} (cs , ret) halt = cs , Γ , _ , _ , _ , halt
+  exec-blk : ∀ {Γ Δ} → CallCtx → Block Γ Δ → CallCtx
+  exec-blk {Γ} (cs , ret) halt = cs , Γ , _ , halt
   exec-blk cc (↝ x) = exec-control cc x
   exec-blk cc (i ∙ b) = exec-blk cc b
   
   -- Два блока считаются эквивалентными в одном контексте исполнения, если
   -- они в итоге приводят к одному и тому же блоку с одинаковым контекстом
   -- исполнения
-  data BlockEq (CC : CallCtx) :
-    {Γ₁ Γ₂ Δ₁ Δ₂ new₁ new₂ : RegFileTypes} →
-    {free₁ : Δ₁ ⊆ Γ₁} {free₂ : Δ₂ ⊆ Γ₂} →
-    Block free₁ new₁ → Block free₂ new₂ → Set where
-    eq : ∀ {Γ Δ new} → {free : Δ ⊆ Γ} → {B : Block free new} → BlockEq CC B B
-    nr : ∀ {Δ₁ Δ₂ Δ₃ Γ₁ Γ₂ Γ₃ new₁ new₂ new₃} → {free₁ : Δ₁ ⊆ Γ₁} {free₂ : Δ₂ ⊆ Γ₂} {free₃ : Δ₃ ⊆ Γ₃} → {A : Block free₁ new₁} → {B : Block free₂ new₂} → {C : Block free₃ new₃} → projr (exec-blk CC C) ≡ _ , _ , _ , _ , A → BlockEq CC A B → BlockEq CC C B
-    nl : ∀ {Δ₁ Δ₂ Δ₃ Γ₁ Γ₂ Γ₃ new₁ new₂ new₃} → {free₁ : Δ₁ ⊆ Γ₁} {free₂ : Δ₂ ⊆ Γ₂} {free₃ : Δ₃ ⊆ Γ₃} → {A : Block free₁ new₁} → {B : Block free₂ new₂} → {C : Block free₃ new₃} → projr (exec-blk CC C) ≡ _ , _ , _ , _ , B → BlockEq CC A B → BlockEq CC A C
-    cc : ∀ {Δ₁ Δ₂ Δ₁' Δ₂' Γ₁ Γ₂ Γ₁' Γ₂' new₁ new₂ new₁' new₂'} → {free₁ : Δ₁ ⊆ Γ₁} {free₂ : Δ₂ ⊆ Γ₂} {free₁' : Δ₁' ⊆ Γ₁'} {free₂' : Δ₂' ⊆ Γ₂'} → {B' : Block free₂' new₂'} → {A : Block free₁ new₁} → {B : Block free₂ new₂} {A' : Block free₁' new₁'} → {CC' : CallCtx} → (exec-blk CC A) ≡ projl CC' , _ , _ , _ , _ , A' → exec-blk CC B ≡ projl CC' , _ , _ , _ , _ , B' → BlockEq CC' A' B' → BlockEq CC A B
+  data BlockEq (CC : CallCtx) : {Γ₁ Γ₂ Δ₁ Δ₂ : RegFileTypes} → Block Γ₁ Δ₁ → Block Γ₂ Δ₂ → Set where
+    eq : ∀ {Γ Δ} → {B : Block Γ Δ} → BlockEq CC B B
+    nr : ∀ {Δ₁ Δ₂ Δ₃ Γ₁ Γ₂ Γ₃}
+       → {A : Block Γ₁ Δ₁} → {B : Block Γ₂ Δ₂} → {C : Block Γ₃ Δ₃}
+       → projr (exec-blk CC C) ≡ _ , _ , A
+       → BlockEq CC A B
+       → BlockEq CC C B
+    nl : ∀ {Δ₁ Δ₂ Δ₃ Γ₁ Γ₂ Γ₃}
+       → {A : Block Γ₁ Δ₁} → {B : Block Γ₂ Δ₂} → {C : Block Γ₃ Δ₃}
+       → projr (exec-blk CC C) ≡ _ , _ , B
+       → BlockEq CC A B
+       → BlockEq CC A C
+    cc : ∀ {Δ₁ Δ₂ Δ₁' Δ₂' Γ₁ Γ₂ Γ₁' Γ₂'}
+       → {B' : Block Γ₂' Δ₂'} → {A : Block Γ₁ Δ₁} → {B : Block Γ₂ Δ₂} {A' : Block Γ₁' Δ₁'}
+       → {CC' : CallCtx} → (exec-blk CC A) ≡ projl CC' , _ , _ , A' → exec-blk CC B ≡ projl CC' , _ , _ , B'
+       → BlockEq CC' A' B'
+       → BlockEq CC A B
 
 open FixedHeap public
 
@@ -147,7 +145,7 @@ module PLTize where
 
 -- plt состоит всего из одной инструкции, потому что я рассчитываю на то,
 -- что весь нужный код уже загружен в память, и got заполнен
-plt-stub : ∀ {Γ Ψ} → (blk Γ) ✴ ∈ Ψ → Block Ψ {Γ = Γ} id []
+plt-stub : ∀ {Γ Ψ} → (blk Γ) ✴ ∈ Ψ → Block Ψ Γ []
 plt-stub label = ↝ (jmp[ label ])
 
 -- Вот это полная дрянь, я задаю, значения какого типа добавятся в heap,
@@ -176,24 +174,23 @@ got = {!!}
 ∈-⊆ : ∀ {x A B} → x ∈ A → A ⊆ B → x ∈ B
 ∈-⊆ = {!!}
 
-wk-instr : ∀ {Ψ Ψ' Γ Δ Δ'} → {ss : Δ ⊆ Δ'} → Ψ ⊆ Ψ' → Instr Ψ ss Γ → Instr Ψ' ss Γ
+wk-instr : ∀ {Ψ Ψ' Γ Δ} → Ψ ⊆ Ψ' → Instr Ψ Γ Δ → Instr Ψ' Γ Δ
 wk-instr = {!!}
 
-wk-blk : ∀ {Ψ Ψ' Γ Δ Δ'} → {ss : Δ ⊆ Δ'} → Ψ ⊆ Ψ' → Block Ψ ss Γ → Block Ψ' ss Γ
+wk-blk : ∀ {Ψ Ψ' Γ Δ} → Ψ ⊆ Ψ' → Block Ψ Γ Δ → Block Ψ' Γ Δ
 wk-blk = {!!}
 
-pltize-code : ∀ {Ψ Γ Δ Δ'} → {ss : Δ' ⊆ Δ} → Block Ψ ss Γ → Block (pltize-heap Ψ) ss Γ
+pltize-code : ∀ {Ψ Γ Δ} → Block Ψ Γ Δ → Block (pltize-heap Ψ) Γ Δ
 pltize-code halt = halt
 pltize-code (↝ (call f)) = ↝ (call (∈-⊆ f pltize-⊆))
 pltize-code (↝ (jmp[_] f)) = ↝ (jmp[ ∈-⊆ f pltize-⊆ ])
 pltize-code (↝ (jmp f)) = ↝ (jmp (∈-⊆ f pltize-⊆ ))
 pltize-code (i ∙ b) = wk-instr pltize-⊆ i ∙ pltize-code b
 
-jmp[]-proof : ∀ {Ψ Γ Δ new} → {CC : CallCtx Ψ}
-           → {free : Δ ⊆ Γ}
-           → {A : Block Ψ free new}
+jmp[]-proof : ∀ {Ψ Γ Δ} → {CC : CallCtx Ψ}
+           → {A : Block Ψ Γ Δ}
            → (f : (blk Γ) ✴ ∈ Ψ)
-           → loadblk Ψ (deref Ψ f) ≡ _ , _ , _ , _ , A
+           → loadblk Ψ (deref Ψ f) ≡ _ , _ , A
            → BlockEq Ψ CC A (↝ jmp[ f ])
 jmp[]-proof {Ψ} {CC = CC} {A = A} f p = nl (loadblk-≡ Ψ (deref Ψ f)) eq
 
