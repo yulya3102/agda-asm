@@ -175,7 +175,7 @@ wk-blk = {!!}
 
 pltize-code : ∀ {Ψ Γ Δ} → Block Ψ Γ Δ → Block (pltize-heap Ψ) Γ Δ
 pltize-code halt = halt
-pltize-code (↝ (call f)) = ↝ (call (∈-⊆ f pltize-⊆))
+pltize-code (↝ (call f)) = ↝ (call (plt f))
 pltize-code (↝ (jmp[_] f)) = ↝ (jmp[ ∈-⊆ f pltize-⊆ ])
 pltize-code (↝ (jmp f)) = ↝ (jmp (∈-⊆ f pltize-⊆ ))
 pltize-code (i ∙ b) = wk-instr pltize-⊆ i ∙ pltize-code b
