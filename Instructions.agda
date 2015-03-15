@@ -92,6 +92,12 @@ module HeapDefinitions where
   deref (vs , ptr p)      (here refl) = there p
   deref (vs , x)          (there p)   = there (deref vs p)
 
+  wk-∈ : ∀ {x A B} → x ∈ A → A ⊆ B → x ∈ B
+  wk-∈ = {!!}
+
+  wk-blk : ∀ {Ψ Ψ' Γ Δ} → Ψ ⊆ Ψ' → Block Ψ Γ Δ → Block Ψ' Γ Δ
+  wk-blk = {!!}
+
   wk-value : ∀ {Ψ Ψ' τ} → Ψ ⊆ Ψ' → Value Ψ τ → Value Ψ' τ
   wk-value = {!!}
   
@@ -176,12 +182,6 @@ pltize-heap (blk Γ ∷ Ψ) = blk Γ ∷ blk Γ ✴ ∷ blk Γ ∷ (pltize-heap 
 -- Всё остальное остаётся неизменным
 pltize-heap (x ∷ Ψ) = x ∷ (pltize-heap Ψ)
 pltize-heap [] = []
-
-wk-∈ : ∀ {x A B} → x ∈ A → A ⊆ B → x ∈ B
-wk-∈ = {!!}
-
-wk-blk : ∀ {Ψ Ψ' Γ Δ} → Ψ ⊆ Ψ' → Block Ψ Γ Δ → Block Ψ' Γ Δ
-wk-blk = {!!}
 
 pltize-⊆ : ∀ {Ψ} → Ψ ⊆ pltize-heap Ψ
 pltize-⊆ {x = blk Γ} (Data-Any.here refl) = Data-Any.there $ Data-Any.there (Data-Any.here refl)
