@@ -158,6 +158,9 @@ pltize-heap Ψ = Ψ
 wk-∈ : ∀ {x A B} → x ∈ A → A ⊆ B → x ∈ B
 wk-∈ = {!!}
 
+wk-blk : ∀ {Ψ Ψ' Γ Δ} → Ψ ⊆ Ψ' → Block Ψ Γ Δ → Block Ψ' Γ Δ
+wk-blk = {!!}
+
 pltize-⊆ : ∀ {Ψ} → Ψ ⊆ pltize-heap Ψ
 pltize-⊆ {x = blk Γ} (Data-Any.here refl) = Data-Any.there $ Data-Any.there (Data-Any.here refl)
 pltize-⊆ {x = x ✴} (Data-Any.here refl) = Data-Any.here refl
@@ -174,9 +177,6 @@ got = {!!}
 
 wk-instr : ∀ {Ψ Ψ' Γ Δ} → Ψ ⊆ Ψ' → Instr Ψ Γ Δ → Instr Ψ' Γ Δ
 wk-instr = {!!}
-
-wk-blk : ∀ {Ψ Ψ' Γ Δ} → Ψ ⊆ Ψ' → Block Ψ Γ Δ → Block Ψ' Γ Δ
-wk-blk = {!!}
 
 pltize-code : ∀ {Ψ Γ Δ} → Block Ψ Γ Δ → Block (pltize-heap Ψ) Γ Δ
 pltize-code halt = halt
