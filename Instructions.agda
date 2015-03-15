@@ -92,15 +92,12 @@ module HeapDefinitions where
   deref (vs , ptr p)      (here refl) = there p
   deref (vs , x)          (there p)   = there (deref vs p)
 
-  wk-∈ : ∀ {x A B} → x ∈ A → A ⊆ B → x ∈ B
-  wk-∈ = {!!}
-
   wk-blk : ∀ {Ψ Ψ' Γ Δ} → Ψ ⊆ Ψ' → Block Ψ Γ Δ → Block Ψ' Γ Δ
   wk-blk = {!!}
 
   wk-value : ∀ {Ψ Ψ' τ} → Ψ ⊆ Ψ' → Value Ψ τ → Value Ψ' τ
   wk-value ss (function x) = function (wk-blk ss x)
-  wk-value ss (ptr x)      = ptr (wk-∈ x ss)
+  wk-value ss (ptr x)      = ptr (ss x)
   
   load : ∀ {l Ψ} → Heap Ψ → l ∈ Ψ → Value Ψ l
   load (vs , x) (here refl) = wk-value there x
@@ -195,7 +192,7 @@ pltize-⊆ {any ∷ ψs} (there i) = there (pltize-⊆ i)
 pltize : ∀ {Ψ} → Heap Ψ → Heap (pltize-heap Ψ)
 pltize [] = []
 pltize (vs , function f) = ((pltize vs , function (wk-blk pltize-⊆ f)) , ptr (here refl)) , function (plt-stub (here refl))
-pltize (vs , ptr x) = pltize vs , ptr (wk-∈ x pltize-⊆)
+pltize (vs , ptr x) = pltize vs , ptr (pltize-⊆ x)
 
 plt : ∀ {Γ Ψ} → (blk Γ) ∈ Ψ → (blk Γ) ∈ pltize-heap Ψ
 plt (here refl) = here refl
@@ -215,8 +212,8 @@ wk-instr = {!!}
 pltize-code : ∀ {Ψ Γ Δ} → Block Ψ Γ Δ → Block (pltize-heap Ψ) Γ Δ
 pltize-code halt = halt
 pltize-code (↝ (call f)) = ↝ (call (plt f))
-pltize-code (↝ (jmp[_] f)) = ↝ (jmp[ wk-∈ f pltize-⊆ ])
-pltize-code (↝ (jmp f)) = ↝ (jmp (wk-∈ f pltize-⊆ ))
+pltize-code (↝ (jmp[_] f)) = ↝ (jmp[ pltize-⊆ f ])
+pltize-code (↝ (jmp f)) = ↝ (jmp (pltize-⊆ f ))
 pltize-code (i ∙ b) = wk-instr pltize-⊆ i ∙ pltize-code b
 
 jmp[]-proof : ∀ {Ψ Γ Δ} → {CC : CallCtx Ψ}
@@ -240,10 +237,10 @@ proof : ∀ {Γ Ψ}
       → (cc : CallCtx (pltize-heap Ψ))
       → BlockEq H cc (wk-blk pltize-⊆ (↝ (call f))) (↝ (call (plt f)))
 proof {Ψ = Ψ} H f ctx = ⟨ after-call ⟩
-    call-proof ctx (wk-∈ f pltize-⊆) (loadblk-≡ H (wk-∈ f pltize-⊆)) ≅ call-proof ctx (plt f) (loadblk-≡ H (plt f))
+    {!call-proof ctx (pltize-⊆ f) (loadblk-≡ H (pltize-⊆ f))!} ≅ call-proof ctx (plt f) (loadblk-≡ H (plt f))
     where
-    newblock-f = loadblk H (wk-∈ f pltize-⊆)
+    newblock-f = loadblk H (pltize-⊆ f)
     called-block = projr $ projr newblock-f
 
     after-call : BlockEq H (projr ctx ∷ projl ctx , newblock-f) called-block (↝ jmp[ got f ])
-    after-call = jmp[]-proof (got f) (loadblk-≡ H (deref H (got f)))
+    after-call = {!jmp[]-proof (got f) (loadblk-≡ H (deref H (got f)))!}
