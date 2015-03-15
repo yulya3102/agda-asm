@@ -99,7 +99,9 @@ module HeapDefinitions where
   wk-cinstr = {!!}
 
   wk-blk : ∀ {Ψ Ψ' Γ Δ} → Ψ ⊆ Ψ' → Block Ψ Γ Δ → Block Ψ' Γ Δ
-  wk-blk = {!!}
+  wk-blk ss halt = halt
+  wk-blk ss (↝ x) = ↝ (wk-cinstr ss x)
+  wk-blk ss (x ∙ b) = wk-instr ss x ∙ wk-blk ss b
 
   wk-value : ∀ {Ψ Ψ' τ} → Ψ ⊆ Ψ' → Value Ψ τ → Value Ψ' τ
   wk-value ss (function x) = function (wk-blk ss x)
