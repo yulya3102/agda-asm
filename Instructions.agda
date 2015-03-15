@@ -197,10 +197,16 @@ pltize (vs , function f) = ((pltize vs , function (wk-blk pltize-⊆ f)) , ptr (
 pltize (vs , ptr x) = pltize vs , ptr (wk-∈ x pltize-⊆)
 
 plt : ∀ {Γ Ψ} → (blk Γ) ∈ Ψ → (blk Γ) ∈ pltize-heap Ψ
-plt = {!!}
+plt (here refl) = here refl
+plt {Ψ = blk Δ ∷ Ψ} (there f) = there (there (there (plt f)))
+plt {Ψ = x ✴ ∷ Ψ} (there f) = there (plt f)
+plt {Ψ = any ∷ Ψ} (there f) = there (plt f)
 
 got : ∀ {Γ Ψ} → (blk Γ) ∈ Ψ → (blk Γ) ✴ ∈ pltize-heap Ψ
-got = {!!}
+got (here refl) = there (here refl)
+got {Ψ = blk Δ ∷ Ψ} (there f) = there (there (there (got f)))
+got {Ψ = x ✴ ∷ Ψ} (there f) = there (got f)
+got {Ψ = any ∷ Ψ} (there f) = there (got f)
 
 wk-instr : ∀ {Ψ Ψ' Γ Δ} → Ψ ⊆ Ψ' → Instr Ψ Γ Δ → Instr Ψ' Γ Δ
 wk-instr = {!!}
