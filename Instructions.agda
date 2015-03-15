@@ -153,7 +153,8 @@ pltize-heap : HeapTypes → HeapTypes
 -- очевидно, имеет тот же тип, что и сам блок)
 pltize-heap (blk Γ ∷ Ψ) = blk Γ ∷ blk Γ ✴ ∷ blk Γ ∷ (pltize-heap Ψ)
 -- Всё остальное остаётся неизменным
-pltize-heap Ψ = Ψ
+pltize-heap (x ∷ Ψ) = x ∷ (pltize-heap Ψ)
+pltize-heap [] = []
 
 wk-∈ : ∀ {x A B} → x ∈ A → A ⊆ B → x ∈ B
 wk-∈ = {!!}
