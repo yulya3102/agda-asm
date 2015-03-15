@@ -119,12 +119,6 @@ module HeapDefinitions where
   loadblk Ψ f with load Ψ f
   loadblk Ψ f | function x = _ , _ , x
 
-  -- Этот тип вообще не о том, надо придумать другой
-  loadblk-≡ : ∀ {Γ Ψ Δ} → {A : Block Ψ Γ Δ}
-            → (H : Heap Ψ) → (f : blk Γ ∈ Ψ)
-            → loadblk H f ≡ Γ , Δ , A
-  loadblk-≡ H f = {!!}
-
 open HeapDefinitions public
 open FixedHeap public
 
