@@ -96,7 +96,9 @@ module HeapDefinitions where
   wk-instr = {!!}
 
   wk-cinstr : ∀ {Ψ Ψ' Γ} → Ψ ⊆ Ψ' → ControlInstr Ψ Γ → ControlInstr Ψ' Γ
-  wk-cinstr = {!!}
+  wk-cinstr ss (call f) = call (ss f)
+  wk-cinstr ss jmp[ f ] = jmp[ ss f ]
+  wk-cinstr ss (jmp f) = jmp (ss f)
 
   wk-blk : ∀ {Ψ Ψ' Γ Δ} → Ψ ⊆ Ψ' → Block Ψ Γ Δ → Block Ψ' Γ Δ
   wk-blk ss halt = halt
