@@ -99,7 +99,8 @@ module HeapDefinitions where
   wk-blk = {!!}
 
   wk-value : ∀ {Ψ Ψ' τ} → Ψ ⊆ Ψ' → Value Ψ τ → Value Ψ' τ
-  wk-value = {!!}
+  wk-value ss (function x) = function (wk-blk ss x)
+  wk-value ss (ptr x)      = ptr (wk-∈ x ss)
   
   load : ∀ {l Ψ} → Heap Ψ → l ∈ Ψ → Value Ψ l
   load (vs , x) (here refl) = wk-value there x
