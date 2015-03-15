@@ -224,7 +224,7 @@ jmp[]-proof : ∀ {Ψ Γ Δ} → {CC : CallCtx Ψ}
            → (f : (blk Γ) ✴ ∈ Ψ)
            → loadblk H (deref H f) ≡ _ , _ , A
            → BlockEq H CC A (↝ jmp[ f ])
-jmp[]-proof {Ψ} {CC = CC} {H = H} {A = A} f p = right (loadblk-≡ H (deref H f)) equal
+jmp[]-proof {Ψ} {CC = CC} {H = H} {A = A} f p = right p equal
 
 call-proof : ∀ {Ψ Γ} → (CC : CallCtx Ψ) → {A : NewBlk Ψ}
            → {H : Heap Ψ}
