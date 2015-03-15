@@ -166,7 +166,7 @@ data BlockEq {Ψ : HeapTypes} (H : Heap Ψ) (CC : CallCtx Ψ) : {Γ₁ Γ₂ Δ�
          → projr (exec-blk H CC C) ≡ _ , _ , B
          → BlockEq H CC A B
          → BlockEq H CC A C
-  ⟨_⟩_≅_ : ∀ {Δ₁ Δ₂ Δ₁' Δ₂' Γ₁ Γ₂ Γ₁' Γ₂'}
+  ctxchg : ∀ {Δ₁ Δ₂ Δ₁' Δ₂' Γ₁ Γ₂ Γ₁' Γ₂'}
          → {CC' : CallCtx Ψ}
          → {A' : Block Ψ Γ₁' Δ₁'} {B' : Block Ψ Γ₂' Δ₂'}
          → BlockEq H CC' A' B'
@@ -245,8 +245,8 @@ proof : ∀ {Γ Ψ}
       → (f : blk Γ ∈ Ψ)
       → (cc : CallCtx (pltize-heap Ψ))
       → BlockEq H cc (wk-blk pltize-⊆ (↝ (call f))) (↝ (call (plt f)))
-proof {Ψ = Ψ} H f ctx = ⟨ after-call ⟩
-    {!call-proof ctx (pltize-⊆ f) (loadblk-≡ H (pltize-⊆ f))!} ≅ call-proof ctx (plt f) (loadblk-≡ H (plt f))
+proof {Ψ = Ψ} H f ctx = ctxchg after-call
+    {!call-proof ctx (pltize-⊆ f) (loadblk-≡ H (pltize-⊆ f))!} (call-proof ctx (plt f) (loadblk-≡ H (plt f)))
     where
     newblock-f = loadblk H (pltize-⊆ f)
     called-block = projr $ projr newblock-f
