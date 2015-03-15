@@ -125,15 +125,15 @@ CallCtx Ψ = CallStack Ψ × NewBlk Ψ
 -- Ограничение на стек хорошо бы засунуть в определение типа, потому что
 -- без него инструкция `ret` может быть поставлена в неправильное место.
 -- Правда, я не понимаю, действительно ли мне надо об этом задумываться.
-exec-control : ∀ {Γ Ψ} → CallCtx Ψ → ControlInstr Ψ Γ → CallCtx Ψ
-exec-control (cs , ret) (call f) = ret ∷ cs , loadblk ? f
-exec-control (cs , ret) jmp[ f ] = cs , loadblk ? (deref ? f)
-exec-control (cs , ret) (jmp f)  = cs , loadblk ? f
+exec-control : ∀ {Γ Ψ} → Heap Ψ → CallCtx Ψ → ControlInstr Ψ Γ → CallCtx Ψ
+exec-control H (cs , ret) (call f) = ret ∷ cs , loadblk H f
+exec-control H (cs , ret) jmp[ f ] = cs , loadblk H (deref H f)
+exec-control H (cs , ret) (jmp f)  = cs , loadblk H f
 
-exec-blk : ∀ {Γ Δ Ψ} → CallCtx Ψ → Block Ψ Γ Δ → CallCtx Ψ
-exec-blk {Γ} (cs , ret) halt = cs , Γ , _ , halt
-exec-blk cc (↝ x) = exec-control cc x
-exec-blk cc (i ∙ b) = exec-blk cc b
+exec-blk : ∀ {Γ Δ Ψ} → Heap Ψ → CallCtx Ψ → Block Ψ Γ Δ → CallCtx Ψ
+exec-blk {Γ} H (cs , ret) halt = cs , Γ , _ , halt
+exec-blk H cc (↝ x) = exec-control H cc x
+exec-blk H cc (i ∙ b) = exec-blk H cc b
 
 -- Два блока считаются эквивалентными в одном контексте исполнения, если
 -- они в итоге приводят к одному и тому же блоку с одинаковым контекстом
@@ -142,12 +142,12 @@ data BlockEq {Ψ : HeapTypes} (CC : CallCtx Ψ) : {Γ₁ Γ₂ Δ₁ Δ₂ : Reg
   equal  : ∀ {Γ Δ} → {B : Block Ψ Γ Δ} → BlockEq CC B B
   left   : ∀ {Δ₁ Δ₂ Δ₃ Γ₁ Γ₂ Γ₃}
          → {A : Block Ψ Γ₁ Δ₁} → {B : Block Ψ Γ₂ Δ₂} → {C : Block Ψ Γ₃ Δ₃}
-         → projr (exec-blk CC C) ≡ _ , _ , A
+         → projr (exec-blk {!!} CC C) ≡ _ , _ , A
          → BlockEq CC A B
          → BlockEq CC C B
   right  : ∀ {Δ₁ Δ₂ Δ₃ Γ₁ Γ₂ Γ₃}
          → {A : Block Ψ Γ₁ Δ₁} → {B : Block Ψ Γ₂ Δ₂} → {C : Block Ψ Γ₃ Δ₃}
-         → projr (exec-blk CC C) ≡ _ , _ , B
+         → projr (exec-blk {!!} CC C) ≡ _ , _ , B
          → BlockEq CC A B
          → BlockEq CC A C
   ⟨_⟩_≅_ : ∀ {Δ₁ Δ₂ Δ₁' Δ₂' Γ₁ Γ₂ Γ₁' Γ₂'}
@@ -155,9 +155,9 @@ data BlockEq {Ψ : HeapTypes} (CC : CallCtx Ψ) : {Γ₁ Γ₂ Δ₁ Δ₂ : Reg
          → {A' : Block Ψ Γ₁' Δ₁'} {B' : Block Ψ Γ₂' Δ₂'}
          → BlockEq CC' A' B'
          → {A : Block Ψ Γ₁ Δ₁}
-         → exec-blk CC A ≡ projl CC' , _ , _ , A'
+         → exec-blk {!!} CC A ≡ projl CC' , _ , _ , A'
          → {B : Block Ψ Γ₂ Δ₂} 
-         → exec-blk CC B ≡ projl CC' , _ , _ , B'
+         → exec-blk {!!} CC B ≡ projl CC' , _ , _ , B'
          → BlockEq CC A B
 
 module PLTize where
@@ -215,15 +215,15 @@ pltize-code (i ∙ b) = wk-instr pltize-⊆ i ∙ pltize-code b
 jmp[]-proof : ∀ {Ψ Γ Δ} → {CC : CallCtx Ψ}
            → {A : Block Ψ Γ Δ}
            → (f : (blk Γ) ✴ ∈ Ψ)
-           → loadblk ? (deref ? f) ≡ _ , _ , A
+           → loadblk {!!} (deref {!!} f) ≡ _ , _ , A
            → BlockEq CC A (↝ jmp[ f ])
-jmp[]-proof {Ψ} {CC = CC} {A = A} f p = right (loadblk-≡ ? (deref ? f)) equal
+jmp[]-proof {Ψ} {CC = CC} {A = A} f p = right (loadblk-≡ {!!} (deref {!!} f)) equal
 
 call-proof : ∀ {Ψ Γ} → (CC : CallCtx Ψ) → {A : NewBlk Ψ}
            → (f : (blk Γ) ∈ Ψ)
-           → loadblk ? f ≡ A
-           → exec-blk CC (↝ (call f)) ≡ ((projr CC ∷ projl CC) , A)
-call-proof CC f p rewrite p = ?
+           → loadblk {!!} f ≡ A
+           → exec-blk {!!} CC (↝ (call f)) ≡ ((projr CC ∷ projl CC) , A)
+call-proof CC f p rewrite p = {!!}
 
 proof : ∀ {Γ Ψ}
       → (f : blk Γ ∈ Ψ)
