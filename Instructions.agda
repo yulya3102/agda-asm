@@ -187,9 +187,9 @@ pltize-⊆ : ∀ {Ψ} → Ψ ⊆ pltize-heap Ψ
 pltize-⊆ {x = blk Γ} (Data-Any.here refl) = Data-Any.there $ Data-Any.there (Data-Any.here refl)
 pltize-⊆ {x = x ✴} (Data-Any.here refl) = Data-Any.here refl
 pltize-⊆ {x = any} (Data-Any.here refl) = Data-Any.here refl
-pltize-⊆ {ψ ∷ ψs} {blk Γ} (Data-Any.there i) = {!!}
-pltize-⊆ {ψ ∷ ψs} {x ✴} (Data-Any.there i) = {!!}
-pltize-⊆ {ψ ∷ ψs} {any} (Data-Any.there i) = {!!}
+pltize-⊆ {blk Γ ∷ ψs} (there i) = there (there (there (pltize-⊆ i)))
+pltize-⊆ {ψ ✴ ∷ ψs} (there i) = there (pltize-⊆ i)
+pltize-⊆ {any ∷ ψs} (there i) = there (pltize-⊆ i)
 
 pltize : ∀ {Ψ} → Heap Ψ → Heap (pltize-heap Ψ)
 pltize [] = []
