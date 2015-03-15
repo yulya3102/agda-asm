@@ -164,8 +164,8 @@ plt = {!!}
 got : ∀ {Γ Ψ} → (blk Γ) ∈ Ψ → (blk Γ) ✴ ∈ pltize-heap Ψ
 got = {!!}
 
-∈-⊆ : ∀ {x A B} → x ∈ A → A ⊆ B → x ∈ B
-∈-⊆ = {!!}
+wk-∈ : ∀ {x A B} → x ∈ A → A ⊆ B → x ∈ B
+wk-∈ = {!!}
 
 wk-instr : ∀ {Ψ Ψ' Γ Δ} → Ψ ⊆ Ψ' → Instr Ψ Γ Δ → Instr Ψ' Γ Δ
 wk-instr = {!!}
@@ -176,8 +176,8 @@ wk-blk = {!!}
 pltize-code : ∀ {Ψ Γ Δ} → Block Ψ Γ Δ → Block (pltize-heap Ψ) Γ Δ
 pltize-code halt = halt
 pltize-code (↝ (call f)) = ↝ (call (plt f))
-pltize-code (↝ (jmp[_] f)) = ↝ (jmp[ ∈-⊆ f pltize-⊆ ])
-pltize-code (↝ (jmp f)) = ↝ (jmp (∈-⊆ f pltize-⊆ ))
+pltize-code (↝ (jmp[_] f)) = ↝ (jmp[ wk-∈ f pltize-⊆ ])
+pltize-code (↝ (jmp f)) = ↝ (jmp (wk-∈ f pltize-⊆ ))
 pltize-code (i ∙ b) = wk-instr pltize-⊆ i ∙ pltize-code b
 
 jmp[]-proof : ∀ {Ψ Γ Δ} → {CC : CallCtx Ψ}
@@ -198,4 +198,4 @@ proof : ∀ {Γ Ψ}
       → (cc : CallCtx (pltize-heap Ψ))
       → BlockEq cc (wk-blk pltize-⊆ (↝ (call f))) (↝ (call (plt f)))
 proof {Ψ = Ψ} f ctx = ⟨ (jmp[]-proof (got f) (loadblk-≡ (pltize-heap Ψ) (deref (pltize-heap Ψ) (got f)))) ⟩
-    call-proof ctx (∈-⊆ f pltize-⊆) (loadblk-≡ (pltize-heap Ψ) (∈-⊆ f pltize-⊆)) ≅ call-proof ctx (plt f) (loadblk-≡ (pltize-heap Ψ) (plt f))
+    call-proof ctx (wk-∈ f pltize-⊆) (loadblk-≡ (pltize-heap Ψ) (wk-∈ f pltize-⊆)) ≅ call-proof ctx (plt f) (loadblk-≡ (pltize-heap Ψ) (plt f))
