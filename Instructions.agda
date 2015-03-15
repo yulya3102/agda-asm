@@ -170,6 +170,11 @@ pltize-⊆ {ψ ∷ ψs} {blk Γ} (Data-Any.there i) = {!!}
 pltize-⊆ {ψ ∷ ψs} {x ✴} (Data-Any.there i) = {!!}
 pltize-⊆ {ψ ∷ ψs} {any} (Data-Any.there i) = {!!}
 
+pltize : ∀ {Ψ} → Heap Ψ → Heap (pltize-heap Ψ)
+pltize [] = []
+pltize (vs , function f) = ((pltize vs , function (wk-blk pltize-⊆ f)) , ptr (here refl)) , function (plt-stub (here refl))
+pltize (vs , ptr x) = pltize vs , ptr (wk-∈ x pltize-⊆)
+
 plt : ∀ {Γ Ψ} → (blk Γ) ∈ Ψ → (blk Γ) ∈ pltize-heap Ψ
 plt = {!!}
 
