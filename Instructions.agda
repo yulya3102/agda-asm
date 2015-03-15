@@ -92,8 +92,11 @@ module HeapDefinitions where
   deref (vs , ptr p)      (here refl) = there p
   deref (vs , x)          (there p)   = there (deref vs p)
 
+  wk-value : ∀ {Ψ Ψ' τ} → Ψ ⊆ Ψ' → Value Ψ τ → Value Ψ' τ
+
   wk-instr : ∀ {Ψ Ψ' Γ Δ} → Ψ ⊆ Ψ' → Instr Ψ Γ Δ → Instr Ψ' Γ Δ
-  wk-instr = {!!}
+  wk-instr ss (any Δ) = any Δ
+  wk-instr ss (mov x) = mov (wk-value ss x)
 
   wk-cinstr : ∀ {Ψ Ψ' Γ} → Ψ ⊆ Ψ' → ControlInstr Ψ Γ → ControlInstr Ψ' Γ
   wk-cinstr ss (call f) = call (ss f)
@@ -105,7 +108,6 @@ module HeapDefinitions where
   wk-blk ss (↝ x) = ↝ (wk-cinstr ss x)
   wk-blk ss (x ∙ b) = wk-instr ss x ∙ wk-blk ss b
 
-  wk-value : ∀ {Ψ Ψ' τ} → Ψ ⊆ Ψ' → Value Ψ τ → Value Ψ' τ
   wk-value ss (function x) = function (wk-blk ss x)
   wk-value ss (ptr x)      = ptr (ss x)
   
