@@ -79,36 +79,61 @@ module FixedHeap (Ψ : HeapTypes) where
 
   NewBlk = Σ RegFileTypes (λ Γ → Σ RegFileTypes (λ Δ → Block Γ Δ))
 
-  postulate deref : ∀ {l} → l ✴ ∈ Ψ → l ∈ Ψ
-  postulate load : ∀ {l} → l ∈ Ψ → Value l
+module HeapDefinitions where
+  open FixedHeap
 
-  loadblk : ∀ {Γ} → blk Γ ∈ Ψ → NewBlk
-  loadblk f with load f
-  loadblk f | function x = _ , _ , x
+  data Heap : HeapTypes → Set where
+    []  : Heap []
+    _,_ : ∀ {τ Ψ'} → (Ψ : Heap Ψ') → Value Ψ' τ → Heap (τ ∷ Ψ')
 
-  postulate loadblk-≡ : ∀ {Γ A} → (f : blk Γ ∈ Ψ) → loadblk f ≡ Γ , A
+  deref : ∀ {l Ψ} → Heap Ψ → l ✴ ∈ Ψ → l ∈ Ψ
+  deref [] ()
+  deref (vs , function x) (here ())
+  deref (vs , ptr p)      (here refl) = there p
+  deref (vs , x)          (there p)   = there (deref vs p)
 
-  CallStack = List NewBlk
-  CallCtx = CallStack × NewBlk
+  wk-value : ∀ {Ψ Ψ' τ} → Ψ ⊆ Ψ' → Value Ψ τ → Value Ψ' τ
+  wk-value = {!!}
   
-  -- На самом деле это тоже часть определения ControlInstr, ибо определяет
-  -- семантику каждой конкретной инструкции, но если засунуть что-нибудь
-  -- похожее в определение типа или конструкторы, сломается strict positivity
-  -- :(
-  -- Ограничение на стек хорошо бы засунуть в определение типа, потому что
-  -- без него инструкция `ret` может быть поставлена в неправильное место.
-  -- Правда, я не понимаю, действительно ли мне надо об этом задумываться.
-  exec-control : ∀ {Γ} → CallCtx → ControlInstr Γ → CallCtx
-  exec-control (cs , ret) (call f) = ret ∷ cs , loadblk f
-  exec-control (cs , ret) jmp[ f ] = cs , loadblk (deref f)
-  exec-control (cs , ret) (jmp f)  = cs , loadblk f
+  load : ∀ {l Ψ} → Heap Ψ → l ∈ Ψ → Value Ψ l
+  load (vs , x) (here refl) = wk-value there x
+  load (vs , x) (there p)   = wk-value there (load vs p)
 
-  exec-blk : ∀ {Γ Δ} → CallCtx → Block Γ Δ → CallCtx
-  exec-blk {Γ} (cs , ret) halt = cs , Γ , _ , halt
-  exec-blk cc (↝ x) = exec-control cc x
-  exec-blk cc (i ∙ b) = exec-blk cc b
-  
+  loadblk : ∀ {Γ Ψ} → Heap Ψ → blk Γ ∈ Ψ → NewBlk Ψ
+  loadblk Ψ f with load Ψ f
+  loadblk Ψ f | function x = _ , _ , x
+
+  -- Этот тип вообще не о том, надо придумать другой
+  loadblk-≡ : ∀ {Γ Ψ Δ} → {A : Block Ψ Γ Δ}
+            → (H : Heap Ψ) → (f : blk Γ ∈ Ψ)
+            → loadblk H f ≡ Γ , Δ , A
+  loadblk-≡ H f = {!!}
+
+open HeapDefinitions public
 open FixedHeap public
+
+CallStack : HeapTypes → Set
+CallStack Ψ = List (NewBlk Ψ)
+
+CallCtx : HeapTypes → Set
+CallCtx Ψ = CallStack Ψ × NewBlk Ψ
+
+-- На самом деле это тоже часть определения ControlInstr, ибо определяет
+-- семантику каждой конкретной инструкции, но если засунуть что-нибудь
+-- похожее в определение типа или конструкторы, сломается strict positivity
+-- :(
+-- Ограничение на стек хорошо бы засунуть в определение типа, потому что
+-- без него инструкция `ret` может быть поставлена в неправильное место.
+-- Правда, я не понимаю, действительно ли мне надо об этом задумываться.
+exec-control : ∀ {Γ Ψ} → CallCtx Ψ → ControlInstr Ψ Γ → CallCtx Ψ
+exec-control (cs , ret) (call f) = ret ∷ cs , loadblk ? f
+exec-control (cs , ret) jmp[ f ] = cs , loadblk ? (deref ? f)
+exec-control (cs , ret) (jmp f)  = cs , loadblk ? f
+
+exec-blk : ∀ {Γ Δ Ψ} → CallCtx Ψ → Block Ψ Γ Δ → CallCtx Ψ
+exec-blk {Γ} (cs , ret) halt = cs , Γ , _ , halt
+exec-blk cc (↝ x) = exec-control cc x
+exec-blk cc (i ∙ b) = exec-blk cc b
 
 -- Два блока считаются эквивалентными в одном контексте исполнения, если
 -- они в итоге приводят к одному и тому же блоку с одинаковым контекстом
@@ -117,12 +142,12 @@ data BlockEq {Ψ : HeapTypes} (CC : CallCtx Ψ) : {Γ₁ Γ₂ Δ₁ Δ₂ : Reg
   equal  : ∀ {Γ Δ} → {B : Block Ψ Γ Δ} → BlockEq CC B B
   left   : ∀ {Δ₁ Δ₂ Δ₃ Γ₁ Γ₂ Γ₃}
          → {A : Block Ψ Γ₁ Δ₁} → {B : Block Ψ Γ₂ Δ₂} → {C : Block Ψ Γ₃ Δ₃}
-         → projr (exec-blk Ψ CC C) ≡ _ , _ , A
+         → projr (exec-blk CC C) ≡ _ , _ , A
          → BlockEq CC A B
          → BlockEq CC C B
   right  : ∀ {Δ₁ Δ₂ Δ₃ Γ₁ Γ₂ Γ₃}
          → {A : Block Ψ Γ₁ Δ₁} → {B : Block Ψ Γ₂ Δ₂} → {C : Block Ψ Γ₃ Δ₃}
-         → projr (exec-blk Ψ CC C) ≡ _ , _ , B
+         → projr (exec-blk CC C) ≡ _ , _ , B
          → BlockEq CC A B
          → BlockEq CC A C
   ⟨_⟩_≅_ : ∀ {Δ₁ Δ₂ Δ₁' Δ₂' Γ₁ Γ₂ Γ₁' Γ₂'}
@@ -130,9 +155,9 @@ data BlockEq {Ψ : HeapTypes} (CC : CallCtx Ψ) : {Γ₁ Γ₂ Δ₁ Δ₂ : Reg
          → {A' : Block Ψ Γ₁' Δ₁'} {B' : Block Ψ Γ₂' Δ₂'}
          → BlockEq CC' A' B'
          → {A : Block Ψ Γ₁ Δ₁}
-         → exec-blk Ψ CC A ≡ projl CC' , _ , _ , A'
+         → exec-blk CC A ≡ projl CC' , _ , _ , A'
          → {B : Block Ψ Γ₂ Δ₂} 
-         → exec-blk Ψ CC B ≡ projl CC' , _ , _ , B'
+         → exec-blk CC B ≡ projl CC' , _ , _ , B'
          → BlockEq CC A B
 
 module PLTize where
@@ -141,10 +166,6 @@ module PLTize where
 -- что весь нужный код уже загружен в память, и got заполнен
 plt-stub : ∀ {Γ Ψ} → (blk Γ) ✴ ∈ Ψ → Block Ψ Γ []
 plt-stub label = ↝ (jmp[ label ])
-
-data Heap : HeapTypes → Set where
-  []  : Heap []
-  _,_ : ∀ {τ Ψ'} → (Ψ : Heap Ψ') → Value Ψ' τ → Heap (τ ∷ Ψ')
 
 -- Вот это полная дрянь, я задаю, значения какого типа добавятся в heap,
 -- но не указываю, какие именно это будут значения, хотя надо бы
@@ -194,19 +215,19 @@ pltize-code (i ∙ b) = wk-instr pltize-⊆ i ∙ pltize-code b
 jmp[]-proof : ∀ {Ψ Γ Δ} → {CC : CallCtx Ψ}
            → {A : Block Ψ Γ Δ}
            → (f : (blk Γ) ✴ ∈ Ψ)
-           → loadblk Ψ (deref Ψ f) ≡ _ , _ , A
+           → loadblk ? (deref ? f) ≡ _ , _ , A
            → BlockEq CC A (↝ jmp[ f ])
-jmp[]-proof {Ψ} {CC = CC} {A = A} f p = right (loadblk-≡ Ψ (deref Ψ f)) equal
+jmp[]-proof {Ψ} {CC = CC} {A = A} f p = right (loadblk-≡ ? (deref ? f)) equal
 
 call-proof : ∀ {Ψ Γ} → (CC : CallCtx Ψ) → {A : NewBlk Ψ}
            → (f : (blk Γ) ∈ Ψ)
-           → loadblk Ψ f ≡ A
-           → exec-blk Ψ CC (↝ (call f)) ≡ ((projr CC ∷ projl CC) , A)
-call-proof CC f p rewrite p = refl
+           → loadblk ? f ≡ A
+           → exec-blk CC (↝ (call f)) ≡ ((projr CC ∷ projl CC) , A)
+call-proof CC f p rewrite p = ?
 
 proof : ∀ {Γ Ψ}
       → (f : blk Γ ∈ Ψ)
       → (cc : CallCtx (pltize-heap Ψ))
       → BlockEq cc (wk-blk pltize-⊆ (↝ (call f))) (↝ (call (plt f)))
-proof {Ψ = Ψ} f ctx = ⟨ (jmp[]-proof (got f) (loadblk-≡ (pltize-heap Ψ) (deref (pltize-heap Ψ) (got f)))) ⟩
-    call-proof ctx (wk-∈ f pltize-⊆) (loadblk-≡ (pltize-heap Ψ) (wk-∈ f pltize-⊆)) ≅ call-proof ctx (plt f) (loadblk-≡ (pltize-heap Ψ) (plt f))
+proof {Ψ = Ψ} f ctx = ⟨ (jmp[]-proof (got f) (loadblk-≡ {!pltize-heap Ψ!} (deref {!pltize-heap Ψ!} (got f)))) ⟩
+    call-proof ctx (wk-∈ f pltize-⊆) (loadblk-≡ {!pltize-heap Ψ!} (wk-∈ f pltize-⊆)) ≅ call-proof ctx (plt f) (loadblk-≡ {!pltize-heap Ψ!} (plt f))
