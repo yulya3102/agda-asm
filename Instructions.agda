@@ -151,7 +151,7 @@ data Heap : HeapTypes → Set where
 pltize-heap : HeapTypes → HeapTypes
 -- На каждый блок в heap добавляются соответствующие got и plt (который,
 -- очевидно, имеет тот же тип, что и сам блок)
-pltize-heap (blk Γ ∷ Ψ) = blk Γ ∷ blk Γ ✴ ∷ blk Γ ∷ Ψ
+pltize-heap (blk Γ ∷ Ψ) = blk Γ ∷ blk Γ ✴ ∷ blk Γ ∷ (pltize-heap Ψ)
 -- Всё остальное остаётся неизменным
 pltize-heap Ψ = Ψ
 
