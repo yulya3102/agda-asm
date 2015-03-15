@@ -238,5 +238,11 @@ proof : ∀ {Γ Ψ}
       → (f : blk Γ ∈ Ψ)
       → (cc : CallCtx (pltize-heap Ψ))
       → BlockEq H cc (wk-blk pltize-⊆ (↝ (call f))) (↝ (call (plt f)))
-proof {Ψ = Ψ} H f ctx = ⟨ (jmp[]-proof (got f) (loadblk-≡ H (deref H (got f)))) ⟩
+proof {Ψ = Ψ} H f ctx = ⟨ after-call ⟩
     call-proof ctx (wk-∈ f pltize-⊆) (loadblk-≡ H (wk-∈ f pltize-⊆)) ≅ call-proof ctx (plt f) (loadblk-≡ H (plt f))
+    where
+    newblock-f = loadblk H (wk-∈ f pltize-⊆)
+    called-block = projr $ projr newblock-f
+
+    after-call : BlockEq H (projr ctx ∷ projl ctx , newblock-f) called-block (↝ jmp[ got f ])
+    after-call = jmp[]-proof (got f) (loadblk-≡ H (deref H (got f)))
