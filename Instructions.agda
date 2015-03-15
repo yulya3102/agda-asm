@@ -92,6 +92,9 @@ module HeapDefinitions where
   deref (vs , ptr p)      (here refl) = there p
   deref (vs , x)          (there p)   = there (deref vs p)
 
+  wk-instr : ∀ {Ψ Ψ' Γ Δ} → Ψ ⊆ Ψ' → Instr Ψ Γ Δ → Instr Ψ' Γ Δ
+  wk-instr = {!!}
+
   wk-blk : ∀ {Ψ Ψ' Γ Δ} → Ψ ⊆ Ψ' → Block Ψ Γ Δ → Block Ψ' Γ Δ
   wk-blk = {!!}
 
@@ -205,9 +208,6 @@ got (here refl) = there (here refl)
 got {Ψ = blk Δ ∷ Ψ} (there f) = there (there (there (got f)))
 got {Ψ = x ✴ ∷ Ψ} (there f) = there (got f)
 got {Ψ = any ∷ Ψ} (there f) = there (got f)
-
-wk-instr : ∀ {Ψ Ψ' Γ Δ} → Ψ ⊆ Ψ' → Instr Ψ Γ Δ → Instr Ψ' Γ Δ
-wk-instr = {!!}
 
 pltize-code : ∀ {Ψ Γ Δ} → Block Ψ Γ Δ → Block (pltize-heap Ψ) Γ Δ
 pltize-code halt = halt
