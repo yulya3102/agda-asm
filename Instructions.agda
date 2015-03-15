@@ -141,6 +141,10 @@ module PLTize where
 plt-stub : ∀ {Γ Ψ} → (blk Γ) ✴ ∈ Ψ → Block Ψ Γ []
 plt-stub label = ↝ (jmp[ label ])
 
+data Heap : HeapTypes → Set where
+  []  : Heap []
+  _,_ : ∀ {τ Ψ'} → (Ψ : Heap Ψ') → Value Ψ' τ → Heap (τ ∷ Ψ')
+
 -- Вот это полная дрянь, я задаю, значения какого типа добавятся в heap,
 -- но не указываю, какие именно это будут значения, хотя надо бы
 pltize-heap : HeapTypes → HeapTypes
