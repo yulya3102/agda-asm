@@ -138,27 +138,27 @@ exec-blk H cc (i ∙ b) = exec-blk H cc b
 -- Два блока считаются эквивалентными в одном контексте исполнения, если
 -- они в итоге приводят к одному и тому же блоку с одинаковым контекстом
 -- исполнения
-data BlockEq {Ψ : HeapTypes} (CC : CallCtx Ψ) : {Γ₁ Γ₂ Δ₁ Δ₂ : RegFileTypes} → Block Ψ Γ₁ Δ₁ → Block Ψ Γ₂ Δ₂ → Set where
-  equal  : ∀ {Γ Δ} → {B : Block Ψ Γ Δ} → BlockEq CC B B
+data BlockEq {Ψ : HeapTypes} (H : Heap Ψ) (CC : CallCtx Ψ) : {Γ₁ Γ₂ Δ₁ Δ₂ : RegFileTypes} → Block Ψ Γ₁ Δ₁ → Block Ψ Γ₂ Δ₂ → Set where
+  equal  : ∀ {Γ Δ} → {B : Block Ψ Γ Δ} → BlockEq H CC B B
   left   : ∀ {Δ₁ Δ₂ Δ₃ Γ₁ Γ₂ Γ₃}
          → {A : Block Ψ Γ₁ Δ₁} → {B : Block Ψ Γ₂ Δ₂} → {C : Block Ψ Γ₃ Δ₃}
          → projr (exec-blk {!!} CC C) ≡ _ , _ , A
-         → BlockEq CC A B
-         → BlockEq CC C B
+         → BlockEq H CC A B
+         → BlockEq H CC C B
   right  : ∀ {Δ₁ Δ₂ Δ₃ Γ₁ Γ₂ Γ₃}
          → {A : Block Ψ Γ₁ Δ₁} → {B : Block Ψ Γ₂ Δ₂} → {C : Block Ψ Γ₃ Δ₃}
          → projr (exec-blk {!!} CC C) ≡ _ , _ , B
-         → BlockEq CC A B
-         → BlockEq CC A C
+         → BlockEq H CC A B
+         → BlockEq H CC A C
   ⟨_⟩_≅_ : ∀ {Δ₁ Δ₂ Δ₁' Δ₂' Γ₁ Γ₂ Γ₁' Γ₂'}
          → {CC' : CallCtx Ψ}
          → {A' : Block Ψ Γ₁' Δ₁'} {B' : Block Ψ Γ₂' Δ₂'}
-         → BlockEq CC' A' B'
+         → BlockEq H CC' A' B'
          → {A : Block Ψ Γ₁ Δ₁}
          → exec-blk {!!} CC A ≡ projl CC' , _ , _ , A'
          → {B : Block Ψ Γ₂ Δ₂} 
          → exec-blk {!!} CC B ≡ projl CC' , _ , _ , B'
-         → BlockEq CC A B
+         → BlockEq H CC A B
 
 module PLTize where
 
@@ -213,10 +213,11 @@ pltize-code (↝ (jmp f)) = ↝ (jmp (wk-∈ f pltize-⊆ ))
 pltize-code (i ∙ b) = wk-instr pltize-⊆ i ∙ pltize-code b
 
 jmp[]-proof : ∀ {Ψ Γ Δ} → {CC : CallCtx Ψ}
+           → {H : Heap Ψ}
            → {A : Block Ψ Γ Δ}
            → (f : (blk Γ) ✴ ∈ Ψ)
            → loadblk {!!} (deref {!!} f) ≡ _ , _ , A
-           → BlockEq CC A (↝ jmp[ f ])
+           → BlockEq H CC A (↝ jmp[ f ])
 jmp[]-proof {Ψ} {CC = CC} {A = A} f p = right (loadblk-≡ {!!} (deref {!!} f)) equal
 
 call-proof : ∀ {Ψ Γ} → (CC : CallCtx Ψ) → {A : NewBlk Ψ}
@@ -226,8 +227,9 @@ call-proof : ∀ {Ψ Γ} → (CC : CallCtx Ψ) → {A : NewBlk Ψ}
 call-proof CC f p rewrite p = {!!}
 
 proof : ∀ {Γ Ψ}
+      → (H : Heap (pltize-heap Ψ))
       → (f : blk Γ ∈ Ψ)
       → (cc : CallCtx (pltize-heap Ψ))
-      → BlockEq cc (wk-blk pltize-⊆ (↝ (call f))) (↝ (call (plt f)))
-proof {Ψ = Ψ} f ctx = ⟨ (jmp[]-proof (got f) (loadblk-≡ {!pltize-heap Ψ!} (deref {!pltize-heap Ψ!} (got f)))) ⟩
+      → BlockEq H cc (wk-blk pltize-⊆ (↝ (call f))) (↝ (call (plt f)))
+proof {Ψ = Ψ} H f ctx = ⟨ (jmp[]-proof (got f) (loadblk-≡ {!pltize-heap Ψ!} (deref {!pltize-heap Ψ!} (got f)))) ⟩
     call-proof ctx (wk-∈ f pltize-⊆) (loadblk-≡ {!pltize-heap Ψ!} (wk-∈ f pltize-⊆)) ≅ call-proof ctx (plt f) (loadblk-≡ {!pltize-heap Ψ!} (plt f))
