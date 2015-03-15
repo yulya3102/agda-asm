@@ -234,6 +234,26 @@ call-proof : ∀ {Ψ Γ} → (CC : CallCtx Ψ) → {A : NewBlk Ψ}
            → exec-blk H CC (↝ (call f)) ≡ ((projr CC ∷ projl CC) , A)
 call-proof CC f p rewrite p = refl
 
+loadplt : ∀ {Ψ Γ} → (H : Heap (pltize-heap Ψ)) → (f : blk Γ ∈ Ψ)
+        → loadblk H (plt f) ≡ Γ , [] , ↝ jmp[ got f ]
+loadplt H f = {!!}
+
+jmp[]-plt-stub : ∀ {Ψ Γ} → (f : blk Γ ∈ Ψ) → plt-stub (got f) ≡ ↝ jmp[ got f ]
+jmp[]-plt-stub f = refl
+
+loadblk-Γ : ∀ {Ψ Γ} → (H : Heap Ψ) → (f : blk Γ ∈ Ψ) → projl (loadblk H f) ≡ Γ
+loadblk-Γ H f = {!!}
+
+plt-fun-eq : ∀ {Γ Ψ}
+           → (H : Heap (pltize-heap Ψ))
+           → (cc : CallCtx (pltize-heap Ψ))
+           → (f : blk Γ ∈ Ψ)
+           → BlockEq H cc
+             (projr $ projr (loadblk H (pltize-⊆ f)))
+             (plt-stub (got f))
+plt-fun-eq H cc f with jmp[]-plt-stub f | loadblk-Γ H (pltize-⊆ f)
+plt-fun-eq H cc f | refl | r = {!!}
+
 proof : ∀ {Γ Ψ}
       → (H : Heap (pltize-heap Ψ))
       → (f : blk Γ ∈ Ψ)
@@ -245,14 +265,14 @@ proof {Γ = Γ} {Ψ = Ψ} H f ctx = ctxchg after-call just-call plt-call
     called-block = projr $ projr newblock-f
 
     just-call : exec-blk H ctx (↝ (call $ pltize-⊆ f)) ≡
-                projr ctx ∷ projl ctx , _ , _ , called-block
-    just-call = call-proof ctx (pltize-⊆ f) {!!}
+                projr ctx ∷ projl ctx , newblock-f
+    just-call = call-proof ctx (pltize-⊆ f) refl
 
     plt-call : exec-blk H ctx (↝ (call $ plt f)) ≡
                projr ctx ∷ projl ctx , _ , _ , ↝ jmp[ got f ]
-    plt-call = call-proof ctx (plt f) {!!}
+    plt-call = call-proof ctx (plt f) (loadplt H f)
 
     after-call : BlockEq H (projr ctx ∷ projl ctx , newblock-f)
                  called-block
                  (↝ jmp[ got f ])
-    after-call = {!!}
+    after-call = plt-fun-eq H (projr ctx ∷ projl ctx , newblock-f) f
