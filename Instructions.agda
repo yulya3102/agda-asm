@@ -70,7 +70,7 @@ module FixedHeap (Ψ : HeapTypes) where
 
   data Instr (Γ : RegFileTypes) : (Δ : RegFileTypes) → Set where
     any  : ∀ Δ → Instr Γ Δ
-    mov  : ∀ {τ} → Value τ → Instr Γ [ τ ]
+    mov  : ∀ {τ} → Value τ → Instr Γ [ τ ] -- Просто пример того, как может выглядеть инструкция
 
   data Block (Γ : RegFileTypes) where
     halt : Block Γ []
@@ -96,7 +96,8 @@ module FixedHeap (Ψ : HeapTypes) where
   -- похожее в определение типа или конструкторы, сломается strict positivity
   -- :(
   -- Ограничение на стек хорошо бы засунуть в определение типа, потому что
-  -- без него инструкция `ret` может быть поставлена в неправильное место
+  -- без него инструкция `ret` может быть поставлена в неправильное место.
+  -- Правда, я не понимаю, действительно ли мне надо об этом задумываться.
   exec-control : ∀ {Γ} → CallCtx → ControlInstr Γ → CallCtx
   exec-control (cs , ret) (call f) = ret ∷ cs , loadblk f
   exec-control (cs , ret) jmp[ f ] = cs , loadblk (deref f)
