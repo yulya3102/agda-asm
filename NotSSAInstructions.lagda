@@ -17,6 +17,38 @@ data Type where
 
 open Membership {A = Type} _≡_
 
+module TDiffs where
+  {-
+    Diff должен описывать:
+
+    * добавленные регистры
+    * изменённые регистры
+
+    При этом для Diff должны быть определены dempty и dappend
+  -}
+  data TChg (Γ : RegFileTypes) : Set where
+    nr : Type → TChg Γ
+    cr : ∀ {r} → r ∈ Γ → Type → TChg Γ
+
+  appChg : (Γ : RegFileTypes) → TChg Γ → RegFileTypes
+  appChg Γ (nr x) = x ∷ Γ
+  appChg (_ ∷ Γ) (cr (here refl) r') = r' ∷ Γ
+  appChg (a ∷ Γ) (cr (there r) r') = a ∷ appChg Γ (cr r r')
+
+  data TDiff (Γ : RegFileTypes) : Set where
+    tdempty  : TDiff Γ
+    -- Почему я строю диффы в обратную сторону? :\
+    tdchg : (chg : TChg Γ) → TDiff (appChg Γ chg) → TDiff Γ
+
+  appTDiff : (Γ : RegFileTypes) → TDiff Γ → RegFileTypes
+  appTDiff Γ tdempty = Γ
+  appTDiff Γ (tdchg chg td) = appTDiff (appChg Γ chg) td
+
+  tdappend : ∀ {Γ} → (td : TDiff Γ) → TDiff (appTDiff Γ td) → TDiff Γ
+  tdappend tdempty b = b
+  tdappend (tdchg chg a) b = tdchg chg (tdappend a b)
+open TDiffs
+
 {-
   Многие определения используют heap, но никак его не меняют,
   потому в модуле с фиксированным Ψ
