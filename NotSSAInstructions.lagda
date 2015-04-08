@@ -102,7 +102,9 @@ module FixedHeap (Ψ : HeapTypes) where
 
   data Instr (Γ : RegFileTypes) : TDiff Γ → Set where
     -- Просто пример того, как может выглядеть инструкция
-    mov  : ∀ {τ} → Value τ → Instr Γ (tdchg (chgnr τ) tdempty)
+    new  : ∀ {τ} → Value τ → Instr Γ (tdchg (chgnr τ) tdempty)
+    -- Я могу делать инструкции, _меняющие_ регистры, а не добавляющие новые!
+    mov  : ∀ {r τ} → (r∈Γ : r ∈ Γ) → Value τ → Instr Γ (tdchg (chgcr r∈Γ τ) tdempty)
 
   data Block (Γ : RegFileTypes) where
     -- Блок, завершающий исполнение
@@ -139,7 +141,8 @@ deref (vs , x)          (there p)   = there (deref vs p)
 wk-value : ∀ {Ψ Ψ' τ} → Ψ ⊆ Ψ' → Value Ψ τ → Value Ψ' τ
 
 wk-instr : ∀ {Ψ Ψ' Γ Δ} → Ψ ⊆ Ψ' → Instr Ψ Γ Δ → Instr Ψ' Γ Δ
-wk-instr ss (mov x) = mov (wk-value ss x)
+wk-instr ss (new x) = new (wk-value ss x)
+wk-instr ss (mov r v) = mov r (wk-value ss v)
 
 wk-cinstr : ∀ {Ψ Ψ' Γ} → Ψ ⊆ Ψ' → ControlInstr Ψ Γ → ControlInstr Ψ' Γ
 wk-cinstr ss (call f) = call (ss f)
