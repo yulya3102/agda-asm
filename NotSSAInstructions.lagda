@@ -30,34 +30,34 @@ module TDiffs where
     При этом для TDiff должны быть определены dempty и dappend
   -}
   data TChg (Γ : RegFileTypes) : Set where
-    chgnr : Type → TChg Γ
-    chgcr : ∀ {r} → r ∈ Γ → (r' : Type) → TChg Γ
-    chgur : ∀ {s r} → s ∈ Γ → r ∈ Γ → (r' : Type) → TChg Γ
+    tchgnr : Type → TChg Γ
+    tchgcr : ∀ {r} → r ∈ Γ → (r' : Type) → TChg Γ
+    tchgur : ∀ {s r} → s ∈ Γ → r ∈ Γ → (r' : Type) → TChg Γ
 
   appChg : (Γ : RegFileTypes) → TChg Γ → RegFileTypes
-  appChg Γ (chgnr x) = x ∷ Γ
-  appChg (_ ∷ Γ) (chgcr (here refl) r') = r' ∷ Γ
-  appChg (a ∷ Γ) (chgcr (there r) r') = a ∷ appChg Γ (chgcr r r')
-  -- Да, семантически chgur и chgcr одинаковы с точки зрения
+  appChg Γ (tchgnr x) = x ∷ Γ
+  appChg (_ ∷ Γ) (tchgcr (here refl) r') = r' ∷ Γ
+  appChg (a ∷ Γ) (tchgcr (there r) r') = a ∷ appChg Γ (tchgcr r r')
+  -- Да, семантически tchgur и tchgcr одинаковы с точки зрения
   -- изменения типов регистров, s ∈ Γ нужен будет потом, чтобы
   -- случайно не выкинуть используемое значение регистра
   -- Зачем тогда здесь паттернматчиться и копипастить предыдущие
   -- две строки? Затем, что иначе терминейшн-чекер фейлится :\
-  appChg (_ ∷ Γ) (chgur s (here refl) r') = r' ∷ Γ
-  appChg (a ∷ Γ) (chgur s (there r) r') = a ∷ appChg Γ (chgcr r r')
+  appChg (_ ∷ Γ) (tchgur s (here refl) r') = r' ∷ Γ
+  appChg (a ∷ Γ) (tchgur s (there r) r') = a ∷ appChg Γ (tchgcr r r')
 
   data TDiff (Γ : RegFileTypes) : Set where
     tdempty  : TDiff Γ
     -- Почему я строю диффы в обратную сторону? :\
-    tdchg : (chg : TChg Γ) → TDiff (appChg Γ chg) → TDiff Γ
+    tdchg : (tchg : TChg Γ) → TDiff (appChg Γ tchg) → TDiff Γ
 
   tdapply : (Γ : RegFileTypes) → TDiff Γ → RegFileTypes
   tdapply Γ tdempty = Γ
-  tdapply Γ (tdchg chg td) = tdapply (appChg Γ chg) td
+  tdapply Γ (tdchg tchg td) = tdapply (appChg Γ tchg) td
 
   tdappend : ∀ {Γ} → (td : TDiff Γ) → TDiff (tdapply Γ td) → TDiff Γ
   tdappend tdempty b = b
-  tdappend (tdchg chg a) b = tdchg chg (tdappend a b)
+  tdappend (tdchg tchg a) b = tdchg tchg (tdappend a b)
 open TDiffs
 
 {-
@@ -111,11 +111,11 @@ module FixedHeap (Ψ : HeapTypes) where
   -- Возможно, имеет смысл сюда засунуть не TDiff, а TChg
   data Instr (Γ : RegFileTypes) : TDiff Γ → Set where
     -- Просто пример того, как может выглядеть инструкция
-    new  : ∀ {τ} → Value τ → Instr Γ (tdchg (chgnr τ) tdempty)
+    new  : ∀ {τ} → Value τ → Instr Γ (tdchg (tchgnr τ) tdempty)
     -- Я могу делать инструкции, _меняющие_ регистры, а не добавляющие новые!
-    mov  : ∀ {r τ} → (r∈Γ : r ∈ Γ) → Value τ → Instr Γ (tdchg (chgcr r∈Γ τ) tdempty)
+    mov  : ∀ {r τ} → (r∈Γ : r ∈ Γ) → Value τ → Instr Γ (tdchg (tchgcr r∈Γ τ) tdempty)
     -- И даже инструкции, которые не просто затирают старое значение, а апдейтят его
-    ld   : ∀ {r τ} → (s : τ ✴ ∈ Γ) → (d : r ∈ Γ) → Instr Γ (tdchg (chgur s d τ) tdempty)
+    ld   : ∀ {r τ} → (s : τ ✴ ∈ Γ) → (d : r ∈ Γ) → Instr Γ (tdchg (tchgur s d τ) tdempty)
 
   data Block (Γ : RegFileTypes) where
     -- Блок, завершающий исполнение
