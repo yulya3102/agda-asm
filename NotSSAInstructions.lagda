@@ -19,32 +19,35 @@ open Membership {A = Type} _≡_
 
 module TDiffs where
   {-
-    Diff должен описывать:
+    TDiff описывает только изменения типов регистров и нужен
+    мне только для описания инструкций и блоков кода
+    
+    TDiff должен описывать:
 
     * добавленные регистры
     * изменённые регистры
 
-    При этом для Diff должны быть определены dempty и dappend
+    При этом для TDiff должны быть определены dempty и dappend
   -}
   data TChg (Γ : RegFileTypes) : Set where
-    nr : Type → TChg Γ
-    cr : ∀ {r} → r ∈ Γ → Type → TChg Γ
+    chgnr : Type → TChg Γ
+    chgcr : ∀ {r} → r ∈ Γ → (r' : Type) → TChg Γ
 
   appChg : (Γ : RegFileTypes) → TChg Γ → RegFileTypes
-  appChg Γ (nr x) = x ∷ Γ
-  appChg (_ ∷ Γ) (cr (here refl) r') = r' ∷ Γ
-  appChg (a ∷ Γ) (cr (there r) r') = a ∷ appChg Γ (cr r r')
+  appChg Γ (chgnr x) = x ∷ Γ
+  appChg (_ ∷ Γ) (chgcr (here refl) r') = r' ∷ Γ
+  appChg (a ∷ Γ) (chgcr (there r) r') = a ∷ appChg Γ (chgcr r r')
 
   data TDiff (Γ : RegFileTypes) : Set where
     tdempty  : TDiff Γ
     -- Почему я строю диффы в обратную сторону? :\
     tdchg : (chg : TChg Γ) → TDiff (appChg Γ chg) → TDiff Γ
 
-  appTDiff : (Γ : RegFileTypes) → TDiff Γ → RegFileTypes
-  appTDiff Γ tdempty = Γ
-  appTDiff Γ (tdchg chg td) = appTDiff (appChg Γ chg) td
+  tdapply : (Γ : RegFileTypes) → TDiff Γ → RegFileTypes
+  tdapply Γ tdempty = Γ
+  tdapply Γ (tdchg chg td) = tdapply (appChg Γ chg) td
 
-  tdappend : ∀ {Γ} → (td : TDiff Γ) → TDiff (appTDiff Γ td) → TDiff Γ
+  tdappend : ∀ {Γ} → (td : TDiff Γ) → TDiff (tdapply Γ td) → TDiff Γ
   tdappend tdempty b = b
   tdappend (tdchg chg a) b = tdchg chg (tdappend a b)
 open TDiffs
@@ -79,7 +82,7 @@ module FixedHeap (Ψ : HeapTypes) where
     Блок задаёт, на какой контекст регистров Γ он рассчитывает, и какие
     новые регистры Δ добавляет к этому контексту.
   -}
-  data Block (Γ : RegFileTypes) : (Δ : RegFileTypes) → Set
+  data Block (Γ : RegFileTypes) : TDiff Γ → Set
 
   {-
     Управляющая инструкция не добавляет никаких новых регистров, поэтому,
@@ -94,26 +97,26 @@ module FixedHeap (Ψ : HeapTypes) where
     jmp    : (f : blk Γ ∈ Ψ) → ControlInstr Γ
 
   data Value : Type → Set where
-    function : {Γ Δ : RegFileTypes} → Block Γ Δ → Value (blk Γ)
+    function : {Γ : RegFileTypes} → {d : TDiff Γ} → Block Γ d → Value (blk Γ)
     ptr      : ∀ {τ} → τ ∈ Ψ → Value (τ ✴)
 
-  data Instr (Γ : RegFileTypes) : (Δ : RegFileTypes) → Set where
+  data Instr (Γ : RegFileTypes) : TDiff Γ → Set where
     -- Просто пример того, как может выглядеть инструкция
-    mov  : ∀ {τ} → Value τ → Instr Γ [ τ ]
+    mov  : ∀ {τ} → Value τ → Instr Γ (tdchg (chgnr τ) tdempty)
 
   data Block (Γ : RegFileTypes) where
     -- Блок, завершающий исполнение
-    halt : Block Γ []
+    halt : Block Γ tdempty
     -- Блок, переходящий куда-либо в соответствии с результатом
     -- исполнения управляющей инструкции
-    ↝    : ControlInstr Γ → Block Γ []
+    ↝    : ControlInstr Γ → Block Γ tdempty
     -- Какая-нибудь инструкция внутри блока
-    _∙_  : ∀ {Γ' Δ} → Instr Γ Γ' → Block (Γ ++ Γ') Δ → Block Γ (Δ ++ Γ')
+    _∙_  : ∀ {d' d} → Instr Γ d' → Block (tdapply Γ d') d → Block Γ (tdappend d' d)
 
   -- Иногда из функции надо вернуть абсолютно любой блок,
   -- с любыми параметрами типа (как Γ и Δ), как это нормально делается?
   -- Или использовать Σ и есть правильный способ?
-  NewBlk = Σ RegFileTypes (λ Γ → Σ RegFileTypes (λ Δ → Block Γ Δ))
+  NewBlk = Σ RegFileTypes (λ Γ → Σ (TDiff Γ) (λ d → Block Γ d))
 
 open FixedHeap
 
@@ -200,30 +203,34 @@ exec-blk H cc (i ∙ b) = exec-blk H cc b
 -- они в итоге приводят к одному и тому же блоку с одинаковым контекстом
 -- исполнения
 data BlockEq {Ψ : HeapTypes} (H : Heap Ψ) (CC : CallCtx Ψ)
-    : {Γ₁ Γ₂ Δ₁ Δ₂ : RegFileTypes} → Block Ψ Γ₁ Δ₁ → Block Ψ Γ₂ Δ₂ → Set
+    : {Γ₁ Γ₂ : RegFileTypes} → {d₁ : TDiff Γ₁} {d₂ : TDiff Γ₂}
+    → Block Ψ Γ₁ d₁ → Block Ψ Γ₂ d₂ → Set
     where
   -- Равные блоки эквивалентны
   equal  : ∀ {Γ Δ} → {B : Block Ψ Γ Δ} → BlockEq H CC B B
   -- Левый блок исполняет инструкцию
-  left   : ∀ {Δ₁ Δ₂ Δ₃ Γ₁ Γ₂ Γ₃}
-         → {A : Block Ψ Γ₁ Δ₁} → {B : Block Ψ Γ₂ Δ₂} → {C : Block Ψ Γ₃ Δ₃}
+  left   : ∀ {Γ₁ Γ₂ Γ₃}
+         → {d₁ : TDiff Γ₁} {d₂ : TDiff Γ₂} {d₃ : TDiff Γ₃}
+         → {A : Block Ψ Γ₁ d₁} → {B : Block Ψ Γ₂ d₂} → {C : Block Ψ Γ₃ d₃}
          → projr (exec-blk H CC C) ≡ _ , _ , A
          → BlockEq H CC A B
          → BlockEq H CC C B
   -- Правый блок исполняет инструкцию
-  right  : ∀ {Δ₁ Δ₂ Δ₃ Γ₁ Γ₂ Γ₃}
-         → {A : Block Ψ Γ₁ Δ₁} → {B : Block Ψ Γ₂ Δ₂} → {C : Block Ψ Γ₃ Δ₃}
+  right  : ∀ {Γ₁ Γ₂ Γ₃}
+         → {d₁ : TDiff Γ₁} {d₂ : TDiff Γ₂} {d₃ : TDiff Γ₃}
+         → {A : Block Ψ Γ₁ d₁} → {B : Block Ψ Γ₂ d₂} → {C : Block Ψ Γ₃ d₃}
          → projr (exec-blk H CC C) ≡ _ , _ , B
          → BlockEq H CC A B
          → BlockEq H CC A C
   -- Оба блока исполняют какие-то инструкции, меняющие CallCtx
-  ctxchg : ∀ {Δ₁ Δ₂ Δ₁' Δ₂' Γ₁ Γ₂ Γ₁' Γ₂'}
+  ctxchg : ∀ {Γ₁ Γ₂ Γ₁' Γ₂'}
+         → {d₁ : TDiff Γ₁} {d₂ : TDiff Γ₂} {d₁' : TDiff Γ₁'} {d₂' : TDiff Γ₂'}
          → {CC' : CallCtx Ψ}
-         → {A' : Block Ψ Γ₁' Δ₁'} {B' : Block Ψ Γ₂' Δ₂'}
+         → {A' : Block Ψ Γ₁' d₁'} {B' : Block Ψ Γ₂' d₂'}
          → BlockEq H CC' A' B'
-         → {A : Block Ψ Γ₁ Δ₁}
+         → {A : Block Ψ Γ₁ d₁}
          → exec-blk H CC A ≡ projl CC' , _ , _ , A'
-         → {B : Block Ψ Γ₂ Δ₂} 
+         → {B : Block Ψ Γ₂ d₂} 
          → exec-blk H CC B ≡ projl CC' , _ , _ , B'
          → BlockEq H CC A B
 
@@ -231,7 +238,7 @@ data BlockEq {Ψ : HeapTypes} (H : Heap Ψ) (CC : CallCtx Ψ)
 
 -- plt состоит всего из одной инструкции, потому что я рассчитываю на то,
 -- что весь нужный код уже загружен в память, и got заполнен
-plt-stub : ∀ {Γ Ψ} → (blk Γ) ✴ ∈ Ψ → Block Ψ Γ []
+plt-stub : ∀ {Γ Ψ} → (blk Γ) ✴ ∈ Ψ → Block Ψ Γ tdempty
 plt-stub label = ↝ (jmp[ label ])
 
 -- Преобразования heap
@@ -294,7 +301,7 @@ call-proof : ∀ {Ψ Γ} → (CC : CallCtx Ψ) → {A : NewBlk Ψ}
 call-proof CC f p rewrite p = refl
 
 loadplt : ∀ {Ψ Γ} → (H : Heap (plt-heaptypes Ψ)) → (f : blk Γ ∈ Ψ)
-        → loadblk H (plt f) ≡ Γ , [] , ↝ jmp[ got f ]
+        → loadblk H (plt f) ≡ Γ , tdempty , ↝ jmp[ got f ]
 loadplt H f = {!!}
 
 jmp[]-plt-stub : ∀ {Ψ Γ} → (f : blk Γ ∈ Ψ) → plt-stub (got f) ≡ ↝ jmp[ got f ]
