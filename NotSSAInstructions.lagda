@@ -32,11 +32,19 @@ module TDiffs where
   data TChg (Γ : RegFileTypes) : Set where
     chgnr : Type → TChg Γ
     chgcr : ∀ {r} → r ∈ Γ → (r' : Type) → TChg Γ
+    chgur : ∀ {s r} → s ∈ Γ → r ∈ Γ → (r' : Type) → TChg Γ
 
   appChg : (Γ : RegFileTypes) → TChg Γ → RegFileTypes
   appChg Γ (chgnr x) = x ∷ Γ
   appChg (_ ∷ Γ) (chgcr (here refl) r') = r' ∷ Γ
   appChg (a ∷ Γ) (chgcr (there r) r') = a ∷ appChg Γ (chgcr r r')
+  -- Да, семантически chgur и chgcr одинаковы с точки зрения
+  -- изменения типов регистров, s ∈ Γ нужен будет потом, чтобы
+  -- случайно не выкинуть используемое значение регистра
+  -- Зачем тогда здесь паттернматчиться и копипастить предыдущие
+  -- две строки? Затем, что иначе терминейшн-чекер фейлится :\
+  appChg (_ ∷ Γ) (chgur s (here refl) r') = r' ∷ Γ
+  appChg (a ∷ Γ) (chgur s (there r) r') = a ∷ appChg Γ (chgcr r r')
 
   data TDiff (Γ : RegFileTypes) : Set where
     tdempty  : TDiff Γ
@@ -100,11 +108,14 @@ module FixedHeap (Ψ : HeapTypes) where
     function : {Γ : RegFileTypes} → {d : TDiff Γ} → Block Γ d → Value (blk Γ)
     ptr      : ∀ {τ} → τ ∈ Ψ → Value (τ ✴)
 
+  -- Возможно, имеет смысл сюда засунуть не TDiff, а TChg
   data Instr (Γ : RegFileTypes) : TDiff Γ → Set where
     -- Просто пример того, как может выглядеть инструкция
     new  : ∀ {τ} → Value τ → Instr Γ (tdchg (chgnr τ) tdempty)
     -- Я могу делать инструкции, _меняющие_ регистры, а не добавляющие новые!
     mov  : ∀ {r τ} → (r∈Γ : r ∈ Γ) → Value τ → Instr Γ (tdchg (chgcr r∈Γ τ) tdempty)
+    -- И даже инструкции, которые не просто затирают старое значение, а апдейтят его
+    ld   : ∀ {r τ} → (s : τ ✴ ∈ Γ) → (d : r ∈ Γ) → Instr Γ (tdchg (chgur s d τ) tdempty)
 
   data Block (Γ : RegFileTypes) where
     -- Блок, завершающий исполнение
@@ -143,6 +154,7 @@ wk-value : ∀ {Ψ Ψ' τ} → Ψ ⊆ Ψ' → Value Ψ τ → Value Ψ' τ
 wk-instr : ∀ {Ψ Ψ' Γ Δ} → Ψ ⊆ Ψ' → Instr Ψ Γ Δ → Instr Ψ' Γ Δ
 wk-instr ss (new x) = new (wk-value ss x)
 wk-instr ss (mov r v) = mov r (wk-value ss v)
+wk-instr ss (ld s d) = ld s d
 
 wk-cinstr : ∀ {Ψ Ψ' Γ} → Ψ ⊆ Ψ' → ControlInstr Ψ Γ → ControlInstr Ψ' Γ
 wk-cinstr ss (call f) = call (ss f)
