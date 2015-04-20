@@ -17,44 +17,55 @@ data Type where
 
 open Membership {A = Type} _≡_
 
+{-
+  Внизу в описании типа инструкций раньше использовался список регистров,
+  добавляемых инструкцией. На самом деле это примитивнейший diff, умеющий
+  только добавлять что-либо, не изменяя и не удаляя. Собственно, из-за
+  этого и получалось SSA.
+
+  Если же вместо списка новых регистров сделать нормальный diff (только
+  для типов регистров, не для значений), то получится не-SSA-шный вариант.
+  Можно вообще выкинуть добавление новых регистров, тогда будет практически
+  нормальный ассемблер.
+-}
 module TDiffs where
-  {-
-    TDiff описывает только изменения типов регистров и нужен
-    мне только для описания инструкций и блоков кода
-    
-    TDiff должен описывать:
-
-    * добавленные регистры
-    * изменённые регистры
-
-    При этом для TDiff должны быть определены dempty и dappend
-  -}
+  -- Некоторое атомарное изменение RegFile
   data TChg (Γ : RegFileTypes) : Set where
+    -- добавить новый регистр
     tchgnr : Type → TChg Γ
+    -- изменить значение в регистре r
     tchgcr : ∀ {r} → r ∈ Γ → (r' : Type) → TChg Γ
+    -- изменить значение в регистре r, используя значение в регистре s
     tchgur : ∀ {s r} → s ∈ Γ → r ∈ Γ → (r' : Type) → TChg Γ
 
+  -- Применить изменение к RegFile
   appChg : (Γ : RegFileTypes) → TChg Γ → RegFileTypes
   appChg Γ (tchgnr x) = x ∷ Γ
   appChg (_ ∷ Γ) (tchgcr (here refl) r') = r' ∷ Γ
   appChg (a ∷ Γ) (tchgcr (there r) r') = a ∷ appChg Γ (tchgcr r r')
-  -- Да, семантически tchgur и tchgcr одинаковы с точки зрения
-  -- изменения типов регистров, s ∈ Γ нужен будет потом, чтобы
-  -- случайно не выкинуть используемое значение регистра
-  -- Зачем тогда здесь паттернматчиться и копипастить предыдущие
-  -- две строки? Затем, что иначе терминейшн-чекер фейлится :\
+  {-
+    Да, tchgur и tchgcr абсолютно одинаковы с точки зрения изменения
+    типов регистров. s ∈ Γ в конструкторе tchgcr нужен, чтобы явно
+    указать, что это состояние регистра s выкидывать нельзя. Это
+    потенциально полезно, если я таки запилю диффы и их, ээ, нормализацию
+
+    Зачем тогда здесь паттернматчиться и копипастить предыдущие
+    две строки? Затем, что иначе терминейшн-чекер фейлится :\
+  -}
   appChg (_ ∷ Γ) (tchgur s (here refl) r') = r' ∷ Γ
   appChg (a ∷ Γ) (tchgur s (there r) r') = a ∷ appChg Γ (tchgcr r r')
 
+  -- Собственно, diff, являющийся списком атомарных изменений
   data TDiff (Γ : RegFileTypes) : Set where
     tdempty  : TDiff Γ
-    -- Почему я строю диффы в обратную сторону? :\
-    tdchg : (tchg : TChg Γ) → TDiff (appChg Γ tchg) → TDiff Γ
+    tdchg    : (tchg : TChg Γ) → TDiff (appChg Γ tchg) → TDiff Γ
 
+  -- Применение TDiff к RegFile
   tdapply : (Γ : RegFileTypes) → TDiff Γ → RegFileTypes
   tdapply Γ tdempty = Γ
   tdapply Γ (tdchg tchg td) = tdapply (appChg Γ tchg) td
 
+  -- Склеивание diff-ов
   tdappend : ∀ {Γ} → (td : TDiff Γ) → TDiff (tdapply Γ td) → TDiff Γ
   tdappend tdempty b = b
   tdappend (tdchg tchg a) b = tdchg tchg (tdappend a b)
@@ -131,6 +142,10 @@ module FixedHeap (Ψ : HeapTypes) where
   -- Или использовать Σ и есть правильный способ?
   NewBlk = Σ RegFileTypes (λ Γ → Σ (TDiff Γ) (λ d → Block Γ d))
 
+  RegFile = List (Σ Type Value)
+  rftypes : RegFile → RegFileTypes
+  rftypes [] = []
+  rftypes (r ∷ rs) = projl r ∷ rftypes rs
 open FixedHeap
 
 -- Набор heap-related определений
