@@ -150,18 +150,14 @@ open FixedHeap
 
 -- Набор heap-related определений
 
-data Heap : HeapTypes → Set where
-  []  : Heap []
-  -- Value Ψ τ может ссылаться на какие-то значения из Ψ
-  -- (и, соответственно, из H)
-  _,_ : ∀ {τ Ψ} → (H : Heap Ψ) → Value Ψ τ → Heap (τ ∷ Ψ)
+
+data Heap (Γ : HeapTypes) : HeapTypes → Set where
+  []  : Heap Γ []
+  _∷_ : ∀ {τ Ψ} → Value Γ τ → Heap Γ Ψ → Heap Γ (τ ∷ Ψ)
 
 -- Разыменование указателя
-deref : ∀ {l Ψ} → Heap Ψ → l ✴ ∈ Ψ → l ∈ Ψ
-deref [] ()
-deref (vs , function x) (here ())
-deref (vs , ptr p)      (here refl) = there p
-deref (vs , x)          (there p)   = there (deref vs p)
+deref : ∀ {l Ψ} → Heap Ψ Ψ → l ✴ ∈ Ψ → l ∈ Ψ
+deref Ψ p = {!!}
 
 -- Куча почти одинаковых определений
 wk-value : ∀ {Ψ Ψ' τ} → Ψ ⊆ Ψ' → Value Ψ τ → Value Ψ' τ
@@ -185,11 +181,11 @@ wk-value ss (function x) = function (wk-blk ss x)
 wk-value ss (ptr x)      = ptr (ss x)
 
 -- Получение значения из heap по "адресу"
-load : ∀ {l Ψ} → Heap Ψ → l ∈ Ψ → Value Ψ l
-load (vs , x) (here refl) = wk-value there x
-load (vs , x) (there p)   = wk-value there (load vs p)
+load : ∀ {l Ψ} → Heap Ψ Ψ → l ∈ Ψ → Value Ψ l
+load (x ∷ vs) (here refl) = {!!}
+load (x ∷ vs) (there p)   = {!!}
 
-loadblk : ∀ {Γ Ψ} → Heap Ψ → blk Γ ∈ Ψ → NewBlk Ψ
+loadblk : ∀ {Γ Ψ} → Heap Ψ Ψ → blk Γ ∈ Ψ → NewBlk Ψ
 loadblk Ψ f with load Ψ f
 loadblk Ψ f | function x = _ , _ , x
 
@@ -215,12 +211,12 @@ CallCtx Ψ = CallStack Ψ × NewBlk Ψ
 -- Ограничение на стек хорошо бы засунуть в определение типа, потому что
 -- без него инструкция `ret` может быть поставлена в неправильное место.
 -- Правда, я не понимаю, действительно ли мне надо об этом задумываться
-exec-control : ∀ {Γ Ψ} → Heap Ψ → CallCtx Ψ → ControlInstr Ψ Γ → CallCtx Ψ
+exec-control : ∀ {Γ Ψ} → Heap Ψ Ψ → CallCtx Ψ → ControlInstr Ψ Γ → CallCtx Ψ
 exec-control H (cs , ret) (call f) = ret ∷ cs , loadblk H f
 exec-control H (cs , ret) jmp[ f ] = cs , loadblk H (deref H f)
 exec-control H (cs , ret) (jmp f)  = cs , loadblk H f
 
-exec-blk : ∀ {Γ Δ Ψ} → Heap Ψ → CallCtx Ψ → Block Ψ Γ Δ → CallCtx Ψ
+exec-blk : ∀ {Γ Δ Ψ} → Heap Ψ Ψ → CallCtx Ψ → Block Ψ Γ Δ → CallCtx Ψ
 exec-blk {Γ} H (cs , ret) halt = cs , Γ , _ , halt
 exec-blk H cc (↝ x) = exec-control H cc x
 -- Просто инструкции не могут менять контекст исполнения, поэтому
@@ -232,7 +228,7 @@ exec-blk H cc (i ∙ b) = exec-blk H cc b
 -- Два блока считаются эквивалентными в одном контексте исполнения, если
 -- они в итоге приводят к одному и тому же блоку с одинаковым контекстом
 -- исполнения
-data BlockEq {Ψ : HeapTypes} (H : Heap Ψ) (CC : CallCtx Ψ)
+data BlockEq {Ψ : HeapTypes} (H : Heap Ψ Ψ) (CC : CallCtx Ψ)
     : {Γ₁ Γ₂ : RegFileTypes} → {d₁ : TDiff Γ₁} {d₂ : TDiff Γ₂}
     → Block Ψ Γ₁ d₁ → Block Ψ Γ₂ d₂ → Set
     where
@@ -287,10 +283,10 @@ plt-⊆ {x = x ✴} (Data-Any.here refl) = Data-Any.here refl
 plt-⊆ {blk Γ ∷ ψs} (there i) = there (there (there (plt-⊆ i)))
 plt-⊆ {ψ ✴ ∷ ψs} (there i) = there (plt-⊆ i)
 
-plt-heap : ∀ {Ψ} → Heap Ψ → Heap (plt-heaptypes Ψ)
+plt-heap : ∀ {Ψ} → Heap Ψ Ψ → Heap (plt-heaptypes Ψ) (plt-heaptypes Ψ)
 plt-heap [] = []
-plt-heap (vs , function f) = ((plt-heap vs , function (wk-blk plt-⊆ f)) , ptr (here refl)) , function (plt-stub (here refl))
-plt-heap (vs , ptr x) = plt-heap vs , ptr (plt-⊆ x)
+plt-heap (function f ∷ vs) = {!function (plt-stub (here refl))!} ∷ ((ptr (here refl)) ∷ ((function (wk-blk plt-⊆ f)) ∷ {!plt-heap vs!}))
+plt-heap (ptr x ∷ vs) = (ptr (plt-⊆ x)) ∷ {!plt-heap vs!}
 
 -- plt и got
 
@@ -316,7 +312,7 @@ plt-code (i ∙ b) = wk-instr plt-⊆ i ∙ plt-code b
 -- Сами доказательства
 
 jmp[]-proof : ∀ {Ψ Γ Δ} → {CC : CallCtx Ψ}
-           → {H : Heap Ψ}
+           → {H : Heap Ψ Ψ}
            → {A : Block Ψ Γ Δ}
            → (f : (blk Γ) ✴ ∈ Ψ)
            → loadblk H (deref H f) ≡ _ , _ , A
@@ -324,24 +320,24 @@ jmp[]-proof : ∀ {Ψ Γ Δ} → {CC : CallCtx Ψ}
 jmp[]-proof {Ψ} {CC = CC} {H = H} {A = A} f p = right p equal
 
 call-proof : ∀ {Ψ Γ} → (CC : CallCtx Ψ) → {A : NewBlk Ψ}
-           → {H : Heap Ψ}
+           → {H : Heap Ψ Ψ}
            → (f : (blk Γ) ∈ Ψ)
            → loadblk H f ≡ A
            → exec-blk H CC (↝ (call f)) ≡ ((projr CC ∷ projl CC) , A)
 call-proof CC f p rewrite p = refl
 
-loadplt : ∀ {Ψ Γ} → (H : Heap (plt-heaptypes Ψ)) → (f : blk Γ ∈ Ψ)
+loadplt : ∀ {Ψ Γ} → (H : Heap (plt-heaptypes Ψ) (plt-heaptypes Ψ)) → (f : blk Γ ∈ Ψ)
         → loadblk H (plt f) ≡ Γ , tdempty , ↝ jmp[ got f ]
 loadplt H f = {!!}
 
 jmp[]-plt-stub : ∀ {Ψ Γ} → (f : blk Γ ∈ Ψ) → plt-stub (got f) ≡ ↝ jmp[ got f ]
 jmp[]-plt-stub f = refl
 
-loadblk-Γ : ∀ {Ψ Γ} → (H : Heap Ψ) → (f : blk Γ ∈ Ψ) → projl (loadblk H f) ≡ Γ
+loadblk-Γ : ∀ {Ψ Γ} → (H : Heap Ψ Ψ) → (f : blk Γ ∈ Ψ) → projl (loadblk H f) ≡ Γ
 loadblk-Γ H f = {!!}
 
 plt-fun-eq : ∀ {Γ Ψ}
-           → (H : Heap (plt-heaptypes Ψ))
+           → (H : Heap (plt-heaptypes Ψ) (plt-heaptypes Ψ))
            → (cc : CallCtx (plt-heaptypes Ψ))
            → (f : blk Γ ∈ Ψ)
            → BlockEq H cc
@@ -351,7 +347,7 @@ plt-fun-eq H cc f with jmp[]-plt-stub f | loadblk-Γ H (plt-⊆ f)
 plt-fun-eq H cc f | refl | r = {!!}
 
 proof : ∀ {Γ Ψ}
-      → (H : Heap (plt-heaptypes Ψ))
+      → (H : Heap (plt-heaptypes Ψ) (plt-heaptypes Ψ))
       → (f : blk Γ ∈ Ψ)
       → (cc : CallCtx (plt-heaptypes Ψ)) -- для любого контекста исполнения
       → BlockEq H cc                     -- эквивалентны
