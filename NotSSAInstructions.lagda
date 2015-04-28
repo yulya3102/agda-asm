@@ -83,7 +83,37 @@ open TDiffs
   Блок задаёт, на какой контекст регистров Γ он рассчитывает, и какие
   новые регистры Δ добавляет к этому контексту.
 -}
-data Block (Ψ : HeapTypes) (Γ : RegFileTypes) : TDiff Ψ Γ → Set
+module Blocks
+  (ControlInstr : HeapTypes → RegFileTypes → Set)
+  (Instr : (Ψ : HeapTypes) → (Γ : RegFileTypes) → TDiff Ψ Γ → Set)
+  where
+  data Block (Ψ : HeapTypes) (Γ : RegFileTypes) : TDiff Ψ Γ → Set where
+    -- Блок, завершающий исполнение
+    halt : Block Ψ Γ tdempty
+    -- Блок, переходящий куда-либо в соответствии с результатом
+    -- исполнения управляющей инструкции
+    ↝    : ControlInstr Ψ Γ → Block Ψ Γ tdempty
+    -- Какая-нибудь инструкция внутри блока
+    _∙_  : ∀ {d' d} → Instr Ψ Γ d' → Block Ψ (tdapply Ψ Γ d') d → Block Ψ Γ (tdappend d' d)
+
+  -- Иногда из функции надо вернуть абсолютно любой блок,
+  -- с любыми параметрами типа (как Γ и Δ), как это нормально делается?
+  -- Или использовать Σ и есть правильный способ?
+  NewBlk : HeapTypes → Set
+  NewBlk Ψ = Σ RegFileTypes (λ Γ → Σ (TDiff Ψ Γ) (λ d → Block Ψ Γ d))
+
+  -- Какие-то определения про контекст исполнения
+  
+  -- call stack, по сути, есть всего лишь список адресов блоков возврата
+  -- Будем хранить не адреса, а сами блоки
+  CallStack : HeapTypes → Set
+  CallStack Ψ = List (NewBlk Ψ)
+
+  -- Контекст исполнения (кроме регистров) — call stack и instruction
+  -- pointer. На самом деле меня интересует не IP, а IP+1 (блок, который
+  -- будет исполняться следующим)
+  CallCtx : HeapTypes → Set
+  CallCtx Ψ = CallStack Ψ × NewBlk Ψ
 
 {-
   Управляющая инструкция не добавляет никаких новых регистров, поэтому,
@@ -97,9 +127,7 @@ data ControlInstr (Ψ : HeapTypes) (Γ : RegFileTypes) : Set
   -- она здесь просто потому что я могу
   jmp    : (f : blk Γ ∈ Ψ) → ControlInstr Ψ Γ
 
-data Value (Ψ : HeapTypes) : Type → Set where
-  function : {Γ : RegFileTypes} → {d : TDiff Ψ Γ} → Block Ψ Γ d → Value Ψ (blk Γ)
-  ptr      : ∀ {τ} → τ ∈ Ψ → Value Ψ (τ ✴)
+data Value (Ψ : HeapTypes) : Type → Set
 
 -- Возможно, имеет смысл сюда засунуть не TDiff, а TChg
 data Instr (Ψ : HeapTypes) (Γ : RegFileTypes) : TDiff Ψ Γ → Set where
@@ -110,20 +138,11 @@ data Instr (Ψ : HeapTypes) (Γ : RegFileTypes) : TDiff Ψ Γ → Set where
   -- И даже инструкции, которые не просто затирают старое значение, а апдейтят его
   ld   : ∀ {r τ} → (s : τ ✴ ∈ Γ) → (d : r ∈ Γ) → Instr Ψ Γ (tdchg (tchgur s d τ) tdempty)
 
-data Block (Ψ : HeapTypes) (Γ : RegFileTypes) where
-  -- Блок, завершающий исполнение
-  halt : Block Ψ Γ tdempty
-  -- Блок, переходящий куда-либо в соответствии с результатом
-  -- исполнения управляющей инструкции
-  ↝    : ControlInstr Ψ Γ → Block Ψ Γ tdempty
-  -- Какая-нибудь инструкция внутри блока
-  _∙_  : ∀ {d' d} → Instr Ψ Γ d' → Block Ψ (tdapply Ψ Γ d') d → Block Ψ Γ (tdappend d' d)
+open Blocks ControlInstr Instr
 
--- Иногда из функции надо вернуть абсолютно любой блок,
--- с любыми параметрами типа (как Γ и Δ), как это нормально делается?
--- Или использовать Σ и есть правильный способ?
-NewBlk : HeapTypes → Set
-NewBlk Ψ = Σ RegFileTypes (λ Γ → Σ (TDiff Ψ Γ) (λ d → Block Ψ Γ d))
+data Value (Ψ : HeapTypes) where
+  function : {Γ : RegFileTypes} → {d : TDiff Ψ Γ} → Block Ψ Γ d → Value Ψ (blk Γ)
+  ptr      : ∀ {τ} → τ ∈ Ψ → Value Ψ (τ ✴)
 
 RegFile : HeapTypes → Set
 RegFile Ψ = List (Σ Type (Value Ψ))
@@ -176,18 +195,6 @@ loadblk : ∀ {Γ Ψ} → Heap Ψ Ψ → blk Γ ∈ Ψ → NewBlk Ψ
 loadblk Ψ f with load Ψ f
 loadblk Ψ f | function x = _ , _ , x
 
--- Какие-то определения про контекст исполнения
-
--- call stack, по сути, есть всего лишь список адресов блоков возврата
--- Будем хранить не адреса, а сами блоки
-CallStack : HeapTypes → Set
-CallStack Ψ = List (NewBlk Ψ)
-
--- Контекст исполнения (кроме регистров) — call stack и instruction
--- pointer. На самом деле меня интересует не IP, а IP+1 (блок, который
--- будет исполняться следующим)
-CallCtx : HeapTypes → Set
-CallCtx Ψ = CallStack Ψ × NewBlk Ψ
 
 -- Набор определений, показывающих, как CallCtx меняется при исполнении
 
