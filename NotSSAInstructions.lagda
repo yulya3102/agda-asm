@@ -49,17 +49,17 @@ module TDiffs where
   appChg (a ∷ Γ) (tchgcr (there r) r') = a ∷ appChg Γ (tchgcr r r')
 
   -- Собственно, diff, являющийся списком атомарных изменений
-  data TDiff (Ψ : HeapTypes) (Γ : RegFileTypes) : Set where
-    tdempty  : TDiff Ψ Γ
-    tdchg    : (tchg : TChg Γ) → TDiff Ψ (appChg Γ tchg) → TDiff Ψ Γ
+  data TDiff (Γ : RegFileTypes) : Set where
+    tdempty  : TDiff Γ
+    tdchg    : (tchg : TChg Γ) → TDiff (appChg Γ tchg) → TDiff Γ
 
   -- Применение TDiff к RegFile
-  tdapply : (Ψ : HeapTypes) → (Γ : RegFileTypes) → TDiff Ψ Γ → RegFileTypes
-  tdapply Ψ Γ tdempty = Γ
-  tdapply Ψ Γ (tdchg tchg td) = tdapply Ψ (appChg Γ tchg) td
+  tdapply : (Γ : RegFileTypes) → TDiff Γ → RegFileTypes
+  tdapply Γ tdempty = Γ
+  tdapply Γ (tdchg tchg td) = tdapply (appChg Γ tchg) td
 
   -- Склеивание diff-ов
-  tdappend : ∀ {Ψ Γ} → (td : TDiff Ψ Γ) → TDiff Ψ (tdapply Ψ Γ td) → TDiff Ψ Γ
+  tdappend : ∀ {Γ} → (td : TDiff Γ) → TDiff (tdapply Γ td) → TDiff Γ
   tdappend tdempty b = b
   tdappend (tdchg tchg a) b = tdchg tchg (tdappend a b)
 open TDiffs
@@ -78,22 +78,22 @@ open TDiffs
 -}
 module Blocks
   (ControlInstr : HeapTypes → RegFileTypes → Set)
-  (Instr : (Ψ : HeapTypes) → (Γ : RegFileTypes) → TDiff Ψ Γ → Set)
+  (Instr : (Ψ : HeapTypes) → (Γ : RegFileTypes) → TDiff Γ → Set)
   where
-  data Block (Ψ : HeapTypes) (Γ : RegFileTypes) : TDiff Ψ Γ → Set where
+  data Block (Ψ : HeapTypes) (Γ : RegFileTypes) : TDiff Γ → Set where
     -- Блок, завершающий исполнение
     halt : Block Ψ Γ tdempty
     -- Блок, переходящий куда-либо в соответствии с результатом
     -- исполнения управляющей инструкции
     ↝    : ControlInstr Ψ Γ → Block Ψ Γ tdempty
     -- Какая-нибудь инструкция внутри блока
-    _∙_  : ∀ {d' d} → Instr Ψ Γ d' → Block Ψ (tdapply Ψ Γ d') d → Block Ψ Γ (tdappend d' d)
+    _∙_  : ∀ {d' d} → Instr Ψ Γ d' → Block Ψ (tdapply Γ d') d → Block Ψ Γ (tdappend d' d)
 
   -- Иногда из функции надо вернуть абсолютно любой блок,
   -- с любыми параметрами типа (как Γ и Δ), как это нормально делается?
   -- Или использовать Σ и есть правильный способ?
   NewBlk : HeapTypes → Set
-  NewBlk Ψ = Σ RegFileTypes (λ Γ → Σ (TDiff Ψ Γ) (λ d → Block Ψ Γ d))
+  NewBlk Ψ = Σ RegFileTypes (λ Γ → Σ (TDiff Γ) (λ d → Block Ψ Γ d))
 
   -- Какие-то определения про контекст исполнения
   
@@ -123,14 +123,14 @@ data ControlInstr (Ψ : HeapTypes) (Γ : RegFileTypes) : Set
 data Value (Ψ : HeapTypes) : Type → Set
 
 -- Возможно, имеет смысл сюда засунуть не TDiff, а TChg
-data Instr (Ψ : HeapTypes) (Γ : RegFileTypes) : TDiff Ψ Γ → Set where
+data Instr (Ψ : HeapTypes) (Γ : RegFileTypes) : TDiff Γ → Set where
   -- Я могу делать инструкции, _меняющие_ регистры, а не добавляющие новые!
   mov  : ∀ {r τ} → (r∈Γ : r ∈ Γ) → Value Ψ τ → Instr Ψ Γ (tdchg (tchgcr r∈Γ τ) tdempty)
 
 open Blocks ControlInstr Instr
 
 data Value (Ψ : HeapTypes) where
-  function : {Γ : RegFileTypes} → {d : TDiff Ψ Γ} → Block Ψ Γ d → Value Ψ (blk Γ)
+  function : {Γ : RegFileTypes} → {d : TDiff Γ} → Block Ψ Γ d → Value Ψ (blk Γ)
   ptr      : ∀ {τ} → τ ∈ Ψ → Value Ψ (τ ✴)
 
 RegFile : HeapTypes → Set
@@ -153,11 +153,11 @@ deref Ψ p = {!!}
 -- Куча почти одинаковых определений
 wk-value : ∀ {Ψ Ψ' τ} → Ψ ⊆ Ψ' → Value Ψ τ → Value Ψ' τ
 
-wk-tdiff : ∀ {Ψ Ψ' Γ} → TDiff Ψ Γ → Ψ ⊆ Ψ' → TDiff Ψ' Γ
+wk-tdiff : ∀ {Ψ Ψ' Γ} → TDiff Γ → Ψ ⊆ Ψ' → TDiff Γ
 wk-tdiff tdempty ss = tdempty
 wk-tdiff (tdchg tchg d) ss = tdchg tchg (wk-tdiff d ss)
 
-wk-instr : ∀ {Ψ Ψ' Γ} {d : TDiff Ψ Γ} → (ss : Ψ ⊆ Ψ') → Instr Ψ Γ d → Instr Ψ' Γ (wk-tdiff d ss)
+wk-instr : ∀ {Ψ Ψ' Γ} {d : TDiff Γ} → (ss : Ψ ⊆ Ψ') → Instr Ψ Γ d → Instr Ψ' Γ (wk-tdiff d ss)
 wk-instr ss (mov r v) = mov r (wk-value ss v)
 
 wk-cinstr : ∀ {Ψ Ψ' Γ} → Ψ ⊆ Ψ' → ControlInstr Ψ Γ → ControlInstr Ψ' Γ
@@ -197,7 +197,7 @@ exec-control H (cs , ret) (call f) = ret ∷ cs , loadblk H f
 exec-control H (cs , ret) jmp[ f ] = cs , loadblk H (deref H f)
 exec-control H (cs , ret) (jmp f)  = cs , loadblk H f
 
-exec-blk : ∀ {Γ Ψ} {Δ : TDiff Ψ Γ} → Heap Ψ Ψ → CallCtx Ψ → Block Ψ Γ Δ → CallCtx Ψ
+exec-blk : ∀ {Γ Ψ} {Δ : TDiff Γ} → Heap Ψ Ψ → CallCtx Ψ → Block Ψ Γ Δ → CallCtx Ψ
 exec-blk {Γ} H (cs , ret) halt = cs , Γ , _ , halt
 exec-blk H cc (↝ x) = exec-control H cc x
 -- Просто инструкции не могут менять контекст исполнения, поэтому
@@ -210,28 +210,28 @@ exec-blk H cc (i ∙ b) = exec-blk H cc b
 -- они в итоге приводят к одному и тому же блоку с одинаковым контекстом
 -- исполнения
 data BlockEq {Ψ : HeapTypes} (H : Heap Ψ Ψ) (CC : CallCtx Ψ)
-    : {Γ₁ Γ₂ : RegFileTypes} → {d₁ : TDiff Ψ Γ₁} {d₂ : TDiff Ψ Γ₂}
+    : {Γ₁ Γ₂ : RegFileTypes} → {d₁ : TDiff Γ₁} {d₂ : TDiff Γ₂}
     → Block Ψ Γ₁ d₁ → Block Ψ Γ₂ d₂ → Set
     where
   -- Равные блоки эквивалентны
   equal  : ∀ {Γ Δ} → {B : Block Ψ Γ Δ} → BlockEq H CC B B
   -- Левый блок исполняет инструкцию
   left   : ∀ {Γ₁ Γ₂ Γ₃}
-         → {d₁ : TDiff Ψ Γ₁} {d₂ : TDiff Ψ Γ₂} {d₃ : TDiff Ψ Γ₃}
+         → {d₁ : TDiff Γ₁} {d₂ : TDiff Γ₂} {d₃ : TDiff Γ₃}
          → {A : Block Ψ Γ₁ d₁} → {B : Block Ψ Γ₂ d₂} → {C : Block Ψ Γ₃ d₃}
          → projr (exec-blk H CC C) ≡ _ , _ , A
          → BlockEq H CC A B
          → BlockEq H CC C B
   -- Правый блок исполняет инструкцию
   right  : ∀ {Γ₁ Γ₂ Γ₃}
-         → {d₁ : TDiff Ψ Γ₁} {d₂ : TDiff Ψ Γ₂} {d₃ : TDiff Ψ Γ₃}
+         → {d₁ : TDiff Γ₁} {d₂ : TDiff Γ₂} {d₃ : TDiff Γ₃}
          → {A : Block Ψ Γ₁ d₁} → {B : Block Ψ Γ₂ d₂} → {C : Block Ψ Γ₃ d₃}
          → projr (exec-blk H CC C) ≡ _ , _ , B
          → BlockEq H CC A B
          → BlockEq H CC A C
   -- Оба блока исполняют какие-то инструкции, меняющие CallCtx
   ctxchg : ∀ {Γ₁ Γ₂ Γ₁' Γ₂'}
-         → {d₁ : TDiff Ψ Γ₁} {d₂ : TDiff Ψ Γ₂} {d₁' : TDiff Ψ Γ₁'} {d₂' : TDiff Ψ Γ₂'}
+         → {d₁ : TDiff Γ₁} {d₂ : TDiff Γ₂} {d₁' : TDiff Γ₁'} {d₂' : TDiff Γ₂'}
          → {CC' : CallCtx Ψ}
          → {A' : Block Ψ Γ₁' d₁'} {B' : Block Ψ Γ₂' d₂'}
          → BlockEq H CC' A' B'
