@@ -62,6 +62,29 @@ module TDiffs where
   tdappend : ∀ {Γ} → (td : TDiff Γ) → TDiff (tdapply Γ td) → TDiff Γ
   tdappend tdempty b = b
   tdappend (tdchg tchg a) b = tdchg tchg (tdappend a b)
+
+  record State : Set where
+    constructor state
+    field
+      heap : HeapTypes
+      regs : RegFileTypes
+  open State
+
+  record SDiff (S : State) : Set where
+    constructor diff
+    field
+      heapDiff : TDiff (heap S)
+      regsDiff : TDiff (regs S)
+  open SDiff
+
+  sdempty : ∀ {S} → SDiff S
+  sdempty = diff tdempty tdempty
+
+  sdapply : (S : State) → SDiff S → State
+  sdapply s d = state (tdapply (heap s) (heapDiff d)) (tdapply (regs s) (regsDiff d))
+
+  sdappend : ∀ {S} → (d : SDiff S) → SDiff (sdapply S d) → SDiff S
+  sdappend (diff h r) (diff h' r') = diff (tdappend h h') (tdappend r r')
 open TDiffs
 
 {-
