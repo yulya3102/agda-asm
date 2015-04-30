@@ -5,6 +5,15 @@ open import OXIj.BrutalDepTypes
 open Data-List
 open Data-Any
 
+{-
+Все интересуемые меня значения — указатели куда-либо. Поэтому все
+известные мне значения имеют один размер.
+
+Более того, я не умею в аллокацию памяти, ибо это не имеет отношения
+к ассемблеру. Я умею только менять значения в памяти по указателю, и
+это ок.
+-}
+
 data Type : Set
 
 RegFileTypes = List Type
@@ -31,29 +40,13 @@ open Membership {A = Type} _≡_
 module TDiffs where
   -- Некоторое атомарное изменение RegFile
   data TChg (Γ : RegFileTypes) : Set where
-    -- добавить новый регистр
-    tchgnr : Type → TChg Γ
     -- изменить значение в регистре r
     tchgcr : ∀ {r} → r ∈ Γ → (r' : Type) → TChg Γ
-    -- изменить значение в регистре r, используя значение в регистре s
-    tchgur : ∀ {s r} → s ∈ Γ → r ∈ Γ → (r' : Type) → TChg Γ
 
   -- Применить изменение к RegFile
   appChg : (Γ : RegFileTypes) → TChg Γ → RegFileTypes
-  appChg Γ (tchgnr x) = x ∷ Γ
   appChg (_ ∷ Γ) (tchgcr (here refl) r') = r' ∷ Γ
   appChg (a ∷ Γ) (tchgcr (there r) r') = a ∷ appChg Γ (tchgcr r r')
-  {-
-    Да, tchgur и tchgcr абсолютно одинаковы с точки зрения изменения
-    типов регистров. s ∈ Γ в конструкторе tchgcr нужен, чтобы явно
-    указать, что это состояние регистра s выкидывать нельзя. Это
-    потенциально полезно, если я таки запилю диффы и их, ээ, нормализацию
-
-    Зачем тогда здесь паттернматчиться и копипастить предыдущие
-    две строки? Затем, что иначе терминейшн-чекер фейлится :\
-  -}
-  appChg (_ ∷ Γ) (tchgur s (here refl) r') = r' ∷ Γ
-  appChg (a ∷ Γ) (tchgur s (there r) r') = a ∷ appChg Γ (tchgcr r r')
 
   -- Собственно, diff, являющийся списком атомарных изменений
   data TDiff (Ψ : HeapTypes) (Γ : RegFileTypes) : Set where
@@ -131,12 +124,8 @@ data Value (Ψ : HeapTypes) : Type → Set
 
 -- Возможно, имеет смысл сюда засунуть не TDiff, а TChg
 data Instr (Ψ : HeapTypes) (Γ : RegFileTypes) : TDiff Ψ Γ → Set where
-  -- Просто пример того, как может выглядеть инструкция
-  new  : ∀ {τ} → Value Ψ τ → Instr Ψ Γ (tdchg (tchgnr τ) tdempty)
   -- Я могу делать инструкции, _меняющие_ регистры, а не добавляющие новые!
   mov  : ∀ {r τ} → (r∈Γ : r ∈ Γ) → Value Ψ τ → Instr Ψ Γ (tdchg (tchgcr r∈Γ τ) tdempty)
-  -- И даже инструкции, которые не просто затирают старое значение, а апдейтят его
-  ld   : ∀ {r τ} → (s : τ ✴ ∈ Γ) → (d : r ∈ Γ) → Instr Ψ Γ (tdchg (tchgur s d τ) tdempty)
 
 open Blocks ControlInstr Instr
 
@@ -169,9 +158,7 @@ wk-tdiff tdempty ss = tdempty
 wk-tdiff (tdchg tchg d) ss = tdchg tchg (wk-tdiff d ss)
 
 wk-instr : ∀ {Ψ Ψ' Γ} {d : TDiff Ψ Γ} → (ss : Ψ ⊆ Ψ') → Instr Ψ Γ d → Instr Ψ' Γ (wk-tdiff d ss)
-wk-instr ss (new x) = new (wk-value ss x)
 wk-instr ss (mov r v) = mov r (wk-value ss v)
-wk-instr ss (ld s d) = ld s d
 
 wk-cinstr : ∀ {Ψ Ψ' Γ} → Ψ ⊆ Ψ' → ControlInstr Ψ Γ → ControlInstr Ψ' Γ
 wk-cinstr ss (call f) = call (ss f)
