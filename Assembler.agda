@@ -44,33 +44,28 @@ module Meta where
     dappend dempty d' = d'
     dappend (dchg c d) d' = dchg c (dappend d d')
 
-    record SDiff (S : State) : Set where
-      constructor sdiff
-      field
-        heapDiff : Diff (heap S)
-        regsDiff : Diff (regs S)
+    lemma' : ∀ {Γ} d d' → dapply Γ (dappend d d') ≡ dapply (dapply Γ d) d'
+    lemma' dempty d' = refl
+    lemma' (dchg c d) dempty = {!!}
+    lemma' (dchg c d) (dchg c₁ d') = {!!}
 
-    sdempty : ∀ {S} → SDiff S
-    sdempty = sdiff dempty dempty
+    sdapply : (S : State) → Diff (regs S) → State
+    sdapply (state h r) d = state h (dapply r d)
 
-    sdapply : (S : State) → SDiff S → State
-    sdapply (state h r) (sdiff hd rd) = state (dapply h hd) (dapply r rd)
-
-    sdappend : ∀ {S} → (d : SDiff S) → SDiff (sdapply S d) → SDiff S
-    sdappend (sdiff hd rd) (sdiff hd' rd') = sdiff (dappend hd hd') (dappend rd rd')
+    SDiff = λ S → Diff (regs S)
   open Diffs
 
   module Blocks
     (ControlInstr : State → Set)
-    (Instr : (S : State) → SDiff S → Set)
+    (Instr : (S : State) → Diff (regs S) → Set)
     where
-    data Block {S : State} : SDiff S → Set where
-      halt : Block sdempty
-      bjmp : ControlInstr S → Block sdempty
-      bnxt : ∀ {d d'} → Instr S d → Block d' → Block (sdappend d d')
+    data Block (S : State) : Diff (regs S) → Set where
+      halt : Block S dempty
+      bjmp : ControlInstr S → Block S dempty
+      bnxt : ∀ {d d'} → Instr S d → Block (sdapply S d) d' → Block S (dappend d d')
 
     NewBlock : HeapTypes → Set
-    NewBlock Ψ = Σ RegFileTypes $ λ Γ → Σ (SDiff (state Ψ Γ)) (λ d → Block d)
+    NewBlock Ψ = Σ RegFileTypes $ λ Γ → Σ (Diff Γ) (Block (state Ψ Γ))
 
   module Exec-Context (Ψ : HeapTypes) where
     IPRFT = λ Γ → blk Γ ✴ ∈ Ψ
@@ -80,11 +75,11 @@ module Meta where
   open Exec-Context
 
   module Values
-    (Block : {S : State} → SDiff S → Set)
+    (Block : (S : State) → Diff (regs S) → Set)
     where
     data Value (Ψ : HeapTypes) : Type → Set where
       ptr : ∀ {τ} → τ ∈ Ψ → Value Ψ (τ ✴)
-      fun : ∀ {Γ} → {d : SDiff (state Ψ Γ)} → Block d → Value Ψ (blk Γ) 
+      fun : ∀ {Γ} → {d : Diff Γ} → Block (state Ψ Γ) d → Value Ψ (blk Γ) 
   
     data IHeap (Ψ : HeapTypes) : HeapTypes → Set where
       []  : IHeap Ψ []
@@ -115,73 +110,73 @@ module Meta where
     unptr : ∀ {Ψ τ} → Value Ψ (τ ✴) → τ ∈ Ψ
     unptr (ptr x) = x
 
-    unfun : ∀ {Ψ Γ} → Value Ψ (blk Γ) → Σ (SDiff (state Ψ Γ)) Block
+    unfun : ∀ {Ψ Γ} → Value Ψ (blk Γ) → Σ (Diff Γ) (Block (state Ψ Γ))
     unfun (fun x) = _ , x
-  open Values
 
   module Eq
-    (Block : {S : State} → SDiff S → Set)
-    (exec-blk : {S : State} {d : SDiff S} → Block d
-              → Heap Block (heap S) → Registers Block S → CallStack (heap S)
-              → (Σ (SDiff $ sdapply S d) Block)
-              × (Heap Block (heap $ sdapply S d)
-              × (Registers Block (sdapply S d)
+    (Block : (S : State) → Diff (regs S) → Set)
+    (exec-blk : {S : State} {d : Diff (regs S)} → Block S d
+              → Values.Heap Block (heap S) → Values.Registers Block S → CallStack (heap S)
+              → (Σ (Diff $ dapply (regs S) d) (Block $ sdapply S d))
+              × (Values.Heap Block (heap $ sdapply S d)
+              × (Values.Registers Block (sdapply S d)
               × CallStack (heap $ sdapply S d))))
     where
+    open Values Block
     module InState (S : State) where
-      SHeap = Heap Block (heap S)
+      SHeap = Heap (heap S)
       SCallStack = CallStack (heap S)
     open InState
 
     data BlockEq :
       {S₁ S₂ : State} → {d₁ : SDiff S₁} {d₂ : SDiff S₂} →
       (Ψ₁ : SHeap S₁) (Ψ₂ : SHeap S₂) →
-      (Γ₁ : Registers Block S₁) (Γ₂ : Registers Block S₂) →
+      (Γ₁ : Registers S₁) (Γ₂ : Registers S₂) →
       (CC₁ : SCallStack S₁) (CC₂ : SCallStack S₂) →
-      Block d₁ → Block d₂ → Set
+      Block S₁ d₁ → Block S₂ d₂ → Set
       where
       equal : ∀ {S} {d : SDiff S}
-            → {Ψ : SHeap S} {CC : SCallStack S} {B : Block d} {Γ : Registers Block S}
+            → {Ψ : SHeap S} {CC : SCallStack S} {B : Block S d} {Γ : Registers S}
             → BlockEq Ψ Ψ Γ Γ CC CC B B
       left  : ∀ {S₁ S} {d₁ : SDiff S₁} {d₂ : SDiff (sdapply S₁ d₁)} {d : SDiff S}
-            → (A₁ : Block d₁) (A₂ : Block d₂) (B : Block d)
+            → (A₁ : Block S₁ d₁) (A₂ : Block (sdapply S₁ d₁) d₂) (B : Block S d)
             → (Ψ₁ : SHeap S₁) (Ψ₂ : SHeap (sdapply S₁ d₁)) (Ψ : SHeap S)
-            → (Γ₁ : Registers Block S₁) (Γ₂ : Registers Block (sdapply S₁ d₁)) (Γ : Registers Block S)
+            → (Γ₁ : Registers S₁) (Γ₂ : Registers (sdapply S₁ d₁)) (Γ : Registers S)
             → (CC₁ : SCallStack S₁) (CC₂ : SCallStack (sdapply S₁ d₁)) (CC : SCallStack S)
             → exec-blk A₁ Ψ₁ Γ₁ CC₁ ≡ (_ , A₂) , Ψ₂ , Γ₂ , CC₂
             → BlockEq Ψ₁ Ψ Γ₁ Γ CC₁ CC A₁ B
             → BlockEq Ψ₂ Ψ Γ₂ Γ CC₂ CC A₂ B
       right : ∀ {S₁ S} {d₁ : SDiff S₁} {d₂ : SDiff (sdapply S₁ d₁)} {d : SDiff S}
-            → (A₁ : Block d₁) (A₂ : Block d₂) (B : Block d)
+            → (A₁ : Block S₁ d₁) (A₂ : Block (sdapply S₁ d₁) d₂) (B : Block S d)
             → (Ψ₁ : SHeap S₁) (Ψ₂ : SHeap (sdapply S₁ d₁)) (Ψ : SHeap S)
-            → (Γ₁ : Registers Block S₁) (Γ₂ : Registers Block (sdapply S₁ d₁)) (Γ : Registers Block S)
+            → (Γ₁ : Registers S₁) (Γ₂ : Registers (sdapply S₁ d₁)) (Γ : Registers S)
             → (CC₁ : SCallStack S₁) (CC₂ : SCallStack (sdapply S₁ d₁)) (CC : SCallStack S)
             → exec-blk A₁ Ψ₁ Γ₁ CC₁ ≡ (_ , A₂) , Ψ₂ , Γ₂ , CC₂
             → BlockEq Ψ Ψ₁ Γ Γ₁ CC CC₁ B A₁
             → BlockEq Ψ Ψ₂ Γ Γ₂ CC CC₂ B A₂
-  open Eq
 
   module Exec
     (ControlInstr : State → Set)
     (Instr : (S : State) → SDiff S → Set)
     (exec-instr : {S : State}
                 → {d : SDiff S} → Instr S d
-                → Heap (Blocks.Block ControlInstr Instr) (heap S)
-                → Registers (Blocks.Block ControlInstr Instr) S
-                → Heap (Blocks.Block ControlInstr Instr) (heap $ sdapply S d)
-                × Registers (Blocks.Block ControlInstr Instr) (sdapply S d))
+                → Values.Heap (Blocks.Block ControlInstr Instr) (heap S)
+                → Values.Registers (Blocks.Block ControlInstr Instr) S
+                → Values.Heap (Blocks.Block ControlInstr Instr) (heap $ sdapply S d)
+                × Values.Registers (Blocks.Block ControlInstr Instr) (sdapply S d))
     (exec-control : {S : State}
                   → ControlInstr S
                   → CallStack (heap S)
                   → CallStack (heap S) × IPRFT (heap S) (regs S))
     where
     open Blocks ControlInstr Instr public
+    open Values Block public
 
-    exec-blk : {S : State} {d : SDiff S} → Block d
-             → Heap Block (heap S) → Registers Block S → CallStack (heap S)
-             → (Σ (SDiff $ sdapply S d) Block)
-             × (Heap Block (heap $ sdapply S d)
-             × (Registers Block (sdapply S d)
+    exec-blk : {S : State} {d : Diff (regs S)} → Block S d
+             → Heap (heap S) → Registers S → CallStack (heap S)
+             → (Σ (Diff $ dapply (regs S) d) (Block $ sdapply S d))
+             × (Heap (heap $ sdapply S d)
+             × (Registers (sdapply S d)
              × CallStack (heap $ sdapply S d)))
     exec-blk Blocks.halt Ψ Γ cs = (_ , halt) , (Ψ , Γ , cs)
     exec-blk {S} (Blocks.bjmp i) Ψ Γ cs = next-block , Ψ , Γ , next-cs
@@ -192,19 +187,12 @@ module Meta where
       next-cs = projl next-state
       next-ip : blk (regs S) ✴ ∈ (heap S)
       next-ip = projr next-state
-      next-block : Σ (SDiff (state (heap S) (regs S))) Block
-      next-block = unfun Block $ load Block (unptr Block (load Block next-ip Ψ)) Ψ
-    exec-blk {S} (Blocks.bnxt {d} {d'} i b) Ψ Γ cs = {!exec-blk b!}
+      next-block = unfun $ load (unptr (load next-ip Ψ)) Ψ
+    exec-blk {S} (Blocks.bnxt {d} {d'} i b) Ψ Γ cs rewrite lemma' d d' = exec-blk b next-heap next-regs cs
       where
-      next-state : Heap Block (heap $ sdapply S d) × Registers Block (sdapply S d)
+      next-state : Heap (heap $ sdapply S d) × Registers (sdapply S d)
       next-state = exec-instr i Ψ Γ
-      res : Σ (SDiff $ sdapply (sdapply S d) d') Block
-            × (Heap Block (heap $ sdapply (sdapply S d) d')
-            × (Registers Block (sdapply (sdapply S d) d')
-            × CallStack (heap $ sdapply (sdapply S d) d')))
-      res = exec-blk b (projl next-state) (projr next-state) {!cs!}
-
+      next-heap = projl next-state
+      next-regs = projr next-state
 
     open Eq Block exec-blk public
-  open Exec
-open Meta
