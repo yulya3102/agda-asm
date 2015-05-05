@@ -44,10 +44,14 @@ module Meta where
     dappend dempty d' = d'
     dappend (dchg c d) d' = dchg c (dappend d d')
 
+    dappend-dempty-lemma : ∀ {Γ} → (d : Diff Γ) → dappend d dempty ≡ d
+    dappend-dempty-lemma dempty = refl
+    dappend-dempty-lemma (dchg c d) rewrite dappend-dempty-lemma d = refl
+    
     lemma' : ∀ {Γ} d d' → dapply Γ (dappend d d') ≡ dapply (dapply Γ d) d'
     lemma' dempty d' = refl
-    lemma' (dchg c d) dempty = {!!}
-    lemma' (dchg c d) (dchg c₁ d') = {!!}
+    lemma' (dchg c d) dempty rewrite dappend-dempty-lemma d = refl
+    lemma' (dchg c d) d' = {!!}
 
     sdapply : (S : State) → Diff (regs S) → State
     sdapply (state h r) d = state h (dapply r d)
@@ -96,6 +100,9 @@ module Meta where
 
     Heap : HeapTypes → Set
     Heap Ψ = IHeap Ψ Ψ
+
+    _++H_ : ∀ {A B} → Heap A → Heap B → Heap (A ++ B)
+    as ++H bs = {!!}
 
     data IRegisters (Ψ : HeapTypes) : RegFileTypes → Set where
       []  : IRegisters Ψ []
@@ -222,9 +229,12 @@ open Meta
 module x86-64 where
   data ControlInstr (S : State) : Set where
     jmp call : blk (regs S) ∈ heap S → ControlInstr S
-    jmp[]    : blk (regs S) ✴ ∈ heap S → ControlInstr S
+    jmp[_]   : blk (regs S) ✴ ∈ heap S → ControlInstr S
+    -- :(
+    -- ret      : ? → ControlInstr S
 
   data Instr (S : State) : SDiff S → Set where
+    mov_,_ : ∀ {τ σ} → (r : σ ∈ regs S) → Values.Value (Blocks.Block ControlInstr Instr) (heap S) τ → Instr S (dchg (chg r τ) dempty)
 
   exec-instr : {S : State}
              → {d : SDiff S} → Instr S d
@@ -243,6 +253,55 @@ module x86-64 where
 
   exec-control {state heap regs} (jmp x) Ψ cs ip = cs , x
   exec-control {state heap regs} (call x) Ψ cs ip = ip ∷ cs , x
-  exec-control {state heap regs} (jmp[] x) Ψ cs ip = cs , (Values.unptr (Blocks.Block ControlInstr Instr) $ Values.load (Blocks.Block ControlInstr Instr) x Ψ)
+  exec-control {state heap regs} (jmp[ x ]) Ψ cs ip = cs , (Values.unptr (Blocks.Block ControlInstr Instr) $ Values.load (Blocks.Block ControlInstr Instr) x Ψ)
 
   open Exec ControlInstr Instr exec-instr exec-control
+
+  module Binary where
+    record Binary : Set where
+      constructor bin
+      field
+        Ψ         : HeapTypes
+        memory    : Heap Ψ
+
+    EntryPoint : HeapTypes → Set
+    EntryPoint Ψ = Σ RegFileTypes $ λ Γ → (Registers (state Ψ Γ) × (blk Γ ∈ Ψ))
+
+    record Program : Set where
+      constructor exec
+      field
+        binary    : Binary
+        start     : EntryPoint (Binary.Ψ binary)
+
+    static : Binary → Binary → Binary
+    static a b = bin (Binary.Ψ a ++ Binary.Ψ b) (Binary.memory a ++H Binary.memory b)
+
+    infixr 7 _∷,_ _∷
+    infixr 5 _∙ _∙~_
+
+    _∷,_ : ∀ {S d d'} → Instr S d → Block (sdapply S d) d' → Block S (dappend d d')
+    _∷,_ = bnxt
+
+    _∷ : ∀ {S} → ControlInstr S → Block S dempty
+    _∷ = bjmp
+
+    data Code (S : State) : Set where
+      _∙  : ∀ {d} → Block S d → Code S
+      _∙~_ : ∀ {d} → Block S d → Code (sdapply S d) → Code S
+
+    plt-stub : ∀ {S τ} → (rax : τ ∈ regs S) → (linker : blk {!!} ∈ heap S) → (got : ((blk $ regs S) ✴) ∈ heap S) → (id : Value (heap S) {!!}) → Code S
+    plt-stub rax linker got id =
+        jmp[ got ] ∷ ∙~
+
+        mov rax , id ∷,
+        call linker ∷ ∙~
+        
+        {!jmp[ got ] ∷ ∙!}
+
+    {-
+    * add got entry for every block
+    * add plt stub for every block
+    -}
+
+    dynamic : Binary → Binary → Binary × Binary
+    dynamic a b = {!!}
