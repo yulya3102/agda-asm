@@ -1,3 +1,4 @@
+\begin{code}
 module Instructions where
 
 open import OXIj.BrutalDepTypes
@@ -304,3 +305,4 @@ proof {Γ = Γ} {Ψ = Ψ} H f ctx = ctxchg after-call just-call plt-call
                  called-block
                  (↝ jmp[ got f ])
     after-call = plt-fun-eq H (projr ctx ∷ projl ctx , newblock-f) f
+\end{code}
