@@ -249,21 +249,47 @@ data Heap : HeapTypes → Set where
 \begin{code}
   []  : Heap []
   _,_ : ∀ {τ Ψ} → (H : Heap Ψ) → Value Ψ τ → Heap (τ ∷ Ψ)
+\end{code}
 
--- Разыменование указателя
+Для работы с памятью необходимы, как минимум:
+
+\begin{itemize}
+
+    \item
+        разыменование указателя, то есть получение значения по указателю
+        на него;
+
+    \item
+        загрузка значения из памяти по адресу.
+
+\end{itemize}
+
+Так же необходимо доказать, что добавление чего-либо к списку значений,
+расположенных в памяти, не нарушает корректности имеющихся значений. Это
+понадобится в будущем, когда \textbf{TODO:
+"я запилю plt-шные stub-ы и добавлю got"
+}
+
+Разыменование указателя:
+
+\begin{code}
 deref : ∀ {l Ψ} → Heap Ψ → l ✴ ∈ Ψ → l ∈ Ψ
 deref [] ()
 deref (vs , function x) (here ())
 deref (vs , ptr p)      (here refl) = there p
 deref (vs , x)          (there p)   = there (deref vs p)
+\end{code}
 
--- Куча почти одинаковых определений
+Леммы, доказывающие, что \textbf{TODO: "увеличение хипа"} не нарушает
+корректности имеющихся значений:
+\begin{code}
 wk-value : ∀ {Ψ Ψ' τ} → Ψ ⊆ Ψ' → Value Ψ τ → Value Ψ' τ
 
 wk-instr : ∀ {Ψ Ψ' Γ Δ} → Ψ ⊆ Ψ' → Instr Ψ Γ Δ → Instr Ψ' Γ Δ
 wk-instr ss (mov x) = mov (wk-value ss x)
 
-wk-cinstr : ∀ {Ψ Ψ' Γ} → Ψ ⊆ Ψ' → ControlInstr Ψ Γ → ControlInstr Ψ' Γ
+wk-cinstr : ∀ {Ψ Ψ' Γ} → Ψ ⊆ Ψ' → ControlInstr Ψ Γ
+          → ControlInstr Ψ' Γ
 wk-cinstr ss (call f) = call (ss f)
 wk-cinstr ss jmp[ f ] = jmp[ ss f ]
 wk-cinstr ss (jmp f) = jmp (ss f)
@@ -275,8 +301,11 @@ wk-blk ss (x ∙ b) = wk-instr ss x ∙ wk-blk ss b
 
 wk-value ss (function x) = function (wk-blk ss x)
 wk-value ss (ptr x)      = ptr (ss x)
+\end{code}
 
--- Получение значения из heap по "адресу"
+Загрузка значения из памяти по адресу:
+
+\begin{code}
 load : ∀ {l Ψ} → Heap Ψ → l ∈ Ψ → Value Ψ l
 load (vs , x) (here refl) = wk-value there x
 load (vs , x) (there p)   = wk-value there (load vs p)
@@ -284,64 +313,121 @@ load (vs , x) (there p)   = wk-value there (load vs p)
 loadblk : ∀ {Γ Ψ} → Heap Ψ → blk Γ ∈ Ψ → NewBlk Ψ
 loadblk Ψ f with load Ψ f
 loadblk Ψ f | function x = _ , _ , x
+\end{code}
 
--- Какие-то определения про контекст исполнения
+Далее определим, что происходит непосредственно во время исполнения кода.
 
--- call stack, по сути, есть всего лишь список адресов блоков возврата
--- Будем хранить не адреса, а сами блоки
+Стек вызовов можно представить как список адресов блоков в памяти. Для
+простоты определим его как список блоков, а не их адресов.
+
+\begin{code}
 CallStack : HeapTypes → Set
 CallStack Ψ = List (NewBlk Ψ)
+\end{code}
 
--- Контекст исполнения (кроме регистров) — call stack и instruction
--- pointer. На самом деле меня интересует не IP, а IP+1 (блок, который
--- будет исполняться следующим)
+Контекстом исполнения назовем пару из стека вызовов и указателя на
+блок, который должен исполняться вслед за текущим. Это важно, потому что
+результат исполнения некоторых инструкций зависит от того, какой блок
+расположен вслед за текущим. Например, такой инструкцией является вызов
+функции, при котором на стеке вызовов оказывается адрес возврата.
+
+\begin{code}
 CallCtx : HeapTypes → Set
 CallCtx Ψ = CallStack Ψ × NewBlk Ψ
+\end{code}
 
--- Набор определений, показывающих, как CallCtx меняется при исполнении
+Теперь можно описать, что именно делают определенные выше инструкции.
 
--- На самом деле это тоже часть определения ControlInstr, ибо определяет
--- семантику каждой конкретной инструкции, но если засунуть что-нибудь
--- похожее в определение типа или конструкторы, сломается strict positivity
--- :(
--- Ограничение на стек хорошо бы засунуть в определение типа, потому что
--- без него инструкция `ret` может быть поставлена в неправильное место.
--- Правда, я не понимаю, действительно ли мне надо об этом задумываться
-exec-control : ∀ {Γ Ψ} → Heap Ψ → CallCtx Ψ → ControlInstr Ψ Γ → CallCtx Ψ
+\begin{code}
+exec-control : ∀ {Γ Ψ} → Heap Ψ → CallCtx Ψ → ControlInstr Ψ Γ
+             → CallCtx Ψ
+\end{code}
+
+Вызов функции добавляет адрес возврата на стек и следующим исполняемым
+блоком делает загруженную из памяти функцию:
+
+\begin{code}
 exec-control H (cs , ret) (call f) = ret ∷ cs , loadblk H f
-exec-control H (cs , ret) jmp[ f ] = cs , loadblk H (deref H f)
-exec-control H (cs , ret) (jmp f)  = cs , loadblk H f
+\end{code}
 
-exec-blk : ∀ {Γ Δ Ψ} → Heap Ψ → CallCtx Ψ → Block Ψ Γ Δ → CallCtx Ψ
+Indirect jump не меняет стек и передает управление на блок, загруженный
+из памяти по разыменованному указателю:
+
+\begin{code}
+exec-control H (cs , ret) jmp[ f ] = cs , loadblk H (deref H f)
+\end{code}
+
+Jump не меняет стек и передает управление так же, как это делает вызов
+функции:
+
+\begin{code}
+exec-control H (cs , ret) (jmp f)  = cs , loadblk H f
+\end{code}
+
+Так как я рассматриваю только переходы между блоками, я нигде не учитываю,
+какие именно значения находятся в регистрах. Более того, я не учитываю, 
+как \textbf{TODO: "не-управляющие"} инструкции влияют на контекст.
+
+\begin{code}
+exec-blk : ∀ {Γ Δ Ψ} → Heap Ψ → CallCtx Ψ → Block Ψ Γ Δ
+         → CallCtx Ψ
 exec-blk {Γ} H (cs , ret) halt = cs , Γ , _ , halt
 exec-blk H cc (↝ x) = exec-control H cc x
--- Просто инструкции не могут менять контекст исполнения, поэтому
--- они игнорируются
 exec-blk H cc (i ∙ b) = exec-blk H cc b
+\end{code}
 
+Используя описанные выше определения, можно ввести понятие эквивалентности
+блоков кода: два блока считаются эквивалентными в одном контексте
+исполнения, если они в итоге приводят к одному и тому же блоку с одинаковым
+контекстом исполнения.
 
-
--- Два блока считаются эквивалентными в одном контексте исполнения, если
--- они в итоге приводят к одному и тому же блоку с одинаковым контекстом
--- исполнения
+\begin{code}
 data BlockEq {Ψ : HeapTypes} (H : Heap Ψ) (CC : CallCtx Ψ)
-    : {Γ₁ Γ₂ Δ₁ Δ₂ : RegFileTypes} → Block Ψ Γ₁ Δ₁ → Block Ψ Γ₂ Δ₂ → Set
+    : {Γ₁ Γ₂ Δ₁ Δ₂ : RegFileTypes}
+    → Block Ψ Γ₁ Δ₁ → Block Ψ Γ₂ Δ₂ → Set
     where
-  -- Равные блоки эквивалентны
+\end{code}
+
+Два блока эквивалентны, если:
+
+\begin{itemize}
+
+    \item
+        они одинаковы;
+
+\begin{code}
   equal  : ∀ {Γ Δ} → {B : Block Ψ Γ Δ} → BlockEq H CC B B
-  -- Левый блок исполняет инструкцию
+\end{code}
+
+    \item
+        исполнение первого из них приводит к блоку, эквивалентному второму;
+
+\begin{code}
   left   : ∀ {Δ₁ Δ₂ Δ₃ Γ₁ Γ₂ Γ₃}
-         → {A : Block Ψ Γ₁ Δ₁} → {B : Block Ψ Γ₂ Δ₂} → {C : Block Ψ Γ₃ Δ₃}
+         → {A : Block Ψ Γ₁ Δ₁} → {B : Block Ψ Γ₂ Δ₂}
+         → {C : Block Ψ Γ₃ Δ₃}
          → projr (exec-blk H CC C) ≡ _ , _ , A
          → BlockEq H CC A B
          → BlockEq H CC C B
-  -- Правый блок исполняет инструкцию
+\end{code}
+
+    \item
+        исполнение второго из них приводит к блоку, эквивалентному первому;
+
+\begin{code}
   right  : ∀ {Δ₁ Δ₂ Δ₃ Γ₁ Γ₂ Γ₃}
-         → {A : Block Ψ Γ₁ Δ₁} → {B : Block Ψ Γ₂ Δ₂} → {C : Block Ψ Γ₃ Δ₃}
+         → {A : Block Ψ Γ₁ Δ₁} → {B : Block Ψ Γ₂ Δ₂}
+         → {C : Block Ψ Γ₃ Δ₃}
          → projr (exec-blk H CC C) ≡ _ , _ , B
          → BlockEq H CC A B
          → BlockEq H CC A C
-  -- Оба блока исполняют какие-то инструкции, меняющие CallCtx
+\end{code}
+
+    \item
+        исполнение обоих блоков меняет контекст исполнения и приводит к
+        эквивалентным блокам.
+
+\begin{code}
   ctxchg : ∀ {Δ₁ Δ₂ Δ₁' Δ₂' Γ₁ Γ₂ Γ₁' Γ₂'}
          → {CC' : CallCtx Ψ}
          → {A' : Block Ψ Γ₁' Δ₁'} {B' : Block Ψ Γ₂' Δ₂'}
@@ -351,37 +437,125 @@ data BlockEq {Ψ : HeapTypes} (H : Heap Ψ) (CC : CallCtx Ψ)
          → {B : Block Ψ Γ₂ Δ₂} 
          → exec-blk H CC B ≡ projl CC' , _ , _ , B'
          → BlockEq H CC A B
+\end{code}
 
--- Динамическая линковка
+\end{itemize}
 
--- plt состоит всего из одной инструкции, потому что я рассчитываю на то,
--- что весь нужный код уже загружен в память, и got заполнен
+Теперь можно описывать компоновку. В случае простой динамической компоновки
+все используемые функции уже загружены в память и GOT корректно заполнен,
+поэтому PLT состоит всего из одной инструкции.
+
+\begin{code}
 plt-stub : ∀ {Γ Ψ} → (blk Γ) ✴ ∈ Ψ → Block Ψ Γ []
 plt-stub label = ↝ (jmp[ label ])
+\end{code}
 
--- Преобразования heap
+По сравнению со статической компоновкой при динамической компоновке в память
+добавляются дополнительные значения. Сначала опишем их типы.
 
+\begin{code}
 plt-heaptypes : HeapTypes → HeapTypes
--- На каждый блок в heap добавляются соответствующие got и plt (который,
--- очевидно, имеет тот же тип, что и сам блок)
-plt-heaptypes (blk Γ ∷ Ψ) = blk Γ ∷ blk Γ ✴ ∷ blk Γ ∷ (plt-heaptypes Ψ)
--- Всё остальное остаётся неизменным
+\end{code}
+
+На каждый блок кода компоновщиком генерируются:
+
+\begin{code}
+plt-heaptypes (blk Γ ∷ Ψ)
+\end{code}
+
+\begin{itemize}
+
+    \item
+        блок PLT, тип которого совпадает с типом блока, на который происходит
+        переход;
+
+\begin{code}
+    = blk Γ
+\end{code}
+
+    \item
+        элемент GOT, тип которого — указатель на блок, на который происходит
+        переход.
+
+\begin{code}
+    ∷ blk Γ ✴
+\end{code}
+
+\end{itemize}
+
+При этом сам блок кода остается на месте.
+
+\begin{code}
+    ∷ blk Γ ∷ (plt-heaptypes Ψ)
+\end{code}
+
+Все остальное при этом остается неизменным.
+
+\begin{code}
 plt-heaptypes (x ∷ Ψ) = x ∷ (plt-heaptypes Ψ)
 plt-heaptypes [] = []
+\end{code}
 
+При этом все, что загружалось в память при статической компоновке, будет
+загружено и при динамической компоновке.
+
+\begin{code}
 plt-⊆ : ∀ {Ψ} → Ψ ⊆ plt-heaptypes Ψ
-plt-⊆ {x = blk Γ} (Data-Any.here refl) = Data-Any.there $ Data-Any.there (Data-Any.here refl)
+plt-⊆ {x = blk Γ} (Data-Any.here refl)
+    = Data-Any.there $ Data-Any.there (Data-Any.here refl)
 plt-⊆ {x = x ✴} (Data-Any.here refl) = Data-Any.here refl
 plt-⊆ {blk Γ ∷ ψs} (there i) = there (there (there (plt-⊆ i)))
 plt-⊆ {ψ ✴ ∷ ψs} (there i) = there (plt-⊆ i)
+\end{code}
 
+Опишем, какие значения определенных выше типов появляются в памяти.
+
+\begin{code}
 plt-heap : ∀ {Ψ} → Heap Ψ → Heap (plt-heaptypes Ψ)
 plt-heap [] = []
-plt-heap (vs , function f) = ((plt-heap vs , function (wk-blk plt-⊆ f)) , ptr (here refl)) , function (plt-stub (here refl))
+\end{code}
+
+На каждый блок кода из исходного набора значений, находящихся в памяти, 
+генерируется:
+
+\begin{code}
+plt-heap (vs , function f) = ((plt-heap vs
+\end{code}
+
+\begin{itemize}
+
+    \item
+        сам блок кода;
+
+\begin{code}
+    , function (wk-blk plt-⊆ f))
+\end{code}
+
+    \item
+        элемент GOT, указывающий на блок, лежащий перед ним в памяти;
+
+\begin{code}
+    , ptr (here refl))
+\end{code}
+
+    \item
+        блок PLT, ссылающийся на элемент GOT, лежащий перед ним в памяти.
+
+\begin{code}
+    , function (plt-stub (here refl))
+\end{code}
+
+\end{itemize}
+
+\begin{code}
 plt-heap (vs , ptr x) = plt-heap vs , ptr (plt-⊆ x)
+\end{code}
 
--- plt и got
+Зная адрес, по которому блок располагался в памяти при статической компоновке,
+можно получить адрес, по которому при динамической компоновке будут
+располагаться его элементы GOT и PLT.
 
+\begin{code}
 plt : ∀ {Γ Ψ} → (blk Γ) ∈ Ψ → (blk Γ) ∈ plt-heaptypes Ψ
 plt (here refl) = here refl
 plt {Ψ = blk Δ ∷ Ψ} (there f) = there (there (there (plt f)))
@@ -391,18 +565,27 @@ got : ∀ {Γ Ψ} → (blk Γ) ∈ Ψ → (blk Γ) ✴ ∈ plt-heaptypes Ψ
 got (here refl) = there (here refl)
 got {Ψ = blk Δ ∷ Ψ} (there f) = there (there (there (got f)))
 got {Ψ = x ✴ ∷ Ψ} (there f) = there (got f)
+\end{code}
 
--- Преобразование кода
+При смене компоновки со статической на динамическую меняется и код. Все
+переходы на конкретные блоки заменяются на переходы на элементы PLT.
 
+\begin{code}
 plt-code : ∀ {Ψ Γ Δ} → Block Ψ Γ Δ → Block (plt-heaptypes Ψ) Γ Δ
 plt-code halt = halt
 plt-code (↝ (call f)) = ↝ (call (plt f))
 plt-code (↝ (jmp[_] f)) = ↝ (jmp[ plt-⊆ f ])
 plt-code (↝ (jmp f)) = ↝ (jmp (plt-⊆ f ))
 plt-code (i ∙ b) = wk-instr plt-⊆ i ∙ plt-code b
+\end{code}
 
--- Сами доказательства
+Все требуемые примитивы определены, теперь можно доказывать эквивалентность
+различных видов компоновки. Сначала докажем несколько лемм.
 
+Блок кода эквивалентен indirect jump-у, если по указанному адресу находится
+указатель на этот блок кода:
+
+\begin{code}
 jmp[]-proof : ∀ {Ψ Γ Δ} → {CC : CallCtx Ψ}
            → {H : Heap Ψ}
            → {A : Block Ψ Γ Δ}
@@ -410,12 +593,17 @@ jmp[]-proof : ∀ {Ψ Γ Δ} → {CC : CallCtx Ψ}
            → loadblk H (deref H f) ≡ _ , _ , A
            → BlockEq H CC A (↝ jmp[ f ])
 jmp[]-proof {Ψ} {CC = CC} {H = H} {A = A} f p = right p equal
+\end{code}
 
+\textbf{TODO}
+
+\begin{code}
 call-proof : ∀ {Ψ Γ} → (CC : CallCtx Ψ) → {A : NewBlk Ψ}
            → {H : Heap Ψ}
            → (f : (blk Γ) ∈ Ψ)
            → loadblk H f ≡ A
-           → exec-blk H CC (↝ (call f)) ≡ ((projr CC ∷ projl CC) , A)
+           → exec-blk H CC (↝ (call f))
+           ≡ ((projr CC ∷ projl CC) , A)
 call-proof CC f p rewrite p = refl
 
 loadplt : ∀ {Ψ Γ} → (H : Heap (plt-heaptypes Ψ)) → (f : blk Γ ∈ Ψ)
