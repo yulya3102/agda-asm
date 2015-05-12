@@ -37,7 +37,7 @@ HeapTypes    = List Type
 
 \begin{code}
 data Type where
-  _✴  : Type → Type
+  _*  : Type → Type
   blk : (Γ : RegFileTypes) → Type
 
 open Data-Any
@@ -101,7 +101,7 @@ module FixedHeap (Ψ : HeapTypes) where
         памяти по данному адресу;
 
 \begin{code}
-    jmp[_] : (f : (blk Γ) ✴ ∈ Ψ) → ControlInstr Γ
+    jmp[_] : (f : (blk Γ) * ∈ Ψ) → ControlInstr Γ
 \end{code}
 
     \item
@@ -163,7 +163,7 @@ module FixedHeap (Ψ : HeapTypes) where
         указатели на значения, лежащие в памяти.
 
 \begin{code}
-    ptr      : ∀ {τ} → τ ∈ Ψ → Value (τ ✴)
+    ptr      : ∀ {τ} → τ ∈ Ψ → Value (τ *)
 \end{code}
 
 \end{itemize}
@@ -257,7 +257,7 @@ data Heap : HeapTypes → Set where
 Разыменование указателя:
 
 \begin{code}
-deref : ∀ {l Ψ} → Heap Ψ → l ✴ ∈ Ψ → l ∈ Ψ
+deref : ∀ {l Ψ} → Heap Ψ → l * ∈ Ψ → l ∈ Ψ
 deref [] ()
 deref (vs , function x) (here ())
 deref (vs , ptr p)      (here refl) = there p
@@ -431,7 +431,7 @@ data BlockEq {Ψ : HeapTypes} (H : Heap Ψ) (CC : CallCtx Ψ)
 поэтому PLT состоит всего из одной инструкции.
 
 \begin{code}
-plt-stub : ∀ {Γ Ψ} → (blk Γ) ✴ ∈ Ψ → Block Ψ Γ []
+plt-stub : ∀ {Γ Ψ} → (blk Γ) * ∈ Ψ → Block Ψ Γ []
 plt-stub label = ↝ (jmp[ label ])
 \end{code}
 
@@ -463,7 +463,7 @@ plt-heaptypes (blk Γ ∷ Ψ)
         переход.
 
 \begin{code}
-    ∷ blk Γ ✴
+    ∷ blk Γ *
 \end{code}
 
 \end{itemize}
@@ -488,9 +488,9 @@ plt-heaptypes [] = []
 plt-⊆ : ∀ {Ψ} → Ψ ⊆ plt-heaptypes Ψ
 plt-⊆ {x = blk Γ} (Data-Any.here refl)
     = Data-Any.there $ Data-Any.there (Data-Any.here refl)
-plt-⊆ {x = x ✴} (Data-Any.here refl) = Data-Any.here refl
+plt-⊆ {x = x *} (Data-Any.here refl) = Data-Any.here refl
 plt-⊆ {blk Γ ∷ ψs} (there i) = there (there (there (plt-⊆ i)))
-plt-⊆ {ψ ✴ ∷ ψs} (there i) = there (plt-⊆ i)
+plt-⊆ {ψ * ∷ ψs} (there i) = there (plt-⊆ i)
 \end{code}
 
 Опишем, какие значения определенных выше типов появляются в памяти.
@@ -544,12 +544,12 @@ plt-heap (vs , ptr x) = plt-heap vs , ptr (plt-⊆ x)
 plt : ∀ {Γ Ψ} → (blk Γ) ∈ Ψ → (blk Γ) ∈ plt-heaptypes Ψ
 plt (here refl) = here refl
 plt {Ψ = blk Δ ∷ Ψ} (there f) = there (there (there (plt f)))
-plt {Ψ = x ✴ ∷ Ψ} (there f) = there (plt f)
+plt {Ψ = x * ∷ Ψ} (there f) = there (plt f)
 
-got : ∀ {Γ Ψ} → (blk Γ) ∈ Ψ → (blk Γ) ✴ ∈ plt-heaptypes Ψ
+got : ∀ {Γ Ψ} → (blk Γ) ∈ Ψ → (blk Γ) * ∈ plt-heaptypes Ψ
 got (here refl) = there (here refl)
 got {Ψ = blk Δ ∷ Ψ} (there f) = there (there (there (got f)))
-got {Ψ = x ✴ ∷ Ψ} (there f) = there (got f)
+got {Ψ = x * ∷ Ψ} (there f) = there (got f)
 \end{code}
 
 При смене компоновки со статической на динамическую меняется и код. Все
@@ -574,7 +574,7 @@ plt-code (i ∙ b) = wk-instr plt-⊆ i ∙ plt-code b
 jmp[]-proof : ∀ {Ψ Γ Δ} → {CC : CallCtx Ψ}
            → {H : Heap Ψ}
            → {A : Block Ψ Γ Δ}
-           → (f : (blk Γ) ✴ ∈ Ψ)
+           → (f : (blk Γ) * ∈ Ψ)
            → loadblk H (deref H f) ≡ _ , _ , A
            → BlockEq H CC A (↝ jmp[ f ])
 jmp[]-proof {Ψ} {CC = CC} {H = H} {A = A} f p = right p equal
