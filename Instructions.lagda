@@ -595,7 +595,8 @@ jmp[]-proof : ∀ {Ψ Γ Δ} → {CC : CallCtx Ψ}
 jmp[]-proof {Ψ} {CC = CC} {H = H} {A = A} f p = right p equal
 \end{code}
 
-\textbf{TODO}
+Вызов функции меняет контекст исполнения так, как ожидается: на стек
+добавляется адрес возврата, а исполнение передается на вызываемый блок:
 
 \begin{code}
 call-proof : ∀ {Ψ Γ} → (CC : CallCtx Ψ) → {A : NewBlk Ψ}
@@ -605,17 +606,40 @@ call-proof : ∀ {Ψ Γ} → (CC : CallCtx Ψ) → {A : NewBlk Ψ}
            → exec-blk H CC (↝ (call f))
            ≡ ((projr CC ∷ projl CC) , A)
 call-proof CC f p rewrite p = refl
+\end{code}
 
-loadplt : ∀ {Ψ Γ} → (H : Heap (plt-heaptypes Ψ)) → (f : blk Γ ∈ Ψ)
+Загрузка блока PLT, относящегося к заданной функции, действительно загружает
+блок PLT. К сожалению, из-за несовершенства определений эта лемма осталась
+недоказанной.
+
+\begin{code}
+loadplt : ∀ {Ψ Γ} → (H : Heap (plt-heaptypes Ψ))
+        → (f : blk Γ ∈ Ψ)
         → loadblk H (plt f) ≡ Γ , [] , ↝ jmp[ got f ]
 loadplt H f = {!!}
+\end{code}
 
-jmp[]-plt-stub : ∀ {Ψ Γ} → (f : blk Γ ∈ Ψ) → plt-stub (got f) ≡ ↝ jmp[ got f ]
+Блок PLT для любой функции выглядит заданным образом:
+
+\begin{code}
+jmp[]-plt-stub : ∀ {Ψ Γ} → (f : blk Γ ∈ Ψ)
+               → plt-stub (got f) ≡ ↝ jmp[ got f ]
 jmp[]-plt-stub f = refl
+\end{code}
 
-loadblk-Γ : ∀ {Ψ Γ} → (H : Heap Ψ) → (f : blk Γ ∈ Ψ) → projl (loadblk H f) ≡ Γ
+Загрузка блока, в типе которого указано ограничение на состояние регистров,
+загружает блок, который действительно ограничивает состояние регистров
+именно так. Эта лемма тоже осталась недоказанной.
+
+\begin{code}
+loadblk-Γ : ∀ {Ψ Γ} → (H : Heap Ψ) → (f : blk Γ ∈ Ψ)
+          → projl (loadblk H f) ≡ Γ
 loadblk-Γ H f = {!!}
+\end{code}
 
+Блок PLT эквивалентен самой функции. Эта лемма не доказана.
+
+\begin{code}
 plt-fun-eq : ∀ {Γ Ψ}
            → (H : Heap (plt-heaptypes Ψ))
            → (cc : CallCtx (plt-heaptypes Ψ))
@@ -625,14 +649,19 @@ plt-fun-eq : ∀ {Γ Ψ}
              (plt-stub (got f))
 plt-fun-eq H cc f with jmp[]-plt-stub f | loadblk-Γ H (plt-⊆ f)
 plt-fun-eq H cc f | refl | r = {!!}
+\end{code}
 
+И, наконец, доказательство того, что в любом контексте исполнения вызов
+функции напрямую эквивалентен вызову соответствующего PLT.
+
+\begin{code}
 proof : ∀ {Γ Ψ}
       → (H : Heap (plt-heaptypes Ψ))
       → (f : blk Γ ∈ Ψ)
-      → (cc : CallCtx (plt-heaptypes Ψ)) -- для любого контекста исполнения
-      → BlockEq H cc                     -- эквивалентны
-        (wk-blk plt-⊆ (↝ (call f)))      -- вызов функции f напрямую
-        (↝ (call (plt f)))               -- и вызов соответствующего plt
+      → (cc : CallCtx (plt-heaptypes Ψ))
+      → BlockEq H cc
+        (wk-blk plt-⊆ (↝ (call f)))
+        (↝ (call (plt f)))
 proof {Γ = Γ} {Ψ = Ψ} H f ctx = ctxchg after-call just-call plt-call
     where
     newblock-f   = loadblk H (plt-⊆ f)
