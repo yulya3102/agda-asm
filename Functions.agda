@@ -31,6 +31,11 @@ data Type where
 open Membership {A = Type} _≡_
 _∈R_ = Membership._∈_ {A = RegType} _≡_
 
+-- надо перестать страдать фигнёй и переехать на agda-stdlib
+data Maybe (A : Set) : Set where
+  just    : A → Maybe A
+  nothing : Maybe A
+
 module Meta where
   module Diffs where
     module RegDiff where
@@ -140,8 +145,9 @@ module Meta where
     sChg (inl r) = regChg r
     sChg (inr d) = dsChg d
 
-    csChg : ∀ {S} → CallStackChg S → Diff S
-    csChg c =
+    csChg : ∀ {S} → Maybe (CallStackChg S) → Diff S
+    csChg nothing = dempty
+    csChg (just c) =
         diff
         RegDiff.dempty
         StackDiff.dempty
@@ -150,7 +156,7 @@ module Meta where
 
   module Blocks
     -- вообще-то, стек может и не меняться (например, при jump)
-    (ControlInstr : (S : StateType) → CallStackChg S → Set)
+    (ControlInstr : (S : StateType) → Maybe (CallStackChg S) → Set)
     (Instr : (S : StateType) → SmallChg S → Set)
     where
     data Block (S : StateType) : Diff S → Set where
@@ -230,7 +236,7 @@ module Meta where
             → BlockEq Ψ S S₁ B A₁
 
 module 2Meta
-  (ControlInstr : (S : StateType) → Meta.Diffs.CallStackChg S → Set)
+  (ControlInstr : (S : StateType) → Maybe (Meta.Diffs.CallStackChg S) → Set)
   (Instr : (S : StateType) → Meta.Diffs.SmallChg S → Set)
   -- АБСОЛЮТНО НЕЧИТАЕМЫЙ ТИП, ААААА
   (exec-control : ∀ {S c}
@@ -242,8 +248,7 @@ module 2Meta
                 → Meta.Values.CallStack
                  (Meta.Blocks.Block ControlInstr Instr)
                  (StateType.memory S)
-                 (Meta.Diffs.StackDiff.chgapply RegTypes
-                   (StateType.callstack S) c)
+                 {!!}
                 × Σ
                   (Meta.Diffs.Diff
                     (Meta.Diffs.dapply S (Meta.Diffs.csChg c)))
@@ -276,10 +281,7 @@ module 2Meta
   exec-block : ∀ {ST d} → State ST → Block ST d
              → State (dapply ST d)
              × Σ (Diff (dapply ST d)) (Block (dapply ST d))
-  exec-block (state Γ Ψ D CS) (Blocks.jump ci) =
-    state Γ Ψ D (projl ec) , projr ec
-    where
-    ec = exec-control CS ci
+  exec-block (state Γ Ψ D CS) (Blocks.jump ci) = {!!}
   exec-block {statetype registers memory datastack callstack} {diff ._ ._ ._} s (Blocks.next i b) = {!!}
 
   open Eq Block exec-block
@@ -288,7 +290,7 @@ module AMD64 where
   open Meta
   open Diffs
   
-  data ControlInstr (S : StateType) : CallStackChg S → Set where
+  data ControlInstr (S : StateType) : Maybe (CallStackChg S) → Set where
     -- везде, где требуется сакральное знание о том, что расположено в памяти
     -- за этой инструкцией, я принимаю дополнительный аргумент
     -- это сделано для упрощения себе жизни
@@ -297,8 +299,28 @@ module AMD64 where
          -- по-хорошему, ниже должно быть не memory S, а что-то другое
          -- но мне плевать, потому что память неизменна
          → {Γ : RegTypes} → (cont : func Γ ∈ StateType.memory S)
-         → ControlInstr S (StackDiff.push Γ)
-    ijmp : (f : func (StateType.registers S) ∈ StateType.memory S)
-         → ControlInstr S {!!}
+         → ControlInstr S (just $ StackDiff.push Γ)
+         -- вот тут atom выглядит как говно :(
+    ijmp : (ptr : atom (func (StateType.registers S) ✴) ∈ StateType.memory S)
+         → ControlInstr S nothing
+    jump : (f : func (StateType.registers S) ∈ StateType.memory S)
+         → ControlInstr S nothing
+         -- мне сильно не нравится аргумент ret
+    ret  : ∀ {Γ CS} → {p : StateType.callstack S ≡ Γ ∷ CS}
+         → ControlInstr S (just (StackDiff.pop p))
+
+  data Instr (S : StateType) : SmallChg S → Set where
+    mov  : ∀ {σ τ}
+         → (r : σ ∈R StateType.registers S)
+         → Values.RegValue (Blocks.Block ControlInstr Instr) (StateType.memory S) τ
+         → Instr S (inl (RegDiff.chg r τ))
+    push : ∀ {τ}
+         → τ ∈R StateType.registers S
+         → Instr S (inr (StackDiff.push τ))
+    pop  : ∀ {τ}
+         → (r : τ ∈R StateType.registers S)
+         -- и тут до меня дошло, что инструкции могут менять DataStack и регистры
+         -- одновременно :(
+         → Instr S {!!}
   
   open 2Meta ControlInstr {!!} {!!} {!!}
