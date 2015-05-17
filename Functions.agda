@@ -124,8 +124,10 @@ module Meta where
     RegChg : StateType → Set
     RegChg S = RegDiff.Chg (StateType.registers S)
 
-    SmallChg : StateType → Set
-    SmallChg S = RegChg S ∨ DataStackChg S
+    data SmallChg (S : StateType) : Set where
+      onlyreg   : RegChg S → SmallChg S
+      onlystack : DataStackChg S → SmallChg S
+      regstack  : RegChg S → DataStackChg S → SmallChg S
 
     regChg : ∀ {S} → RegChg S → Diff S
     regChg c =
@@ -142,8 +144,13 @@ module Meta where
       StackDiff.dempty
 
     sChg : ∀ {S} → SmallChg S → Diff S
-    sChg (inl r) = regChg r
-    sChg (inr d) = dsChg d
+    sChg (onlyreg r) = regChg r
+    sChg (onlystack d) = dsChg d
+    sChg (regstack r d) =
+      diff
+      (RegDiff.dchg r RegDiff.dempty)
+      (StackDiff.dchg d StackDiff.dempty)
+      StackDiff.dempty
 
     csChg : ∀ {S} → Maybe (CallStackChg S) → Diff S
     csChg nothing = dempty
@@ -173,6 +180,11 @@ module Meta where
     data Value (Ψ : DataType) : Type → Set where
       atom : ∀ {τ} → RegValue Ψ τ → Value Ψ (atom τ)
       func : ∀ {Γ DS CS d} → Block (statetype Γ Ψ DS CS) d → Value Ψ (func Γ)
+
+    unfunc : ∀ {Ψ Γ} → Value Ψ (func Γ)
+           → Σ (DataStackType × CallStackType)
+           (λ DS×CS → Σ (Diff (statetype Γ Ψ (projl DS×CS) (projr DS×CS))) (Block (statetype Γ Ψ (projl DS×CS) (projr DS×CS))))
+    unfunc (func b) = _ , _ , b
       
     data Registers (Ψ : DataType) : RegTypes → Set where
       []  : Registers Ψ []
@@ -184,6 +196,14 @@ module Meta where
 
     Data : DataType → Set
     Data Ψ = IData Ψ Ψ
+
+    load : ∀ {Ψ τ} → Data Ψ → τ ∈ Ψ → Value Ψ τ
+    load {Ψ} {τ} = iload
+      where
+      iload : ∀ {Γ} → IData Ψ Γ → τ ∈ Γ → Value Ψ τ
+      iload [] ()
+      iload (x ∷ H) (here refl) = x
+      iload (x ∷ H) (there p) = iload H p
 
     data Stack {I : Set} {A : I → Set} (Ψ : DataType) : List I → Set where
       []   : Stack Ψ []
@@ -289,8 +309,14 @@ module 2Meta
 module AMD64 where
   open Meta
   open Diffs
+
+  data ControlInstr (S : StateType) : Maybe (CallStackChg S) → Set
+  data Instr (S : StateType) : SmallChg S → Set
+
+  open Blocks ControlInstr Instr
+  open Values Block
   
-  data ControlInstr (S : StateType) : Maybe (CallStackChg S) → Set where
+  data ControlInstr (S : StateType) where
     -- везде, где требуется сакральное знание о том, что расположено в памяти
     -- за этой инструкцией, я принимаю дополнительный аргумент
     -- это сделано для упрощения себе жизни
@@ -309,18 +335,39 @@ module AMD64 where
     ret  : ∀ {Γ CS} → {p : StateType.callstack S ≡ Γ ∷ CS}
          → ControlInstr S (just (StackDiff.pop p))
 
-  data Instr (S : StateType) : SmallChg S → Set where
+  data Instr (S : StateType) where
     mov  : ∀ {σ τ}
          → (r : σ ∈R StateType.registers S)
-         → Values.RegValue (Blocks.Block ControlInstr Instr) (StateType.memory S) τ
-         → Instr S (inl (RegDiff.chg r τ))
+         → RegValue (StateType.memory S) τ
+         → Instr S (onlyreg (RegDiff.chg r τ))
     push : ∀ {τ}
          → τ ∈R StateType.registers S
-         → Instr S (inr (StackDiff.push τ))
-    pop  : ∀ {τ}
-         → (r : τ ∈R StateType.registers S)
-         -- и тут до меня дошло, что инструкции могут менять DataStack и регистры
-         -- одновременно :(
-         → Instr S {!!}
+         → Instr S (onlystack (StackDiff.push τ))
+    -- pop меняет одновременно и стек, и регистры
+    -- тут было три варианта:
+    -- * засунуть в тип дифф, а не чендж
+    -- * разбить эту инструкцию на мув и поп
+    -- * сделать, как сделано
+    -- в первом случае можно будет пилить ЖИРНЫЕ инструкции, и это говно
+    -- во втором надо будет делать огромную кучу разных видов мувов
+    -- третий наименьшее зло, хотя непонятно, пригодится ли это ещё где-то
+    pop  : ∀ {σ τ DS}
+         → (r : σ ∈R StateType.registers S)
+         -- этот аргумент мне сильно не нравится
+         → (p : StateType.datastack S ≡ τ ∷ DS)
+         → Instr S (regstack (RegDiff.chg r τ) (StackDiff.pop p))
+
+  exec-control : ∀ {S c}
+               → State S
+               → ControlInstr S c
+               → CallStack (StateType.memory S) (StateType.callstack (dapply S (csChg c)))
+               × Σ (Diff (dapply S (csChg c))) (Block (dapply S (csChg c)))
+  -- не любой блок можно грузить когда попало
+  -- блок может рассчитывать на какое-то состояние стека
+  -- и это тоже должно быть учтено в типе
+  exec-control S (call f cont) = (cont ∷ Values.State.callstack S) , ?
+  exec-control S (ijmp p) = {!!}
+  exec-control S (jump f) = {!!}
+  exec-control S ret = {!!}
   
-  open 2Meta ControlInstr {!!} {!!} {!!}
+  open 2Meta ControlInstr Instr {!!} {!!}
