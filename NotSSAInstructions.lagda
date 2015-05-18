@@ -150,6 +150,8 @@ data Instr (Ψ : HeapTypes) (Γ : RegFileTypes) : TDiff Γ → Set where
   -- Я могу делать инструкции, _меняющие_ регистры, а не добавляющие новые!
   mov  : ∀ {r τ} → (r∈Γ : r ∈ Γ) → Value Ψ τ → Instr Ψ Γ (tdchg (tchgcr r∈Γ τ) tdempty)
 
+-- возможно, всё, что ниже, стоит дропнуть
+
 open Blocks ControlInstr Instr
 
 data Value (Ψ : HeapTypes) where
@@ -263,115 +265,4 @@ data BlockEq {Ψ : HeapTypes} (H : Heap Ψ Ψ) (CC : CallCtx Ψ)
          → {B : Block Ψ Γ₂ d₂} 
          → exec-blk H CC B ≡ projl CC' , _ , _ , B'
          → BlockEq H CC A B
-
--- Динамическая линковка
-
--- plt состоит всего из одной инструкции, потому что я рассчитываю на то,
--- что весь нужный код уже загружен в память, и got заполнен
-plt-stub : ∀ {Γ Ψ} → (blk Γ) ✴ ∈ Ψ → Block Ψ Γ tdempty
-plt-stub label = ↝ (jmp[ label ])
-
--- Преобразования heap
-
-plt-heaptypes : HeapTypes → HeapTypes
--- На каждый блок в heap добавляются соответствующие got и plt (который,
--- очевидно, имеет тот же тип, что и сам блок)
-plt-heaptypes (blk Γ ∷ Ψ) = blk Γ ∷ blk Γ ✴ ∷ blk Γ ∷ (plt-heaptypes Ψ)
--- Всё остальное остаётся неизменным
-plt-heaptypes (x ∷ Ψ) = x ∷ (plt-heaptypes Ψ)
-plt-heaptypes [] = []
-
-plt-⊆ : ∀ {Ψ} → Ψ ⊆ plt-heaptypes Ψ
-plt-⊆ {x = blk Γ} (Data-Any.here refl) = Data-Any.there $ Data-Any.there (Data-Any.here refl)
-plt-⊆ {x = x ✴} (Data-Any.here refl) = Data-Any.here refl
-plt-⊆ {blk Γ ∷ ψs} (there i) = there (there (there (plt-⊆ i)))
-plt-⊆ {ψ ✴ ∷ ψs} (there i) = there (plt-⊆ i)
-
-plt-heap : ∀ {Ψ} → Heap Ψ Ψ → Heap (plt-heaptypes Ψ) (plt-heaptypes Ψ)
-plt-heap [] = []
-plt-heap (function f ∷ vs) = {!function (plt-stub (here refl))!} ∷ ((ptr (here refl)) ∷ ((function (wk-blk plt-⊆ f)) ∷ {!plt-heap vs!}))
-plt-heap (ptr x ∷ vs) = (ptr (plt-⊆ x)) ∷ {!plt-heap vs!}
-
--- plt и got
-
-plt : ∀ {Γ Ψ} → (blk Γ) ∈ Ψ → (blk Γ) ∈ plt-heaptypes Ψ
-plt (here refl) = here refl
-plt {Ψ = blk Δ ∷ Ψ} (there f) = there (there (there (plt f)))
-plt {Ψ = x ✴ ∷ Ψ} (there f) = there (plt f)
-
-got : ∀ {Γ Ψ} → (blk Γ) ∈ Ψ → (blk Γ) ✴ ∈ plt-heaptypes Ψ
-got (here refl) = there (here refl)
-got {Ψ = blk Δ ∷ Ψ} (there f) = there (there (there (got f)))
-got {Ψ = x ✴ ∷ Ψ} (there f) = there (got f)
-
--- Преобразование кода
-
-plt-code : ∀ {Ψ Γ Δ} → Block Ψ Γ Δ → Block (plt-heaptypes Ψ) Γ (wk-tdiff Δ plt-⊆)
-plt-code halt = halt
-plt-code (↝ (call f)) = ↝ (call (plt f))
-plt-code (↝ (jmp[_] f)) = ↝ (jmp[ plt-⊆ f ])
-plt-code (↝ (jmp f)) = ↝ (jmp (plt-⊆ f ))
-plt-code (i ∙ b) = wk-instr plt-⊆ {!i!} ∙ plt-code b
-
--- Сами доказательства
-
-jmp[]-proof : ∀ {Ψ Γ Δ} → {CC : CallCtx Ψ}
-           → {H : Heap Ψ Ψ}
-           → {A : Block Ψ Γ Δ}
-           → (f : (blk Γ) ✴ ∈ Ψ)
-           → loadblk H (deref H f) ≡ _ , _ , A
-           → BlockEq H CC A (↝ jmp[ f ])
-jmp[]-proof {Ψ} {CC = CC} {H = H} {A = A} f p = right p equal
-
-call-proof : ∀ {Ψ Γ} → (CC : CallCtx Ψ) → {A : NewBlk Ψ}
-           → {H : Heap Ψ Ψ}
-           → (f : (blk Γ) ∈ Ψ)
-           → loadblk H f ≡ A
-           → exec-blk H CC (↝ (call f)) ≡ ((projr CC ∷ projl CC) , A)
-call-proof CC f p rewrite p = refl
-
-loadplt : ∀ {Ψ Γ} → (H : Heap (plt-heaptypes Ψ) (plt-heaptypes Ψ)) → (f : blk Γ ∈ Ψ)
-        → loadblk H (plt f) ≡ Γ , tdempty , ↝ jmp[ got f ]
-loadplt H f = {!!}
-
-jmp[]-plt-stub : ∀ {Ψ Γ} → (f : blk Γ ∈ Ψ) → plt-stub (got f) ≡ ↝ jmp[ got f ]
-jmp[]-plt-stub f = refl
-
-loadblk-Γ : ∀ {Ψ Γ} → (H : Heap Ψ Ψ) → (f : blk Γ ∈ Ψ) → projl (loadblk H f) ≡ Γ
-loadblk-Γ H f = {!!}
-
-plt-fun-eq : ∀ {Γ Ψ}
-           → (H : Heap (plt-heaptypes Ψ) (plt-heaptypes Ψ))
-           → (cc : CallCtx (plt-heaptypes Ψ))
-           → (f : blk Γ ∈ Ψ)
-           → BlockEq H cc
-             (projr $ projr (loadblk H (plt-⊆ f)))
-             (plt-stub (got f))
-plt-fun-eq H cc f with jmp[]-plt-stub f | loadblk-Γ H (plt-⊆ f)
-plt-fun-eq H cc f | refl | r = {!!}
-
-proof : ∀ {Γ Ψ}
-      → (H : Heap (plt-heaptypes Ψ) (plt-heaptypes Ψ))
-      → (f : blk Γ ∈ Ψ)
-      → (cc : CallCtx (plt-heaptypes Ψ)) -- для любого контекста исполнения
-      → BlockEq H cc                     -- эквивалентны
-        (wk-blk plt-⊆ (↝ (call f)))      -- вызов функции f напрямую
-        (↝ (call (plt f)))               -- и вызов соответствующего plt
-proof {Γ = Γ} {Ψ = Ψ} H f ctx = ctxchg after-call just-call plt-call
-    where
-    newblock-f   = loadblk H (plt-⊆ f)
-    called-block = projr $ projr newblock-f
-
-    just-call : exec-blk H ctx (↝ (call $ plt-⊆ f)) ≡
-                projr ctx ∷ projl ctx , newblock-f
-    just-call = call-proof ctx (plt-⊆ f) refl
-
-    plt-call : exec-blk H ctx (↝ (call $ plt f)) ≡
-               projr ctx ∷ projl ctx , _ , _ , ↝ jmp[ got f ]
-    plt-call = call-proof ctx (plt f) (loadplt H f)
-
-    after-call : BlockEq H (projr ctx ∷ projl ctx , newblock-f)
-                 called-block
-                 (↝ jmp[ got f ])
-    after-call = plt-fun-eq H (projr ctx ∷ projl ctx , newblock-f) f
 \end{code}
