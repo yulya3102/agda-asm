@@ -10,7 +10,7 @@ data Type : Set
 RegTypes      = List RegType
 DataType      = List Type
 DataStackType = List RegType
-CallStackType = List RegTypes
+CallStackType = List (RegTypes × DataStackType)
 
 record StateType : Set where
   constructor statetype
@@ -26,7 +26,7 @@ data RegType where
 
 data Type where
   atom : RegType → Type
-  func : RegTypes → Type
+  func : RegTypes → DataStackType → CallStackType → Type
 
 open Membership {A = Type} _≡_
 _∈R_ = Membership._∈_ {A = RegType} _≡_
@@ -94,7 +94,7 @@ module Meta where
       field
         rdiff  : RegDiff.Diff (StateType.registers S)
         dsdiff : StackDiff.Diff RegType (StateType.datastack S)
-        csdiff : StackDiff.Diff RegTypes (StateType.callstack S)
+        csdiff : StackDiff.Diff (RegTypes × DataStackType) (StateType.callstack S)
     open Diff public
 
     dempty : ∀ {S} → Diff S
@@ -106,20 +106,20 @@ module Meta where
         (RegDiff.dapply r rd)
         m
         (StackDiff.dapply RegType d dd)
-        (StackDiff.dapply RegTypes c cd)
+        (StackDiff.dapply (RegTypes × DataStackType) c cd)
 
     dappend : ∀ {S} → (d : Diff S) → Diff (dapply S d) → Diff S
     dappend (diff rd dd cd) (diff rd' dd' cd') =
         diff
         (RegDiff.dappend rd rd')
         (StackDiff.dappend RegType dd dd')
-        (StackDiff.dappend RegTypes cd cd')
+        (StackDiff.dappend (RegTypes × DataStackType) cd cd')
 
     DataStackChg : StateType → Set
     DataStackChg S = StackDiff.Chg (RegType) (StateType.datastack S)
 
     CallStackChg : StateType → Set
-    CallStackChg S = StackDiff.Chg (RegTypes) (StateType.callstack S)
+    CallStackChg S = StackDiff.Chg (RegTypes × DataStackType) (StateType.callstack S)
 
     RegChg : StateType → Set
     RegChg S = RegDiff.Chg (StateType.registers S)
@@ -152,9 +152,9 @@ module Meta where
       (StackDiff.dchg d StackDiff.dempty)
       StackDiff.dempty
 
-    csChg : ∀ {S} → Maybe (CallStackChg S) → Diff S
-    csChg nothing = dempty
-    csChg (just c) =
+    csChg : ∀ S → Maybe (CallStackChg S) → Diff S
+    csChg S nothing = dempty
+    csChg S (just c) =
         diff
         RegDiff.dempty
         StackDiff.dempty
@@ -167,7 +167,7 @@ module Meta where
     (Instr : (S : StateType) → SmallChg S → Set)
     where
     data Block (S : StateType) : Diff S → Set where
-      jump : ∀ {c} → ControlInstr S c → Block S (csChg c)
+      jump : ∀ {c} → ControlInstr S c → Block S (csChg S c)
       next : ∀ {c d} → Instr S c → Block (dapply S (sChg c)) d → Block S (dappend (sChg c) d)
 
   module Values
@@ -179,16 +179,26 @@ module Meta where
 
     data Value (Ψ : DataType) : Type → Set where
       atom : ∀ {τ} → RegValue Ψ τ → Value Ψ (atom τ)
-      func : ∀ {Γ DS CS d} → Block (statetype Γ Ψ DS CS) d → Value Ψ (func Γ)
+      func : ∀ {Γ DS CS d} → Block (statetype Γ Ψ DS CS) d → Value Ψ (func Γ DS CS)
 
-    unfunc : ∀ {Ψ Γ} → Value Ψ (func Γ)
-           → Σ (DataStackType × CallStackType)
-           (λ DS×CS → Σ (Diff (statetype Γ Ψ (projl DS×CS) (projr DS×CS))) (Block (statetype Γ Ψ (projl DS×CS) (projr DS×CS))))
-    unfunc (func b) = _ , _ , b
+    unfunc : ∀ {Ψ Γ DS CS} → Value Ψ (func Γ DS CS)
+           → (Σ (Diff (statetype Γ Ψ DS CS)) (Block (statetype Γ Ψ DS CS)))
+    unfunc (func b) = _ , b
+
+    unptr : ∀ {Ψ τ} → Value Ψ (atom (τ ✴)) → τ ∈ Ψ
+    unptr (atom (ptr x)) = x
       
     data Registers (Ψ : DataType) : RegTypes → Set where
       []  : Registers Ψ []
       _∷_ : ∀ {τ τs} → RegValue Ψ τ → Registers Ψ τs → Registers Ψ (τ ∷ τs)
+
+    fromreg : ∀ {Ψ Γ τ} → Registers Ψ Γ → τ ∈R Γ → RegValue Ψ τ
+    fromreg (x ∷ Γ) (here refl) = x
+    fromreg (x ∷ Γ) (there p) = fromreg Γ p
+
+    toreg : ∀ {Ψ Γ σ τ} → Registers Ψ Γ → (r : σ ∈R Γ) → RegValue Ψ τ → Registers Ψ (RegDiff.chgapply Γ (RegDiff.chg r τ))
+    toreg (x ∷ Γ) (here refl) v = v ∷ Γ
+    toreg (x ∷ Γ) (there r) v = x ∷ (toreg Γ r v)
 
     data IData (Ψ : DataType) : DataType → Set where
       []  : IData Ψ []
@@ -205,15 +215,26 @@ module Meta where
       iload (x ∷ H) (here refl) = x
       iload (x ∷ H) (there p) = iload H p
 
+    loadfunc : ∀ {Ψ Γ CS DS} → Data Ψ → func Γ DS CS ∈ Ψ
+             → Σ (Diff (statetype Γ Ψ DS CS)) (Block (statetype Γ Ψ DS CS))
+    loadfunc Ψ f = unfunc $ load Ψ f
+
+    loadptr : ∀ {Ψ τ} → Data Ψ → atom (τ ✴) ∈ Ψ → τ ∈ Ψ
+    loadptr Ψ p = unptr $ load Ψ p
+
     data Stack {I : Set} {A : I → Set} (Ψ : DataType) : List I → Set where
       []   : Stack Ψ []
       _∷_  : ∀ {τ S} → A τ → Stack {A = A} Ψ S → Stack Ψ (τ ∷ S)
 
-    IPRT : DataType → RegTypes → Set
-    IPRT Ψ Γ = func Γ ∈ Ψ
+    IPRT : DataType → RegTypes → DataStackType → CallStackType → Set
+    IPRT Ψ Γ DS CS = func Γ DS CS ∈ Ψ
 
     DataStack = λ Ψ → Stack {A = RegValue Ψ} Ψ
-    CallStack = λ Ψ → Stack {A = IPRT Ψ} Ψ
+
+    data CallStack (Ψ : DataType) : CallStackType → Set where
+      []  : CallStack Ψ []
+      _∷_ : ∀ {Γ DS CS} → IPRT Ψ Γ DS CS → CallStack Ψ CS
+          → CallStack Ψ ((Γ , DS) ∷ CS)
 
     record State (S : StateType) : Set where
       constructor state
@@ -258,51 +279,60 @@ module Meta where
 module 2Meta
   (ControlInstr : (S : StateType) → Maybe (Meta.Diffs.CallStackChg S) → Set)
   (Instr : (S : StateType) → Meta.Diffs.SmallChg S → Set)
-  -- АБСОЛЮТНО НЕЧИТАЕМЫЙ ТИП, ААААА
   (exec-control : ∀ {S c}
-                → Meta.Values.CallStack
-                 (Meta.Blocks.Block ControlInstr Instr)
-                 (StateType.memory S)
-                 (StateType.callstack S)
-                → ControlInstr S c
-                → Meta.Values.CallStack
-                 (Meta.Blocks.Block ControlInstr Instr)
-                 (StateType.memory S)
-                 {!!}
-                × Σ
-                  (Meta.Diffs.Diff
-                    (Meta.Diffs.dapply S (Meta.Diffs.csChg c)))
-                  (Meta.Blocks.Block ControlInstr Instr
-                    (Meta.Diffs.dapply S (Meta.Diffs.csChg c))))
+               → Meta.Values.State (Meta.Blocks.Block ControlInstr Instr) S
+               → ControlInstr S c
+               → Meta.Values.CallStack
+                (Meta.Blocks.Block ControlInstr Instr)
+                (StateType.memory S)
+                (StateType.callstack (Meta.Diffs.dapply S (Meta.Diffs.csChg S c)))
+               × Σ (Meta.Diffs.Diff (Meta.Diffs.dapply S (Meta.Diffs.csChg S c)))
+                   (Meta.Blocks.Block ControlInstr Instr
+                     (Meta.Diffs.dapply S (Meta.Diffs.csChg S c))))
   (exec-instr : ∀ {S c}
-              → Meta.Values.Registers
-               (Meta.Blocks.Block ControlInstr Instr)
-               (StateType.memory S)
-               (StateType.registers S)
-              → Meta.Values.DataStack
-               (Meta.Blocks.Block ControlInstr Instr)
-               (StateType.memory S)
-               (StateType.datastack S)
+              → Meta.Values.State (Meta.Blocks.Block ControlInstr Instr) S
               → Instr S c
               → Meta.Values.Registers
                (Meta.Blocks.Block ControlInstr Instr)
-               (StateType.memory {!!})
-               (StateType.registers {!!})
+               (StateType.memory S)
+               (StateType.registers (Meta.Diffs.dapply S (Meta.Diffs.sChg c)))
+              × (Meta.Values.Data
+                (Meta.Blocks.Block ControlInstr Instr) (StateType.memory S)
               × Meta.Values.DataStack
                (Meta.Blocks.Block ControlInstr Instr)
-               (StateType.memory {!!})
-               (StateType.datastack {!!}))
+               (StateType.memory S)
+               (StateType.datastack (Meta.Diffs.dapply S (Meta.Diffs.sChg c)))))
   where
   open Meta
   open Diffs
   open Blocks ControlInstr Instr
   open Values Block
 
+  reg-const : ∀ S → (c : Maybe (CallStackChg S)) → rdiff (csChg S c) ≡ RegDiff.dempty
+  reg-const S (just c) = refl
+  reg-const S nothing = refl
+
+  cs-lemma2 : ∀ S → (c : SmallChg S) → csdiff (sChg c) ≡ StackDiff.dempty
+  cs-lemma2 S (onlyreg x) = refl
+  cs-lemma2 S (onlystack x) = refl
+  cs-lemma2 S (regstack x x₁) = refl
+
   exec-block : ∀ {ST d} → State ST → Block ST d
              → State (dapply ST d)
              × Σ (Diff (dapply ST d)) (Block (dapply ST d))
-  exec-block (state Γ Ψ D CS) (Blocks.jump ci) = {!!}
-  exec-block {statetype registers memory datastack callstack} {diff ._ ._ ._} s (Blocks.next i b) = {!!}
+  exec-block {S} (state Γ Ψ DS CS) (Blocks.jump {c} ci) with reg-const S c
+  ... | r = {!!} {- (state {!Γ!} Ψ {!DS!} CS') , blk
+    where
+    ecr = exec-control (state Γ Ψ DS CS) ci
+    CS' = projl ecr
+    blk = projr ecr -}
+  exec-block {S} (state Γ Ψ DS CS) (Blocks.next {c} i b) with cs-lemma2 S c
+  ... | r = {!!} {- exec-block (state Γ' Ψ' DS' CS) {!b!}
+    where
+    eir = exec-instr (state Γ Ψ DS CS) i
+    Γ'  = projl eir
+    Ψ'  = projl (projr eir)
+    DS' = projr (projr eir) -}
 
   open Eq Block exec-block
 
@@ -321,18 +351,33 @@ module AMD64 where
     -- за этой инструкцией, я принимаю дополнительный аргумент
     -- это сделано для упрощения себе жизни
     -- в реальный ассемблер это отобразится одним лишним jump
-    call : (f : func (StateType.registers S) ∈ StateType.memory S)
+    call : ∀ {Γ DS}
+         → (f : func
+           (StateType.registers S)
+           (StateType.datastack S)
+           ((Γ , DS) ∷ StateType.callstack S)
+           ∈ StateType.memory S)
          -- по-хорошему, ниже должно быть не memory S, а что-то другое
          -- но мне плевать, потому что память неизменна
-         → {Γ : RegTypes} → (cont : func Γ ∈ StateType.memory S)
-         → ControlInstr S (just $ StackDiff.push Γ)
+         → (cont : func Γ DS (StateType.callstack S) ∈ StateType.memory S)
+         → ControlInstr S (just $ StackDiff.push (Γ , DS))
          -- вот тут atom выглядит как говно :(
-    ijmp : (ptr : atom (func (StateType.registers S) ✴) ∈ StateType.memory S)
+    ijmp : (ptr : atom
+           (func
+           (StateType.registers S)
+           (StateType.datastack S)
+           (StateType.callstack S) ✴)
+           ∈ StateType.memory S)
          → ControlInstr S nothing
-    jump : (f : func (StateType.registers S) ∈ StateType.memory S)
+    jump : (f : func
+           (StateType.registers S)
+           (StateType.datastack S)
+           (StateType.callstack S)
+           ∈ StateType.memory S)
          → ControlInstr S nothing
          -- мне сильно не нравится аргумент ret
-    ret  : ∀ {Γ CS} → {p : StateType.callstack S ≡ Γ ∷ CS}
+    ret  : ∀ {CS}
+         → (p : StateType.callstack S ≡ (StateType.registers S , StateType.datastack S) ∷ CS)
          → ControlInstr S (just (StackDiff.pop p))
 
   data Instr (S : StateType) where
@@ -360,14 +405,24 @@ module AMD64 where
   exec-control : ∀ {S c}
                → State S
                → ControlInstr S c
-               → CallStack (StateType.memory S) (StateType.callstack (dapply S (csChg c)))
-               × Σ (Diff (dapply S (csChg c))) (Block (dapply S (csChg c)))
-  -- не любой блок можно грузить когда попало
-  -- блок может рассчитывать на какое-то состояние стека
-  -- и это тоже должно быть учтено в типе
-  exec-control S (call f cont) = (cont ∷ Values.State.callstack S) , ?
-  exec-control S (ijmp p) = {!!}
-  exec-control S (jump f) = {!!}
-  exec-control S ret = {!!}
+               → CallStack (StateType.memory S)
+                           (StateType.callstack (dapply S (csChg S c)))
+               × Σ (Diff (dapply S (csChg S c))) (Block (dapply S (csChg S c)))
+  exec-control (state Γ Ψ DS CS) (call f cont) = cont ∷ CS , loadfunc Ψ f
+  exec-control (state Γ Ψ DS CS) (ijmp p) = CS , loadfunc Ψ (loadptr Ψ p)
+  exec-control (state Γ Ψ DS CS) (jump f) = CS , loadfunc Ψ f
+  exec-control (state Γ Ψ DS (f ∷ CS)) (ret refl) = CS , loadfunc Ψ f
+
+  exec-instr : ∀ {S c}
+             → State S
+             → Instr S c
+             → Registers (StateType.memory S)
+                         (StateType.registers (dapply S (sChg c)))
+             × (Data (StateType.memory S)
+             × DataStack (StateType.memory S)
+                         (StateType.datastack (dapply S (sChg c))))
+  exec-instr (state Γ Ψ DS CS) (mov r x) = toreg Γ r x , Ψ , DS
+  exec-instr (state Γ Ψ DS CS) (push r) = Γ , Ψ , fromreg Γ r ∷ DS
+  exec-instr (state Γ Ψ (v ∷ DS) CS) (pop r refl) = toreg Γ r v , Ψ , DS
   
-  open 2Meta ControlInstr Instr {!!} {!!}
+  open 2Meta ControlInstr Instr exec-control exec-instr
