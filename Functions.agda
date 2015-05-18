@@ -334,7 +334,7 @@ module 2Meta
     Ψ'  = projl (projr eir)
     DS' = projr (projr eir) -}
 
-  open Eq Block exec-block
+  open Eq Block exec-block public
 
 module AMD64 where
   open Meta
@@ -426,3 +426,47 @@ module AMD64 where
   exec-instr (state Γ Ψ (v ∷ DS) CS) (pop r refl) = toreg Γ r v , Ψ , DS
   
   open 2Meta ControlInstr Instr exec-control exec-instr
+
+  module Linkers where
+    pltize : DataType → DataType
+    pltize [] = []
+    pltize (atom x ∷ Ψ) = atom x ∷ pltize Ψ
+    pltize (func Γ DS CS ∷ Ψ)
+      -- первое — plt, второе — got, третье — сама функция
+      = func Γ DS CS ∷ (atom (func Γ DS CS ✴) ∷ (func Γ DS CS ∷ pltize Ψ))
+
+    -- вообще-то тут результатом является не функция в измененном хипе,
+    -- а plt-шный блок, соответствующий функции из старого хипа
+    -- но у функции и plt-шного блока одинаковые типы (что логично),
+    -- потому эта сигнатура выглядит как говно :(
+    plt : ∀ {Γ Ψ DS CS} → func Γ DS CS ∈ Ψ → func Γ DS CS ∈ pltize Ψ
+    plt (here refl) = here refl
+    plt {Ψ = atom x ∷ Ψ} (there f) = there $ plt f
+    plt {Ψ = func Γ DS CS ∷ Ψ} (there f) = there (there (there (plt f)))
+
+    got : ∀ {Γ Ψ DS CS} → func Γ DS CS ∈ Ψ → atom (func Γ DS CS ✴) ∈ pltize Ψ
+    got (here refl) = there (here refl)
+    got {Ψ = atom x ∷ Ψ} (there f) = there $ got f
+    got {Ψ = func Γ DS CS ∷ Ψ} (there f) = there (there (there (got f)))
+
+    blk : ∀ {Γ Ψ DS CS} → func Γ DS CS ∈ Ψ → func Γ DS CS ∈ pltize Ψ
+    blk (here refl) = there (there (here refl))
+    blk {Ψ = atom x ∷ Ψ} (there f) = there $ blk f
+    blk {Ψ = func Γ DS CS ∷ Ψ} (there f) = there (there (there (blk f)))
+
+    plt-stub : ∀ {Γ Ψ DS CS} → atom (func Γ DS CS ✴) ∈ Ψ
+             -- внимание на дифф!
+             → Block (statetype Γ Ψ DS CS) dempty
+    plt-stub got = jump (ijmp got)
+
+    proof : ∀ {Γ Ψ DS CS}
+          → (f : func Γ DS CS ∈ Ψ)
+          → (S : State (statetype Γ (pltize Ψ) DS CS))
+          → BlockEq Ψ S S
+            (plt-stub (got f))
+            (projr $ loadfunc (State.memory S) (blk f))
+    proof f S = left lemma equal
+      where
+      lemma : exec-block S (plt-stub (got f))
+            ≡ S , loadfunc (State.memory S) (blk f)
+      lemma = {!!}
