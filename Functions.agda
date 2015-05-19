@@ -65,6 +65,12 @@ module Meta where
       dappend-dempty-lemma dempty = refl
       dappend-dempty-lemma (dchg c d) rewrite dappend-dempty-lemma d = refl
 
+      dappend-dapply-lemma : ∀ S → (d₁ : Diff S) → (d₂ : Diff (dapply S d₁))
+                           → dapply S (dappend d₁ d₂) ≡ dapply (dapply S d₁) d₂
+      dappend-dapply-lemma S dempty d₂ = refl
+      dappend-dapply-lemma S (dchg c d₁) d₂
+        = dappend-dapply-lemma (chgapply S c) d₁ d₂
+
     module StackDiff (A : Set) where
       data Chg (S : List A) : Set where
         push : (i : A) → Chg S
@@ -80,6 +86,10 @@ module Meta where
 
       dc : ∀ {S} → Chg S → Diff S
       dc c = dchg c dempty
+
+      dmaybe : ∀ {S} → Maybe (Chg S) → Diff S
+      dmaybe (just x) = dc x
+      dmaybe nothing = dempty
   
       dapply : (S : List A) → Diff S → List A
       dapply S dempty = S
@@ -88,6 +98,12 @@ module Meta where
       dappend : ∀ {S} → (d : Diff S) → Diff (dapply S d) → Diff S
       dappend dempty d' = d'
       dappend (dchg c d) d' = dchg c (dappend d d')
+
+      dappend-dapply-lemma : ∀ S → (d₁ : Diff S) → (d₂ : Diff (dapply S d₁))
+                           → dapply S (dappend d₁ d₂) ≡ dapply (dapply S d₁) d₂
+      dappend-dapply-lemma S dempty d₂ = refl
+      dappend-dapply-lemma S (dchg c d₁) d₂
+        = dappend-dapply-lemma (chgapply S c) d₁ d₂
 
     record Diff (S : StateType) : Set where
       constructor diff
@@ -308,31 +324,59 @@ module 2Meta
   open Blocks ControlInstr Instr
   open Values Block
 
+  -- вот эти леммы куда-нибудь подвинуть надо бы
   reg-const : ∀ S → (c : Maybe (CallStackChg S)) → rdiff (csChg S c) ≡ RegDiff.dempty
   reg-const S (just c) = refl
   reg-const S nothing = refl
 
-  cs-lemma2 : ∀ S → (c : SmallChg S) → csdiff (sChg c) ≡ StackDiff.dempty
-  cs-lemma2 S (onlyreg x) = refl
-  cs-lemma2 S (onlystack x) = refl
-  cs-lemma2 S (regstack x x₁) = refl
+  ds-const : ∀ S → (c : Maybe (CallStackChg S)) → dsdiff (csChg S c) ≡ StackDiff.dempty
+  ds-const S (just x) = refl
+  ds-const S nothing = refl
+
+  cs-lemma : ∀ S → (c : SmallChg S) → csdiff (sChg c) ≡ StackDiff.dempty
+  cs-lemma S (onlyreg x) = refl
+  cs-lemma S (onlystack x) = refl
+  cs-lemma S (regstack x x₁) = refl
+
+  dapply-csChg : ∀ S → (c : Maybe (CallStackChg S))
+               → dapply S (csChg S c) ≡ statetype (StateType.registers S) (StateType.memory S) (StateType.datastack S)
+                (StackDiff.dapply (RegTypes × DataStackType) (StateType.callstack S) (csdiff (csChg S c)))
+  dapply-csChg S (just x) = refl
+  dapply-csChg S nothing = refl
+
+  open ≡-Prop
 
   exec-block : ∀ {ST d} → State ST → Block ST d
              → State (dapply ST d)
              × Σ (Diff (dapply ST d)) (Block (dapply ST d))
-  exec-block {S} (state Γ Ψ DS CS) (Blocks.jump {c} ci) with reg-const S c
-  ... | r = {!!} {- (state {!Γ!} Ψ {!DS!} CS') , blk
+  exec-block {S} (state Γ Ψ DS CS) (Blocks.jump {c} ci)
+    rewrite reg-const S c | ds-const S c
+    = (state Γ Ψ DS CS') , blk
     where
     ecr = exec-control (state Γ Ψ DS CS) ci
     CS' = projl ecr
-    blk = projr ecr -}
-  exec-block {S} (state Γ Ψ DS CS) (Blocks.next {c} i b) with cs-lemma2 S c
-  ... | r = {!!} {- exec-block (state Γ' Ψ' DS' CS) {!b!}
+    blk : Σ
+      (Diff
+       (statetype (StateType.registers S) (StateType.memory S)
+        (StateType.datastack S)
+        (StackDiff.dapply (RegTypes × DataStackType)
+         (StateType.callstack S) (csdiff (csChg S c)))))
+      (Block
+       (statetype (StateType.registers S) (StateType.memory S)
+        (StateType.datastack S)
+        (StackDiff.dapply (RegTypes × DataStackType)
+         (StateType.callstack S) (csdiff (csChg S c)))))
+    blk rewrite sym (dapply-csChg S c) = projr ecr
+  exec-block {S} (state Γ Ψ DS CS) (Blocks.next {c} {d} i b)
+    rewrite cs-lemma S c
+          | RegDiff.dappend-dapply-lemma (StateType.registers S) (rdiff (sChg c)) (rdiff d)
+          | StackDiff.dappend-dapply-lemma RegType (StateType.datastack S) (dsdiff (sChg c)) (dsdiff d)
+          = exec-block (state Γ' Ψ' DS' CS) b
     where
     eir = exec-instr (state Γ Ψ DS CS) i
     Γ'  = projl eir
     Ψ'  = projl (projr eir)
-    DS' = projr (projr eir) -}
+    DS' = projr (projr eir)
 
   open Eq Block exec-block public
 
@@ -449,6 +493,9 @@ module AMD64 where
     got {Ψ = atom x ∷ Ψ} (there f) = there $ got f
     got {Ψ = func Γ DS CS ∷ Ψ} (there f) = there (there (there (got f)))
 
+    -- вот эту часть, по-хорошему, надо заимплементить по-другому
+    -- ибо по-любому где-нибудь вылезет необходимость доказать, что Ψ ⊆ pltize Ψ
+    -- и эта функция является следствием из этого факта
     blk : ∀ {Γ Ψ DS CS} → func Γ DS CS ∈ Ψ → func Γ DS CS ∈ pltize Ψ
     blk (here refl) = there (there (here refl))
     blk {Ψ = atom x ∷ Ψ} (there f) = there $ blk f
@@ -459,14 +506,35 @@ module AMD64 where
              → Block (statetype Γ Ψ DS CS) dempty
     plt-stub got = jump (ijmp got)
 
+    exec-ijmp : ∀ {ST} → (S : State ST)
+              → (p : atom (func
+                   (StateType.registers ST)
+                   (StateType.datastack ST)
+                   (StateType.callstack ST)
+                 ✴) ∈ StateType.memory ST)
+              → exec-block S (jump (ijmp p))
+              ≡ S , loadfunc (State.memory S) (loadptr (State.memory S) p)
+    exec-ijmp S p = refl
+
+    open ≡-Prop
+
+    exec-plt : ∀ {Γ Ψ DS CS}
+             → (f : func Γ DS CS ∈ Ψ)
+             → (S : State (statetype Γ (pltize Ψ) DS CS))
+             → loadptr (State.memory S) (got f) ≡ blk f
+             → exec-block S (plt-stub (got f))
+             ≡ S , loadfunc (State.memory S) (blk f)
+    exec-plt f S p rewrite sym p = exec-ijmp S (got f)
+
     proof : ∀ {Γ Ψ DS CS}
           → (f : func Γ DS CS ∈ Ψ)
           → (S : State (statetype Γ (pltize Ψ) DS CS))
+          -- если GOT заполнен корректно, то
+          → loadptr (State.memory S) (got f) ≡ blk f
+          -- в любом стейте S эквивалентны
           → BlockEq Ψ S S
+          -- PLTшный стаб, дергающий нужный GOT
             (plt-stub (got f))
+          -- и сама функция
             (projr $ loadfunc (State.memory S) (blk f))
-    proof f S = left lemma equal
-      where
-      lemma : exec-block S (plt-stub (got f))
-            ≡ S , loadfunc (State.memory S) (blk f)
-      lemma = {!!}
+    proof f S p = left (exec-plt f S p) equal
