@@ -406,7 +406,7 @@ module AMD64 where
          → (cont : func Γ DS (StateType.callstack S) ∈ StateType.memory S)
          → ControlInstr S (just $ StackDiff.push (Γ , DS))
          -- вот тут atom выглядит как говно :(
-    ijmp : (ptr : atom
+    jmp[_] : (ptr : atom
            (func
            (StateType.registers S)
            (StateType.datastack S)
@@ -453,7 +453,7 @@ module AMD64 where
                            (StateType.callstack (dapply S (csChg S c)))
                × Σ (Diff (dapply S (csChg S c))) (Block (dapply S (csChg S c)))
   exec-control (state Γ Ψ DS CS) (call f cont) = cont ∷ CS , loadfunc Ψ f
-  exec-control (state Γ Ψ DS CS) (ijmp p) = CS , loadfunc Ψ (loadptr Ψ p)
+  exec-control (state Γ Ψ DS CS) (jmp[ p ]) = CS , loadfunc Ψ (loadptr Ψ p)
   exec-control (state Γ Ψ DS CS) (jump f) = CS , loadfunc Ψ f
   exec-control (state Γ Ψ DS (f ∷ CS)) (ret refl) = CS , loadfunc Ψ f
 
@@ -504,7 +504,7 @@ module AMD64 where
     plt-stub : ∀ {Γ Ψ DS CS} → atom (func Γ DS CS ✴) ∈ Ψ
              -- внимание на дифф!
              → Block (statetype Γ Ψ DS CS) dempty
-    plt-stub got = ijmp got ∙
+    plt-stub got = jmp[ got ] ∙
 
     exec-ijmp : ∀ {ST} → (S : State ST)
               → (p : atom (func
@@ -512,7 +512,7 @@ module AMD64 where
                    (StateType.datastack ST)
                    (StateType.callstack ST)
                  ✴) ∈ StateType.memory ST)
-              → exec-block S (ijmp p ∙)
+              → exec-block S (jmp[ p ] ∙)
               ≡ S , loadfunc (State.memory S) (loadptr (State.memory S) p)
     exec-ijmp S p = refl
 
