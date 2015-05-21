@@ -183,8 +183,8 @@ module Meta where
     (Instr : (S : StateType) → SmallChg S → Set)
     where
     data Block (S : StateType) : Diff S → Set where
-      jump : ∀ {c} → ControlInstr S c → Block S (csChg S c)
-      next : ∀ {c d} → Instr S c → Block (dapply S (sChg c)) d → Block S (dappend (sChg c) d)
+      _∙ : ∀ {c} → ControlInstr S c → Block S (csChg S c)
+      _∙~_ : ∀ {c d} → Instr S c → Block (dapply S (sChg c)) d → Block S (dappend (sChg c) d)
 
   module Values
     (Block : (S : StateType) → Diff S → Set)
@@ -349,7 +349,7 @@ module 2Meta
   exec-block : ∀ {ST d} → State ST → Block ST d
              → State (dapply ST d)
              × Σ (Diff (dapply ST d)) (Block (dapply ST d))
-  exec-block {S} (state Γ Ψ DS CS) (Blocks.jump {c} ci)
+  exec-block {S} (state Γ Ψ DS CS) (Blocks._∙ {c} ci)
     rewrite reg-const S c | ds-const S c
     = (state Γ Ψ DS CS') , blk
     where
@@ -367,7 +367,7 @@ module 2Meta
         (StackDiff.dapply (RegTypes × DataStackType)
          (StateType.callstack S) (csdiff (csChg S c)))))
     blk rewrite sym (dapply-csChg S c) = projr ecr
-  exec-block {S} (state Γ Ψ DS CS) (Blocks.next {c} {d} i b)
+  exec-block {S} (state Γ Ψ DS CS) (Blocks._∙~_ {c} {d} i b)
     rewrite cs-lemma S c
           | RegDiff.dappend-dapply-lemma (StateType.registers S) (rdiff (sChg c)) (rdiff d)
           | StackDiff.dappend-dapply-lemma RegType (StateType.datastack S) (dsdiff (sChg c)) (dsdiff d)
@@ -504,7 +504,7 @@ module AMD64 where
     plt-stub : ∀ {Γ Ψ DS CS} → atom (func Γ DS CS ✴) ∈ Ψ
              -- внимание на дифф!
              → Block (statetype Γ Ψ DS CS) dempty
-    plt-stub got = jump (ijmp got)
+    plt-stub got = ijmp got ∙
 
     exec-ijmp : ∀ {ST} → (S : State ST)
               → (p : atom (func
@@ -512,7 +512,7 @@ module AMD64 where
                    (StateType.datastack ST)
                    (StateType.callstack ST)
                  ✴) ∈ StateType.memory ST)
-              → exec-block S (jump (ijmp p))
+              → exec-block S (ijmp p ∙)
               ≡ S , loadfunc (State.memory S) (loadptr (State.memory S) p)
     exec-ijmp S p = refl
 
