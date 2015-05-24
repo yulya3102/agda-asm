@@ -1,7 +1,7 @@
 Все начальные определения идентичны определениям из предыдущей версии.
 
 \begin{code}
-module NotSSAInstructions where
+module NotSSA where
 
 open import OXIj.BrutalDepTypes
 open Data-List
