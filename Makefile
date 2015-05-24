@@ -1,4 +1,4 @@
-AGDA = SSA NotSSA Assembler
+AGDA = SSA NotSSA Meta
 
 agda:
 	@for lagda in $(AGDA) ; do \

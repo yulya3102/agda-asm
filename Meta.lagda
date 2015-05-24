@@ -1,7 +1,7 @@
 Все первичные определения остаются неизменными.
 
 \begin{code}
-module Assembler where
+module Meta where
 
 open import OXIj.BrutalDepTypes
 open Data-List
