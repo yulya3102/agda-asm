@@ -7,7 +7,7 @@
 конкретных типов. То же самое можно сказать и про состояние памяти.
 
 \begin{code}
-module Instructions where
+module SSA where
 
 open import OXIj.BrutalDepTypes
 open Data-List
