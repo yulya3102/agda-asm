@@ -1,3 +1,4 @@
+\begin{code}
 module Assembler where
 
 open import OXIj.BrutalDepTypes
@@ -11,7 +12,7 @@ HeapTypes    = List Type
 
 data Type where
   blk : RegFileTypes → Type
-  _✴  : Type → Type
+  _*  : Type → Type
   int : Type
 
 open Membership {A = Type} _≡_
@@ -82,7 +83,7 @@ module Meta where
     (Block : (S : State) → Diff (regs S) → Set)
     where
     data Value (Ψ : HeapTypes) : Type → Set where
-      ptr : ∀ {τ} → τ ∈ Ψ → Value Ψ (τ ✴)
+      ptr : ∀ {τ} → τ ∈ Ψ → Value Ψ (τ *)
       fun : ∀ {Γ} → {d : Diff Γ} → Block (state Ψ Γ) d → Value Ψ (blk Γ) 
   
     data IHeap (Ψ : HeapTypes) : HeapTypes → Set where
@@ -114,7 +115,7 @@ module Meta where
     load : ∀ {Ψ τ} → τ ∈ Ψ → Heap Ψ → Value Ψ τ
     load p heap = iload [] p heap
 
-    unptr : ∀ {Ψ τ} → Value Ψ (τ ✴) → τ ∈ Ψ
+    unptr : ∀ {Ψ τ} → Value Ψ (τ *) → τ ∈ Ψ
     unptr (ptr x) = x
 
     unfun : ∀ {Ψ Γ} → Value Ψ (blk Γ) → Σ (Diff Γ) (Block (state Ψ Γ))
@@ -229,7 +230,7 @@ open Meta
 module x86-64 where
   data ControlInstr (S : State) : Set where
     jmp call : blk (regs S) ∈ heap S → ControlInstr S
-    jmp[_]   : blk (regs S) ✴ ∈ heap S → ControlInstr S
+    jmp[_]   : blk (regs S) * ∈ heap S → ControlInstr S
     -- :(
     -- ret      : ? → ControlInstr S
 
@@ -289,7 +290,7 @@ module x86-64 where
       _∙  : ∀ {d} → Block S d → Code S
       _∙~_ : ∀ {d} → Block S d → Code (sdapply S d) → Code S
 
-    plt-stub : ∀ {S τ} → (rax : τ ∈ regs S) → (linker : blk {!!} ∈ heap S) → (got : ((blk $ regs S) ✴) ∈ heap S) → (id : Value (heap S) {!!}) → Code S
+    plt-stub : ∀ {S τ} → (rax : τ ∈ regs S) → (linker : blk {!!} ∈ heap S) → (got : ((blk $ regs S) *) ∈ heap S) → (id : Value (heap S) {!!}) → Code S
     plt-stub rax linker got id =
         jmp[ got ] ∷ ∙~
 
@@ -298,10 +299,4 @@ module x86-64 where
         
         {!jmp[ got ] ∷ ∙!}
 
-    {-
-    * add got entry for every block
-    * add plt stub for every block
-    -}
-
-    dynamic : Binary → Binary → Binary × Binary
-    dynamic a b = {!!}
+\end{code}
