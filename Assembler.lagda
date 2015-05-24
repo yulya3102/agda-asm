@@ -1,3 +1,5 @@
+Все первичные определения остаются неизменными.
+
 \begin{code}
 module Assembler where
 
@@ -11,20 +13,35 @@ RegFileTypes = List Type
 HeapTypes    = List Type
 
 data Type where
-  blk : RegFileTypes → Type
   _*  : Type → Type
-  int : Type
+  blk : RegFileTypes → Type
 
 open Membership {A = Type} _≡_
+\end{code}
 
+Независимо от конкретных инструкций все языки ассемблера имеют общий набор
+сущностей. Нижеприведенный модуль определяет эти сущности.
+
+\begin{code}
 module Meta where
+\end{code}
+
+В этой версии память больше не считается неизменной, поэтому текущее
+состояние должно описывать не только регистры, но и память.
+
+\begin{code}
   record State : Set where
     constructor state
     field
       heap : HeapTypes
       regs : RegFileTypes
   open State public
+\end{code}
 
+Далее следует определение набора изменений регистров, приведенное в предыдущей
+секции.
+
+\begin{code}
   module Diffs where
     data Chg (Γ : List Type) : Set where
       chg : ∀ {τ} → τ ∈ Γ → Type → Chg Γ
@@ -44,34 +61,45 @@ module Meta where
     dappend : ∀ {Γ} → (d : Diff Γ) → Diff (dapply Γ d) → Diff Γ
     dappend dempty d' = d'
     dappend (dchg c d) d' = dchg c (dappend d d')
+\end{code}
 
-    dappend-dempty-lemma : ∀ {Γ} → (d : Diff Γ) → dappend d dempty ≡ d
-    dappend-dempty-lemma dempty = refl
-    dappend-dempty-lemma (dchg c d) rewrite dappend-dempty-lemma d = refl
-    
-    lemma' : ∀ {Γ} d d' → dapply Γ (dappend d d') ≡ dapply (dapply Γ d) d'
-    lemma' dempty d' = refl
-    lemma' (dchg c d) dempty rewrite dappend-dempty-lemma d = refl
-    lemma' (dchg c d) d' = {!!}
+Так как почти нигде в коде не используется применение изменений к набору
+регистров отдельно от всего контекста, удобно определить функцию для
+применения изменений сразу ко всему контексту.
 
+\begin{code}
     sdapply : (S : State) → Diff (regs S) → State
     sdapply (state h r) d = state h (dapply r d)
 
     SDiff = λ S → Diff (regs S)
   open Diffs public
+\end{code}
 
+Теперь можно определить, что такое блок. Определение блока использует
+определения различных видов инструкций. Они зависят от конкретного ассемблера,
+но имеют заранее известные не зависящие от ассемблера типы, поэтому их
+можно принимать как параметры.
+
+\begin{code}
   module Blocks
     (ControlInstr : State → Set)
     (Instr : (S : State) → Diff (regs S) → Set)
     where
+\end{code}
+
+Определение блока аналогично приведенным в предыдущих секциях.
+
+\begin{code}
     data Block (S : State) : Diff (regs S) → Set where
       halt : Block S dempty
-      bjmp : ControlInstr S → Block S dempty
-      bnxt : ∀ {d d'} → Instr S d → Block (sdapply S d) d' → Block S (dappend d d')
+      ↝    : ControlInstr S → Block S dempty
+      _∙_  : ∀ {d d'} → Instr S d → Block (sdapply S d) d'
+           → Block S (dappend d d')
+\end{code}
 
-    NewBlock : HeapTypes → Set
-    NewBlock Ψ = Σ RegFileTypes $ λ Γ → Σ (Diff Γ) (Block (state Ψ Γ))
+\textbf{TODO}
 
+\begin{code}
   module Exec-Context (Ψ : HeapTypes) where
     IPRFT = λ Γ → blk Γ ∈ Ψ
     IP = Σ RegFileTypes IPRFT
@@ -188,6 +216,10 @@ module Meta where
     open Blocks ControlInstr Instr public
     open Values Block public
 
+    dapply-lemma : ∀ {Γ} d d'
+           → dapply Γ (dappend d d') ≡ dapply (dapply Γ d) d'
+    dapply-lemma d d' = {!!}
+
     exec-blk : {S : State} {d : Diff (regs S)} {b : Block S d}
              → (Ψ : Heap (heap S))
              → b ∈B Ψ
@@ -207,7 +239,7 @@ module Meta where
                        × (Registers (sdapply S d)
                        × CallStack (heap $ sdapply S d)))
       exec-blk-next-ip Blocks.halt ip Ψ Γ cs = (_ , halt) , (Ψ , Γ , cs)
-      exec-blk-next-ip {S} (Blocks.bjmp i) ip Ψ Γ cs = next-block , Ψ , Γ , next-cs
+      exec-blk-next-ip {S} (Blocks.↝ i) ip Ψ Γ cs = next-block , Ψ , Γ , next-cs
         where
         next-state : CallStack (heap S) × IPRFT (heap S) (regs S)
         next-state = exec-control i Ψ cs ip
@@ -217,7 +249,8 @@ module Meta where
         next-ip = projr next-state
         next-block : Σ (Diff (regs S)) (Block S)
         next-block = unfun $ load next-ip Ψ
-      exec-blk-next-ip {S} (Blocks.bnxt {d} {d'} i b) ip Ψ Γ cs rewrite lemma' d d' = exec-blk-next-ip b ip next-heap next-regs cs
+      exec-blk-next-ip {S} (Blocks._∙_ {d} {d'} i b) ip Ψ Γ cs
+        rewrite dapply-lemma d d' = exec-blk-next-ip b ip next-heap next-regs cs
         where
         next-state : Heap (heap $ sdapply S d) × Registers (sdapply S d)
         next-state = exec-instr i Ψ Γ
@@ -226,6 +259,8 @@ module Meta where
 
     open Eq Block exec-blk public
 open Meta
+\end{code}
+\begin{code}
 
 module x86-64 where
   data ControlInstr (S : State) : Set where
@@ -281,10 +316,10 @@ module x86-64 where
     infixr 5 _∙ _∙~_
 
     _∷,_ : ∀ {S d d'} → Instr S d → Block (sdapply S d) d' → Block S (dappend d d')
-    _∷,_ = bnxt
+    _∷,_ = _∙_
 
     _∷ : ∀ {S} → ControlInstr S → Block S dempty
-    _∷ = bjmp
+    _∷ = ↝
 
     data Code (S : State) : Set where
       _∙  : ∀ {d} → Block S d → Code S
