@@ -97,7 +97,8 @@ module Meta where
            → Block S (dappend d d')
 \end{code}
 
-\textbf{TODO}
+В этой версии вместо сохранения в стеке вызовов самих блоков будем хранить
+указатели на них. То же верно относительно контекста исполнения.
 
 \begin{code}
   module Exec-Context (Ψ : HeapTypes) where
@@ -106,52 +107,95 @@ module Meta where
     CallStack = List IP
     CallCtx = IP × CallStack
   open Exec-Context public
+\end{code}
 
+Возможные значения тоже не зависят от конкретного ассемблера, поэтому тоже
+определены в этом модуле. Значения используют понятие блока, поэтому принимают
+его как параметр.
+
+\begin{code}
   module Values
     (Block : (S : State) → Diff (regs S) → Set)
     where
+
     data Value (Ψ : HeapTypes) : Type → Set where
+      function : ∀ {Γ} → {d : Diff Γ} → Block (state Ψ Γ) d
+               → Value Ψ (blk Γ) 
       ptr : ∀ {τ} → τ ∈ Ψ → Value Ψ (τ *)
-      fun : ∀ {Γ} → {d : Diff Γ} → Block (state Ψ Γ) d → Value Ψ (blk Γ) 
-  
+\end{code}
+
+Первая реализация не позволяла блокам ссылаться друг на друга. Эту проблему
+можно решить, если определить память, используя два параметра типа: первый
+говорит о том, на что значения могут ссылаться, а второй говорит о том, что
+в памяти в действительности располагается.
+
+\begin{code}
     data IHeap (Ψ : HeapTypes) : HeapTypes → Set where
       []  : IHeap Ψ []
       _∷_ : ∀ {τ Δ} → Value Ψ τ → IHeap Ψ Δ → IHeap Ψ (τ ∷ Δ)
+\end{code}
 
-    lemma : {A : Set} (a : A) (as bs : List A) → as ++ a ∷ bs ≡ (as ++ [ a ]) ++ bs
-    lemma a [] bs = refl
-    lemma a (x ∷ as) bs rewrite lemma a as bs = refl
+При этом корректно заполненной память считается тогда, когда эти параметры
+совпадают.
 
-    iload : ∀ {Ψ τ} ψs → τ ∈ Ψ → IHeap (ψs ++ Ψ) Ψ → Value (ψs ++ Ψ) τ
-    iload ψs (here refl) (x ∷ _) = x
-    iload {ψ ∷ Ψ} ψs (there p) (x ∷ h)
-      rewrite lemma ψ ψs Ψ = iload (ψs ++ [ ψ ]) p h
-
+\begin{code}
     Heap : HeapTypes → Set
     Heap Ψ = IHeap Ψ Ψ
+\end{code}
 
-    _++H_ : ∀ {A B} → Heap A → Heap B → Heap (A ++ B)
-    as ++H bs = {!!}
+Определим функции для загрузки значений из памяти:
 
-    data IRegisters (Ψ : HeapTypes) : RegFileTypes → Set where
-      []  : IRegisters Ψ []
-      _∷_ : ∀ {τ τs} → Value Ψ τ → IRegisters Ψ τs → IRegisters Ψ (τ ∷ τs)
+\begin{code}
+    ++[]-lemma : {A : Set} (a : A) (as bs : List A)
+          → as ++ a ∷ bs ≡ (as ++ [ a ]) ++ bs
+    ++[]-lemma a [] bs = refl
+    ++[]-lemma a (x ∷ as) bs rewrite ++[]-lemma a as bs = refl
 
-    Registers : State → Set
-    Registers S = IRegisters (heap S) (regs S)
+    iload : ∀ {Ψ τ} ψs → τ ∈ Ψ → IHeap (ψs ++ Ψ) Ψ
+          → Value (ψs ++ Ψ) τ
+    iload ψs (here refl) (x ∷ _) = x
+    iload {ψ ∷ Ψ} ψs (there p) (x ∷ h)
+      rewrite ++[]-lemma ψ ψs Ψ = iload (ψs ++ [ ψ ]) p h
 
     load : ∀ {Ψ τ} → τ ∈ Ψ → Heap Ψ → Value Ψ τ
     load p heap = iload [] p heap
+\end{code}
 
+Регистры — список значений, ссылающихся на память, в типе которого описано,
+значения каких типов он хранит.
+% тут до меня дошло, что это копипаста IHeap :(
+
+\begin{code}
+    data IRegisters (Ψ : HeapTypes) : RegFileTypes → Set where
+      []  : IRegisters Ψ []
+      _∷_ : ∀ {τ τs} → Value Ψ τ → IRegisters Ψ τs
+          → IRegisters Ψ (τ ∷ τs)
+
+    Registers : State → Set
+    Registers S = IRegisters (heap S) (regs S)
+\end{code}
+
+Ниже приведены вспомогательные функции для работы с значениями.
+
+\begin{code}
     unptr : ∀ {Ψ τ} → Value Ψ (τ *) → τ ∈ Ψ
     unptr (ptr x) = x
 
-    unfun : ∀ {Ψ Γ} → Value Ψ (blk Γ) → Σ (Diff Γ) (Block (state Ψ Γ))
-    unfun (fun x) = _ , x
+    unfun : ∀ {Ψ Γ} → Value Ψ (blk Γ)
+          → Σ (Diff Γ) (Block (state Ψ Γ))
+    unfun (function x) = _ , x
 
     _∈B_ : ∀ {S d} → Block S d → Heap (heap S) → Set
-    _∈B_ {S} b Ψ = Σ (blk (regs S) ∈ heap S) $ λ ptr → (unfun (load ptr Ψ)) ≡ _ , b
+    _∈B_ {S} b Ψ = Σ (blk (regs S) ∈ heap S)
+                 $ λ ptr → (unfun (load ptr Ψ)) ≡ _ , b
+\end{code}
 
+Так как определение блоков не зависит от конкретного ассемблера, то и 
+определение эквивалентности блоков не должно от него зависеть. Требуемыми 
+параметрами являются определение типа блока и функция, описывающая изменение
+контекста при исполнении блока.
+
+\begin{code}
   module Eq
     (Block : (S : State) → Diff (regs S) → Set)
     (exec-blk : {S : State} {d : Diff (regs S)} {b : Block S d}
@@ -308,6 +352,9 @@ module x86-64 where
       field
         binary    : Binary
         start     : EntryPoint (Binary.Ψ binary)
+
+    _++H_ : ∀ {A B} → Heap A → Heap B → Heap (A ++ B)
+    as ++H bs = {!!}
 
     static : Binary → Binary → Binary
     static a b = bin (Binary.Ψ a ++ Binary.Ψ b) (Binary.memory a ++H Binary.memory b)
