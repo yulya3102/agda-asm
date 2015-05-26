@@ -1,4 +1,6 @@
 Все первичные определения остаются неизменными.
+% меня уже подзадолбала эта копипаста, наверное, ее стоит вынести в отдельный
+% файл, описать в отдельной секции и просто импортить везде
 
 \begin{code}
 module Meta where
@@ -40,6 +42,7 @@ module Meta where
 
 Далее следует определение набора изменений регистров, приведенное в предыдущей
 секции.
+% и это тоже можно было бы просто поимпортить
 
 \begin{code}
   module Diffs where
@@ -195,6 +198,8 @@ module Meta where
 параметрами являются определение типа блока и функция, описывающая изменение
 контекста при исполнении блока.
 
+% вообще, наверное, стоит написать, почему у exec-blk именно такой тип
+
 \begin{code}
   module Eq
     (Block : (S : State) → Diff (regs S) → Set)
@@ -212,7 +217,13 @@ module Meta where
       SHeap = Heap (heap S)
       SCallStack = CallStack (heap S)
     open InState
+\end{code}
 
+Определение эквивалентности блоков почти аналогично приведенному ранее.
+Отличием является то, что стек вызовов теперь считается меняющимся после
+исполнения любого блока.
+
+\begin{code}
     data BlockEq :
       {S₁ S₂ : State} → {d₁ : SDiff S₁} {d₂ : SDiff S₂} →
       (Ψ₁ : SHeap S₁) (Ψ₂ : SHeap S₂) →
@@ -220,46 +231,112 @@ module Meta where
       (CC₁ : SCallStack S₁) (CC₂ : SCallStack S₂) →
       Block S₁ d₁ → Block S₂ d₂ → Set
       where
-      equal : ∀ {S} {d : SDiff S}
-            → {Ψ : SHeap S} {CC : SCallStack S} {B : Block S d} {Γ : Registers S}
+\end{code}
+
+Два блока эквивалентны, если:
+
+\begin{itemize}
+
+    \item
+        они одинаковы;
+
+\begin{code}
+      equal : ∀ {S} → {d : SDiff S}
+            → {Ψ : SHeap S} {CC : SCallStack S}
+            → {B : Block S d} {Γ : Registers S}
             → BlockEq Ψ Ψ Γ Γ CC CC B B
-      left  : ∀ {S₁ S} {d₁ : SDiff S₁} {d₂ : SDiff (sdapply S₁ d₁)} {d : SDiff S}
-            → {A₁ : Block S₁ d₁} {A₂ : Block (sdapply S₁ d₁) d₂} {B : Block S d}
-            → (Ψ₁ : SHeap S₁) (Ψ₂ : SHeap (sdapply S₁ d₁)) (Ψ : SHeap S)
-            → (ip₁ : A₁ ∈B Ψ₁) (ip₂ : A₂ ∈B Ψ₂) (ip : B ∈B Ψ)
-            → (Γ₁ : Registers S₁) (Γ₂ : Registers (sdapply S₁ d₁)) (Γ : Registers S)
-            → (CC₁ : SCallStack S₁) (CC₂ : SCallStack (sdapply S₁ d₁)) (CC : SCallStack S)
+\end{code}
+
+    \item
+        исполнение первого из них приводит к блоку, эквивалентному второму;
+
+\begin{code}
+      left  : ∀ {S₁ S}
+            → {d₁ : SDiff S₁} {d₂ : SDiff (sdapply S₁ d₁)}
+            → {d : SDiff S}
+            → {A₁ : Block S₁ d₁} {A₂ : Block (sdapply S₁ d₁) d₂}
+            → {B : Block S d}
+            → (Ψ₁ : SHeap S₁) (Ψ₂ : SHeap (sdapply S₁ d₁))
+            → (Ψ : SHeap S)
+            → (ip₁ : A₁ ∈B Ψ₁) (ip₂ : A₂ ∈B Ψ₂)
+            → (ip : B ∈B Ψ)
+            → (Γ₁ : Registers S₁) (Γ₂ : Registers (sdapply S₁ d₁))
+            → (Γ : Registers S)
+            → (CC₁ : SCallStack S₁) (CC₂ : SCallStack (sdapply S₁ d₁))
+            → (CC : SCallStack S)
             → exec-blk Ψ₁ ip₁ Γ₁ CC₁ ≡ (_ , A₂) , Ψ₂ , Γ₂ , CC₂
             → BlockEq Ψ₁ Ψ Γ₁ Γ CC₁ CC A₁ B
             → BlockEq Ψ₂ Ψ Γ₂ Γ CC₂ CC A₂ B
-      right : ∀ {S₁ S} {d₁ : SDiff S₁} {d₂ : SDiff (sdapply S₁ d₁)} {d : SDiff S}
-            → {A₁ : Block S₁ d₁} {A₂ : Block (sdapply S₁ d₁) d₂} {B : Block S d}
-            → (Ψ₁ : SHeap S₁) (Ψ₂ : SHeap (sdapply S₁ d₁)) (Ψ : SHeap S)
-            → (ip₁ : A₁ ∈B Ψ₁) (ip₂ : A₂ ∈B Ψ₂) (ip : B ∈B Ψ)
-            → (Γ₁ : Registers S₁) (Γ₂ : Registers (sdapply S₁ d₁)) (Γ : Registers S)
-            → (CC₁ : SCallStack S₁) (CC₂ : SCallStack (sdapply S₁ d₁)) (CC : SCallStack S)
+\end{code}
+
+    \item
+        исполнение второго из них приводит к блоку, эквивалентному первому.
+
+\begin{code}
+      right : ∀ {S₁ S}
+            → {d₁ : SDiff S₁} {d₂ : SDiff (sdapply S₁ d₁)}
+            → {d : SDiff S}
+            → {A₁ : Block S₁ d₁} {A₂ : Block (sdapply S₁ d₁) d₂}
+            → {B : Block S d}
+            → (Ψ₁ : SHeap S₁) (Ψ₂ : SHeap (sdapply S₁ d₁))
+            → (Ψ : SHeap S)
+            → (ip₁ : A₁ ∈B Ψ₁) (ip₂ : A₂ ∈B Ψ₂)
+            → (ip : B ∈B Ψ)
+            → (Γ₁ : Registers S₁) (Γ₂ : Registers (sdapply S₁ d₁))
+            → (Γ : Registers S)
+            → (CC₁ : SCallStack S₁) (CC₂ : SCallStack (sdapply S₁ d₁))
+            → (CC : SCallStack S)
             → exec-blk Ψ₁ ip₁ Γ₁ CC₁ ≡ (_ , A₂) , Ψ₂ , Γ₂ , CC₂
             → BlockEq Ψ Ψ₁ Γ Γ₁ CC CC₁ B A₁
             → BlockEq Ψ Ψ₂ Γ Γ₂ CC CC₂ B A₂
+\end{code}
 
+\end{itemize}
+
+Конкретный ассемблер можно задать, описав его инструкции и семантику их
+исполнения. По этой информации можно автоматически получать определения
+блоков и семантики их исполнения. Нижеприведенный модуль делает именно это.
+% на самом деле не делает, ибо не осилила
+
+\begin{code}
   module Exec
     (ControlInstr : State → Set)
     (Instr : (S : State) → SDiff S → Set)
     (exec-instr : {S : State}
                 → {d : SDiff S} → Instr S d
-                → Values.Heap (Blocks.Block ControlInstr Instr) (heap S)
-                → Values.Registers (Blocks.Block ControlInstr Instr) S
-                → Values.Heap (Blocks.Block ControlInstr Instr) (heap $ sdapply S d)
-                × Values.Registers (Blocks.Block ControlInstr Instr) (sdapply S d))
+                → Values.Heap
+                  (Blocks.Block ControlInstr Instr)
+                  (heap S)
+                → Values.Registers
+                  (Blocks.Block ControlInstr Instr)
+                  S
+                → Values.Heap
+                  (Blocks.Block ControlInstr Instr)
+                  (heap $ sdapply S d)
+                × Values.Registers
+                  (Blocks.Block ControlInstr Instr)
+                  (sdapply S d))
     (exec-control : {S : State}
                   → ControlInstr S
-                  → Values.Heap (Blocks.Block ControlInstr Instr) (heap S)
-                  → CallStack (heap S) → IP (heap S)
-                  → CallStack (heap S) × IPRFT (heap S) (regs S))
+                  → Values.Heap
+                    (Blocks.Block ControlInstr Instr)
+                    (heap S)
+                  → CallStack (heap S)
+                  → IP (heap S)
+                  → CallStack (heap S)
+                  × IPRFT (heap S) (regs S))
     where
     open Blocks ControlInstr Instr public
     open Values Block public
+\end{code}
 
+% вот тут надо как-нибудь написать, что тут я увидела, каким говном получается
+% определение exec-blk, переосмыслила жизнь и расстроилась
+
+% и вообще, эта портянка кода никому не нужна, ибо все равно не работает,
+% может, ее стоит выкинуть?
+
+\begin{code}
     dapply-lemma : ∀ {Γ} d d'
            → dapply Γ (dappend d d') ≡ dapply (dapply Γ d) d'
     dapply-lemma d d' = {!!}
@@ -304,15 +381,23 @@ module Meta where
     open Eq Block exec-blk public
 open Meta
 \end{code}
-\begin{code}
 
+Имея все вышеопределенное, можно описать требуемые инструкции.
+
+\begin{code}
 module x86-64 where
   data ControlInstr (S : State) : Set where
     jmp call : blk (regs S) ∈ heap S → ControlInstr S
     jmp[_]   : blk (regs S) * ∈ heap S → ControlInstr S
     -- :(
     -- ret      : ? → ControlInstr S
+\end{code}
 
+% вот тут можно поныть на тему того, что сигнатуры jmp и call не различаются,
+% и это не очень хорошо
+% а так же на тему того, что ret нормально не заимплементишь
+
+\begin{code}
   data Instr (S : State) : SDiff S → Set where
     mov_,_ : ∀ {τ σ} → (r : σ ∈ regs S) → Values.Value (Blocks.Block ControlInstr Instr) (heap S) τ → Instr S (dchg (chg r τ) dempty)
 
@@ -328,15 +413,31 @@ module x86-64 where
                → Values.Heap (Blocks.Block ControlInstr Instr) (heap S)
                → CallStack (heap S) → IP (heap S)
                → CallStack (heap S) × IPRFT (heap S) (regs S)
+\end{code}
 
+% я не помню, почему это не реализовано: то ли не осилила, то ли
+% потерялся смысл
+
+\begin{code}
   exec-instr = {!!}
 
   exec-control {state heap regs} (jmp x) Ψ cs ip = cs , x
   exec-control {state heap regs} (call x) Ψ cs ip = ip ∷ cs , x
-  exec-control {state heap regs} (jmp[ x ]) Ψ cs ip = cs , (Values.unptr (Blocks.Block ControlInstr Instr) $ Values.load (Blocks.Block ControlInstr Instr) x Ψ)
+  exec-control {state heap regs} (jmp[ x ]) Ψ cs ip
+    = cs
+    , (Values.unptr
+      (Blocks.Block ControlInstr Instr)
+      $ Values.load (Blocks.Block ControlInstr Instr) x Ψ)
 
   open Exec ControlInstr Instr exec-instr exec-control
+\end{code}
 
+% все, что ниже, вообще несет мало смысла, из интересного там только
+% последний кусок, показывающий, что теоретически можно заимплементить
+% PLTшный stub со всеми этими определениями
+% но куда потом пихать этот кусок асмокода, совершенно непонятно
+
+\begin{code}
   module Binary where
     record Binary : Set where
       constructor bin
