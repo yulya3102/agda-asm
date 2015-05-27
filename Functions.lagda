@@ -153,7 +153,8 @@ module Diffs where
   open Diff public
 \end{code}
 
-% дальше какие-то вспомогательные никому не интересные функции и типы
+Определим вспомогательные функции и типы для конструирования и применения
+изменений состояния исполнителя.
 
 \begin{code}
   dempty : ∀ {S} → Diff S
@@ -189,21 +190,12 @@ module Diffs where
 
   RegChg : StateType → Set
   RegChg S = RegDiff.Chg (StateType.registers S)
-\end{code}
 
-% вот это вот нужно для описания типа инструкций, которые могут менять
-% все подряд
-
-\begin{code}
   data SmallChg (S : StateType) : Set where
     onlyreg   : RegChg S → SmallChg S
     onlystack : DataStackChg S → SmallChg S
     regstack  : RegChg S → DataStackChg S → SmallChg S
-\end{code}
 
-% снова никому не интерсеные вспомогательные функции
-
-\begin{code}
   regChg : ∀ {S} → RegChg S → Diff S
   regChg c =
       diff
@@ -236,26 +228,39 @@ module Diffs where
       (StackDiff.dchg c StackDiff.dempty)
 \end{code}
 
-% метаассемблер
+Аналогично описанному ранее определим сущности, общие для различных языков
+ассемблера.
 
 \begin{code}
 module Meta where
   open Diffs
-
-  module Blocks
 \end{code}
 
-% вообще-то, стек может и не меняться (например, при jump)
+Ранее управляющие инструкции описывали только состояние исполнителя,
+требуемое для выполнения инструкции. С добавлением в состояние исполнителя
+стека вызовов становится возможным описание изменений, производимых
+управляющей инструкцией. По типу управляющей инструкции видно, что в
+результате исполнения может измениться только, возможно, стек
+вызовов. % и это очень няшно
+
+Тип инструкции тоже задает, какие части состояния исполнителя он может
+изменить: это либо регистры, либо стек данных, либо и то, и то.
 
 \begin{code}
+  module Blocks
     (ControlInstr : (S : StateType)
                   → Maybe (CallStackChg S)
                   → Set)
     (Instr : (S : StateType) → SmallChg S → Set)
     where
+\end{code}
+
+Определение блока аналогично приведенному ранее.
+
+\begin{code}
     data Block (S : StateType) : Diff S → Set where
-      _∙ : ∀ {c} → ControlInstr S c → Block S (csChg S c)
-      _∙~_ : ∀ {c d}
+      ↝ : ∀ {c} → ControlInstr S c → Block S (csChg S c)
+      _∙_ : ∀ {c d}
            → Instr S c
            → Block (dapply S (sChg c)) d
            → Block S (dappend (sChg c) d)
@@ -475,7 +480,7 @@ module 2Meta
   exec-block : ∀ {ST d} → State ST → Block ST d
              → State (dapply ST d)
              × Σ (Diff (dapply ST d)) (Block (dapply ST d))
-  exec-block {S} (state Γ Ψ DS CS) (Blocks._∙ {c} ci)
+  exec-block {S} (state Γ Ψ DS CS) (Blocks.↝ {c} ci)
     rewrite reg-const S c | ds-const S c
     = (state Γ Ψ DS CS') , blk
     where
@@ -493,7 +498,7 @@ module 2Meta
         (StackDiff.dapply (RegTypes × DataStackType)
          (StateType.callstack S) (csdiff (csChg S c)))))
     blk rewrite sym (dapply-csChg S c) = projr ecr
-  exec-block {S} (state Γ Ψ DS CS) (Blocks._∙~_ {c} {d} i b)
+  exec-block {S} (state Γ Ψ DS CS) (Blocks._∙_ {c} {d} i b)
     rewrite cs-lemma S c
           | RegDiff.dappend-dapply-lemma
             (StateType.registers S)
@@ -686,7 +691,7 @@ module AMD64 where
 
 \begin{code}
              → Block (statetype Γ Ψ DS CS) dempty
-    plt-stub got = jmp[ got ] ∙
+    plt-stub got = ↝ jmp[ got ]
 
     exec-ijmp : ∀ {ST} → (S : State ST)
               → (p : atom (block
@@ -694,7 +699,7 @@ module AMD64 where
                    (StateType.datastack ST)
                    (StateType.callstack ST)
                  *) ∈ StateType.memory ST)
-              → exec-block S (jmp[ p ] ∙)
+              → exec-block S (↝ jmp[ p ])
               ≡ S
               , loadfunc
                 (State.memory S)
