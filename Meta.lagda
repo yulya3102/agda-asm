@@ -404,18 +404,32 @@ module x86-64 where
 
 \begin{code}
   data Instr (S : State) : SDiff S → Set where
-    mov_,_ : ∀ {τ σ} → (r : σ ∈ regs S) → Values.Value (Blocks.Block ControlInstr Instr) (heap S) τ → Instr S (dchg (chg r τ) dempty)
+    mov_,_ : ∀ {τ σ} → (r : σ ∈ regs S)
+           → Values.Value
+             (Blocks.Block ControlInstr Instr)
+             (heap S) τ
+           → Instr S (dchg (chg r τ) dempty)
 
   exec-instr : {S : State}
              → {d : SDiff S} → Instr S d
-             → Values.Heap (Blocks.Block ControlInstr Instr) (heap S)
-             → Values.Registers (Blocks.Block ControlInstr Instr) S
-             → Values.Heap (Blocks.Block ControlInstr Instr) (heap $ sdapply S d)
-             × Values.Registers (Blocks.Block ControlInstr Instr) (sdapply S d)
+             → Values.Heap
+               (Blocks.Block ControlInstr Instr)
+               (heap S)
+             → Values.Registers
+               (Blocks.Block ControlInstr Instr)
+               S
+             → Values.Heap
+               (Blocks.Block ControlInstr Instr)
+               (heap $ sdapply S d)
+             × Values.Registers
+               (Blocks.Block ControlInstr Instr)
+               (sdapply S d)
   
   exec-control : {S : State}
                → ControlInstr S
-               → Values.Heap (Blocks.Block ControlInstr Instr) (heap S)
+               → Values.Heap
+                 (Blocks.Block ControlInstr Instr)
+                 (heap S)
                → CallStack (heap S) → IP (heap S)
                → CallStack (heap S) × IPRFT (heap S) (regs S)
 \end{code}
