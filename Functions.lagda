@@ -83,15 +83,25 @@ _∈R_ = Membership._∈_ {A = RegType} _≡_
 data Maybe (A : Set) : Set where
   just    : A → Maybe A
   nothing : Maybe A
+\end{code}
 
+Все, кроме памяти, может изменять свой тип.
+
+\begin{code}
 module Diffs where
+\end{code}
+
+Изменения списка регистров уже были описаны ранее.
+
+\begin{code}
   module RegDiff where
     import NotSSA
     open NotSSA.Diffs RegType public
+\end{code}
 
-    dc : ∀ {Γ} → Chg Γ → Diff Γ
-    dc c = dchg c dempty
+% фиг знает, что тут писать
 
+\begin{code}
     dappend-dempty-lemma : ∀ {Γ} → (d : Diff Γ)
                          → dappend d dempty ≡ d
     dappend-dempty-lemma dempty = refl
@@ -105,16 +115,48 @@ module Diffs where
     dappend-dapply-lemma S dempty d₂ = refl
     dappend-dapply-lemma S (dchg c d₁) d₂
       = dappend-dapply-lemma (chgapply S c) d₁ d₂
+\end{code}
 
+Стек изменяется не так, как список фиксированной длины, поэтому для него
+необходимо отдельно определить возможные изменения.
+
+\begin{code}
   module StackDiff (A : Set) where
     data Chg (S : List A) : Set where
-      push : (i : A) → Chg S
-      pop  : ∀ {Γ S'} → S ≡ Γ ∷ S' → Chg S
+\end{code}
 
+Возможными изменениями стека являются:
+
+\begin{itemize}
+
+    \item
+        добавление значения на вершину стека;
+
+\begin{code}
+      push : (i : A) → Chg S
+\end{code}
+
+    \item
+        снятие значения с вершины стека, если стек не пуст.
+
+\begin{code}
+      pop  : ∀ {Γ S'} → S ≡ Γ ∷ S' → Chg S
+\end{code}
+
+\end{itemize}
+
+\begin{code}
     chgapply : (S : List A) → Chg S → List A
     chgapply cs (push x) = x ∷ cs
     chgapply (._ ∷ S') (pop refl) = S'
+\end{code}
 
+% ой, тут тоже какая-то копипаста, мне теперь хочется определить тип
+% "мета-дифф", который параметрами принимает контекст (List A),
+% изменение (Chg S) и функцию применения изменения (chgapply)
+% как минимум, тогда некоторые леммы не будут дублироваться
+
+\begin{code}
     data Diff (S : List A) : Set where
       dempty : Diff S
       dchg   : (c : Chg S) → Diff (chgapply S c) → Diff S
@@ -141,7 +183,12 @@ module Diffs where
     dappend-dapply-lemma S dempty d₂ = refl
     dappend-dapply-lemma S (dchg c d₁) d₂
       = dappend-dapply-lemma (chgapply S c) d₁ d₂
+\end{code}
 
+Общим набором изменений состояния исполнителя будет являться структура,
+описывающая изменения регистров и двух стеков.
+
+\begin{code}
   record Diff (S : StateType) : Set where
     constructor diff
     field
@@ -150,7 +197,11 @@ module Diffs where
       csdiff : StackDiff.Diff (RegTypes × DataStackType)
                (StateType.callstack S)
   open Diff public
+\end{code}
 
+% дальше какие-то вспомогательные никому не интересные функции и типы
+
+\begin{code}
   dempty : ∀ {S} → Diff S
   dempty = diff
     RegDiff.dempty
@@ -184,12 +235,21 @@ module Diffs where
 
   RegChg : StateType → Set
   RegChg S = RegDiff.Chg (StateType.registers S)
+\end{code}
 
+% вот это вот нужно для описания типа инструкций, которые могут менять
+% все подряд
+
+\begin{code}
   data SmallChg (S : StateType) : Set where
     onlyreg   : RegChg S → SmallChg S
     onlystack : DataStackChg S → SmallChg S
     regstack  : RegChg S → DataStackChg S → SmallChg S
+\end{code}
 
+% снова никому не интерсеные вспомогательные функции
+
+\begin{code}
   regChg : ∀ {S} → RegChg S → Diff S
   regChg c =
       diff
@@ -220,7 +280,11 @@ module Diffs where
       RegDiff.dempty
       StackDiff.dempty
       (StackDiff.dchg c StackDiff.dempty)
+\end{code}
 
+% метаассемблер
+
+\begin{code}
 module Meta where
   open Diffs
 
