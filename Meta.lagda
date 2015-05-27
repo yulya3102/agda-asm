@@ -367,13 +367,13 @@ module x86-64 where
   data ControlInstr (S : State) : Set where
     jmp call : blk (regs S) ∈ heap S → ControlInstr S
     jmp[_]   : blk (regs S) * ∈ heap S → ControlInstr S
-    -- :(
-    -- ret      : ? → ControlInstr S
 \end{code}
 
-% вот тут можно поныть на тему того, что сигнатуры jmp и call не различаются,
-% и это не очень хорошо
-% а так же на тему того, что ret нормально не заимплементишь
+Но не любые инструкции можно корректно определить с помощью имеющегося кода.
+Например, инструкция `ret` может быть корректно выполенена только при
+подходящем состоянии стека вызовов, что никак не учтено в типе инструкции.
+
+% написать что-нибудь про mov надо
 
 \begin{code}
   data Instr (S : State) : SDiff S → Set where
@@ -382,7 +382,11 @@ module x86-64 where
              (Blocks.Block ControlInstr Instr)
              (heap S) τ
            → Instr S (dchg (chg r τ) dempty)
+\end{code}
 
+Описание семантики определенных инструкций аналогично приведенному ранее.
+
+\begin{code}
   exec-control : {S : State}
                → ControlInstr S
                → Values.Heap
@@ -399,8 +403,7 @@ module x86-64 where
       $ Values.load (Blocks.Block ControlInstr Instr) x Ψ)
 \end{code}
 
-% я не помню, почему это не реализовано: то ли не осилила, то ли
-% потерялся смысл
+Функция `exec-instr` не была реализована. % потому что потерялся смысл
 
 \begin{code}
   exec-instr : {S : State}
