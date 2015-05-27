@@ -18,8 +18,8 @@ module Diffs where
 тип должен ограничивать, к какому списку его можно применять.
 
 \begin{code}
+  open import OXIj.BrutalDepTypes
   module ListChg (A : Set) where
-    open import OXIj.BrutalDepTypes
     open Data-List
     open Data-Any
     open Membership {A = A} _≡_
@@ -89,6 +89,24 @@ module Diffs where
             → Diff (dapply Γ d) → Diff Γ
     dappend dempty b = b
     dappend (dchg c a) b = dchg c (dappend a b)
+\end{code}
+
+Докажем две полезных леммы про наборы изменений:
+
+\begin{code}
+    dappend-dempty-lemma : ∀ {Γ} → (d : Diff Γ)
+                         → dappend d dempty ≡ d
+    dappend-dempty-lemma dempty = refl
+    dappend-dempty-lemma (dchg c d)
+      rewrite dappend-dempty-lemma d = refl
+
+    dappend-dapply-lemma : ∀ S → (d₁ : Diff S)
+                         → (d₂ : Diff (dapply S d₁))
+                         → dapply S (dappend d₁ d₂)
+                         ≡ dapply (dapply S d₁) d₂
+    dappend-dapply-lemma S dempty d₂ = refl
+    dappend-dapply-lemma S (dchg c d₁) d₂
+      = dappend-dapply-lemma (chgapply S c) d₁ d₂
 \end{code}
 
 % вообще-то содержательная часть здесь заканчивается

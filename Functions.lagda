@@ -89,34 +89,15 @@ data Maybe (A : Set) : Set where
 
 \begin{code}
 module Diffs where
+  import NotSSA
 \end{code}
 
 Изменения списка регистров уже были описаны ранее.
 
 \begin{code}
   module RegDiff where
-    import NotSSA
-    open NotSSA.Diffs
-    open ListChg RegType public
-    open Diff chgapply public
-\end{code}
-
-% фиг знает, что тут писать
-
-\begin{code}
-    dappend-dempty-lemma : ∀ {Γ} → (d : Diff Γ)
-                         → dappend d dempty ≡ d
-    dappend-dempty-lemma dempty = refl
-    dappend-dempty-lemma (dchg c d)
-      rewrite dappend-dempty-lemma d = refl
-
-    dappend-dapply-lemma : ∀ S → (d₁ : Diff S)
-                         → (d₂ : Diff (dapply S d₁))
-                         → dapply S (dappend d₁ d₂)
-                         ≡ dapply (dapply S d₁) d₂
-    dappend-dapply-lemma S dempty d₂ = refl
-    dappend-dapply-lemma S (dchg c d₁) d₂
-      = dappend-dapply-lemma (chgapply S c) d₁ d₂
+    open NotSSA.Diffs.ListChg RegType public
+    open NotSSA.Diffs.Diff chgapply public
 \end{code}
 
 Стек изменяется не так, как список фиксированной длины, поэтому для него
@@ -147,44 +128,15 @@ module Diffs where
 
 \end{itemize}
 
+Определим, как изменения применяются к стеку, и используем определенный
+ранее тип набора изменений.
+
 \begin{code}
     chgapply : (S : List A) → Chg S → List A
     chgapply cs (push x) = x ∷ cs
     chgapply (._ ∷ S') (pop refl) = S'
-\end{code}
 
-% ой, тут тоже какая-то копипаста, мне теперь хочется определить тип
-% "мета-дифф", который параметрами принимает контекст (List A),
-% изменение (Chg S) и функцию применения изменения (chgapply)
-% как минимум, тогда некоторые леммы не будут дублироваться
-
-\begin{code}
-    data Diff (S : List A) : Set where
-      dempty : Diff S
-      dchg   : (c : Chg S) → Diff (chgapply S c) → Diff S
-
-    dc : ∀ {S} → Chg S → Diff S
-    dc c = dchg c dempty
-
-    dmaybe : ∀ {S} → Maybe (Chg S) → Diff S
-    dmaybe (just x) = dc x
-    dmaybe nothing = dempty
-
-    dapply : (S : List A) → Diff S → List A
-    dapply S dempty = S
-    dapply S (dchg c d) = dapply (chgapply S c) d
-
-    dappend : ∀ {S} → (d : Diff S) → Diff (dapply S d) → Diff S
-    dappend dempty d' = d'
-    dappend (dchg c d) d' = dchg c (dappend d d')
-
-    dappend-dapply-lemma : ∀ S → (d₁ : Diff S)
-                         → (d₂ : Diff (dapply S d₁))
-                         → dapply S (dappend d₁ d₂)
-                         ≡ dapply (dapply S d₁) d₂
-    dappend-dapply-lemma S dempty d₂ = refl
-    dappend-dapply-lemma S (dchg c d₁) d₂
-      = dappend-dapply-lemma (chgapply S c) d₁ d₂
+    open NotSSA.Diffs.Diff chgapply public
 \end{code}
 
 Общим набором изменений состояния исполнителя будет являться структура,
