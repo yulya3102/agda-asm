@@ -1,3 +1,4 @@
+\begin{code}
 module Functions where
 
 open import OXIj.BrutalDepTypes
@@ -21,7 +22,7 @@ record StateType : Set where
     callstack : CallStackType
 
 data RegType where
-  _✴  : Type → RegType
+  _*  : Type → RegType
   int : RegType
 
 data Type where
@@ -190,7 +191,7 @@ module Meta where
     (Block : (S : StateType) → Diff S → Set)
     where
     data RegValue (Ψ : DataType) : RegType → Set where
-      ptr : ∀ {τ} → τ ∈ Ψ → RegValue Ψ (τ ✴)
+      ptr : ∀ {τ} → τ ∈ Ψ → RegValue Ψ (τ *)
       int : ℕ → RegValue Ψ int
 
     data Value (Ψ : DataType) : Type → Set where
@@ -201,7 +202,7 @@ module Meta where
            → (Σ (Diff (statetype Γ Ψ DS CS)) (Block (statetype Γ Ψ DS CS)))
     unfunc (func b) = _ , b
 
-    unptr : ∀ {Ψ τ} → Value Ψ (atom (τ ✴)) → τ ∈ Ψ
+    unptr : ∀ {Ψ τ} → Value Ψ (atom (τ *)) → τ ∈ Ψ
     unptr (atom (ptr x)) = x
       
     data Registers (Ψ : DataType) : RegTypes → Set where
@@ -235,7 +236,7 @@ module Meta where
              → Σ (Diff (statetype Γ Ψ DS CS)) (Block (statetype Γ Ψ DS CS))
     loadfunc Ψ f = unfunc $ load Ψ f
 
-    loadptr : ∀ {Ψ τ} → Data Ψ → atom (τ ✴) ∈ Ψ → τ ∈ Ψ
+    loadptr : ∀ {Ψ τ} → Data Ψ → atom (τ *) ∈ Ψ → τ ∈ Ψ
     loadptr Ψ p = unptr $ load Ψ p
 
     data Stack {I : Set} {A : I → Set} (Ψ : DataType) : List I → Set where
@@ -410,7 +411,7 @@ module AMD64 where
            (func
            (StateType.registers S)
            (StateType.datastack S)
-           (StateType.callstack S) ✴)
+           (StateType.callstack S) *)
            ∈ StateType.memory S)
          → ControlInstr S nothing
     jump : (f : func
@@ -477,7 +478,7 @@ module AMD64 where
     pltize (atom x ∷ Ψ) = atom x ∷ pltize Ψ
     pltize (func Γ DS CS ∷ Ψ)
       -- первое — plt, второе — got, третье — сама функция
-      = func Γ DS CS ∷ (atom (func Γ DS CS ✴) ∷ (func Γ DS CS ∷ pltize Ψ))
+      = func Γ DS CS ∷ (atom (func Γ DS CS *) ∷ (func Γ DS CS ∷ pltize Ψ))
 
     -- вообще-то тут результатом является не функция в измененном хипе,
     -- а plt-шный блок, соответствующий функции из старого хипа
@@ -488,7 +489,7 @@ module AMD64 where
     plt {Ψ = atom x ∷ Ψ} (there f) = there $ plt f
     plt {Ψ = func Γ DS CS ∷ Ψ} (there f) = there (there (there (plt f)))
 
-    got : ∀ {Γ Ψ DS CS} → func Γ DS CS ∈ Ψ → atom (func Γ DS CS ✴) ∈ pltize Ψ
+    got : ∀ {Γ Ψ DS CS} → func Γ DS CS ∈ Ψ → atom (func Γ DS CS *) ∈ pltize Ψ
     got (here refl) = there (here refl)
     got {Ψ = atom x ∷ Ψ} (there f) = there $ got f
     got {Ψ = func Γ DS CS ∷ Ψ} (there f) = there (there (there (got f)))
@@ -501,7 +502,7 @@ module AMD64 where
     blk {Ψ = atom x ∷ Ψ} (there f) = there $ blk f
     blk {Ψ = func Γ DS CS ∷ Ψ} (there f) = there (there (there (blk f)))
 
-    plt-stub : ∀ {Γ Ψ DS CS} → atom (func Γ DS CS ✴) ∈ Ψ
+    plt-stub : ∀ {Γ Ψ DS CS} → atom (func Γ DS CS *) ∈ Ψ
              -- внимание на дифф!
              → Block (statetype Γ Ψ DS CS) dempty
     plt-stub got = jmp[ got ] ∙
@@ -511,7 +512,7 @@ module AMD64 where
                    (StateType.registers ST)
                    (StateType.datastack ST)
                    (StateType.callstack ST)
-                 ✴) ∈ StateType.memory ST)
+                 *) ∈ StateType.memory ST)
               → exec-block S (jmp[ p ] ∙)
               ≡ S , loadfunc (State.memory S) (loadptr (State.memory S) p)
     exec-ijmp S p = refl
@@ -538,3 +539,4 @@ module AMD64 where
           -- и сама функция
             (projr $ loadfunc (State.memory S) (blk f))
     proof f S p = left (exec-plt f S p) equal
+\end{code}
