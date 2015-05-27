@@ -410,6 +410,26 @@ module x86-64 where
              (heap S) τ
            → Instr S (dchg (chg r τ) dempty)
 
+  exec-control : {S : State}
+               → ControlInstr S
+               → Values.Heap
+                 (Blocks.Block ControlInstr Instr)
+                 (heap S)
+               → CallStack (heap S) → IP (heap S)
+               → CallStack (heap S) × IPRFT (heap S) (regs S)
+  exec-control {state heap regs} (jmp x) Ψ cs ip = cs , x
+  exec-control {state heap regs} (call x) Ψ cs ip = ip ∷ cs , x
+  exec-control {state heap regs} (jmp[ x ]) Ψ cs ip
+    = cs
+    , (Values.unptr
+      (Blocks.Block ControlInstr Instr)
+      $ Values.load (Blocks.Block ControlInstr Instr) x Ψ)
+\end{code}
+
+% я не помню, почему это не реализовано: то ли не осилила, то ли
+% потерялся смысл
+
+\begin{code}
   exec-instr : {S : State}
              → {d : SDiff S} → Instr S d
              → Values.Heap
@@ -424,29 +444,7 @@ module x86-64 where
              × Values.Registers
                (Blocks.Block ControlInstr Instr)
                (sdapply S d)
-  
-  exec-control : {S : State}
-               → ControlInstr S
-               → Values.Heap
-                 (Blocks.Block ControlInstr Instr)
-                 (heap S)
-               → CallStack (heap S) → IP (heap S)
-               → CallStack (heap S) × IPRFT (heap S) (regs S)
-\end{code}
-
-% я не помню, почему это не реализовано: то ли не осилила, то ли
-% потерялся смысл
-
-\begin{code}
   exec-instr = {!!}
-
-  exec-control {state heap regs} (jmp x) Ψ cs ip = cs , x
-  exec-control {state heap regs} (call x) Ψ cs ip = ip ∷ cs , x
-  exec-control {state heap regs} (jmp[ x ]) Ψ cs ip
-    = cs
-    , (Values.unptr
-      (Blocks.Block ControlInstr Instr)
-      $ Values.load (Blocks.Block ControlInstr Instr) x Ψ)
 
   open Exec ControlInstr Instr exec-instr exec-control
 \end{code}
