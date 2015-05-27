@@ -335,17 +335,17 @@ module Meta where
     open Values Block public
 \end{code}
 
-% вот тут надо как-нибудь написать, что тут я увидела, каким говном получается
-% определение exec-blk, переосмыслила жизнь и расстроилась
+% описание того, почему сигнатура exec-blk именно такая, должно быть где-то
+% выше
 
-% и вообще, эта портянка кода никому не нужна, ибо все равно не работает,
-% может, ее стоит выкинуть?
+Одним из результатов исполнения функции `exec-blk` является блок, который
+должен исполняться следующим. Для некоторых блоков (например, блоков,
+заканчивающихся условным переходом или вызовом функции) важно их расположение
+в памяти: за ними должен располагаться блок кода, имеющий подходящий тип.
+Это не было учтено при реализации блоков, из-за чего корректно определить
+функцию `exec-blk` оказалось затруднительно.
 
 \begin{code}
-    dapply-lemma : ∀ {Γ} d d'
-           → dapply Γ (dappend d d') ≡ dapply (dapply Γ d) d'
-    dapply-lemma d d' = {!!}
-
     exec-blk : {S : State} {d : Diff (regs S)} {b : Block S d}
              → (Ψ : Heap (heap S))
              → b ∈B Ψ
@@ -354,34 +354,7 @@ module Meta where
              × (Heap (heap $ sdapply S d)
              × (Registers (sdapply S d)
              × CallStack (heap $ sdapply S d)))
-    exec-blk {b = b} Ψ p Γ cs = exec-blk-next-ip b {!!} Ψ Γ cs
-      where
-      find-next-block : ∀ {Ψ} → IP Ψ → IP Ψ
-      find-next-block = {!!}
-      exec-blk-next-ip : {S : State} {d : Diff (regs S)} → Block S d → IP (heap S)
-                       → Heap (heap S) → Registers S → CallStack (heap S)
-                       → (Σ (Diff $ dapply (regs S) d) (Block $ sdapply S d))
-                       × (Heap (heap $ sdapply S d)
-                       × (Registers (sdapply S d)
-                       × CallStack (heap $ sdapply S d)))
-      exec-blk-next-ip Blocks.halt ip Ψ Γ cs = (_ , halt) , (Ψ , Γ , cs)
-      exec-blk-next-ip {S} (Blocks.↝ i) ip Ψ Γ cs = next-block , Ψ , Γ , next-cs
-        where
-        next-state : CallStack (heap S) × IPRFT (heap S) (regs S)
-        next-state = exec-control i Ψ cs ip
-        next-cs : CallStack (heap S)
-        next-cs = projl next-state
-        next-ip : blk (regs S) ∈ (heap S)
-        next-ip = projr next-state
-        next-block : Σ (Diff (regs S)) (Block S)
-        next-block = unfun $ load next-ip Ψ
-      exec-blk-next-ip {S} (Blocks._∙_ {d} {d'} i b) ip Ψ Γ cs
-        rewrite dapply-lemma d d' = exec-blk-next-ip b ip next-heap next-regs cs
-        where
-        next-state : Heap (heap $ sdapply S d) × Registers (sdapply S d)
-        next-state = exec-instr i Ψ Γ
-        next-heap = projl next-state
-        next-regs = projr next-state
+    exec-blk {b = b} Ψ p Γ cs = {!!}
 
     open Eq Block exec-blk public
 open Meta
