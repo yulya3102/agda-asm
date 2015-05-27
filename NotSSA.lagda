@@ -9,11 +9,7 @@ module NotSSA where
 изменив тип инструкции.
 
 \begin{code}
-module Diffs (A : Set) where
-  open import OXIj.BrutalDepTypes
-  open Data-List
-  open Data-Any
-  open Membership {A = A} _≡_
+module Diffs where
 \end{code}
 
 Определим тип, описывающий одно изменение списка фиксированной длины:
@@ -22,23 +18,28 @@ module Diffs (A : Set) where
 тип должен ограничивать, к какому списку его можно применять.
 
 \begin{code}
-  data Chg (Γ : List A) : Set where
+  module ListChg (A : Set) where
+    open import OXIj.BrutalDepTypes
+    open Data-List
+    open Data-Any
+    open Membership {A = A} _≡_
+    data Chg (Γ : List A) : Set where
 \end{code}
 
 Для того, чтобы описать изменение элемента в списке, необходимо указать,
 какая позиция меняется и на что.
 
 \begin{code}
-    chg : ∀ {τ} → τ ∈ Γ → A → Chg Γ
+      chg : ∀ {τ} → τ ∈ Γ → A → Chg Γ
 \end{code}
 
 Сами по себе изменения не несут особого смысла: необходимо указать, как
 они применяются к спискам.
 
 \begin{code}
-  chgapply : (Γ : List A) → Chg Γ → List A
-  chgapply (_ ∷ Γ) (chg (here refl) σ) = σ ∷ Γ
-  chgapply (τ ∷ Γ) (chg (there p)   σ) = τ ∷ chgapply Γ (chg p σ)
+    chgapply : (Γ : List A) → Chg Γ → List A
+    chgapply (_ ∷ Γ) (chg (here refl) σ) = σ ∷ Γ
+    chgapply (τ ∷ Γ) (chg (there p)   σ) = τ ∷ chgapply Γ (chg p σ)
 \end{code}
 
 Блок кода последовательно применяет изменения к контексту регистров. Для
@@ -46,7 +47,12 @@ module Diffs (A : Set) where
 тип:
 
 \begin{code}
-  data Diff (Γ : List A) : Set where
+  module Diff
+    {Ctx : Set}
+    {Chg : Ctx → Set}
+    (chgapply : (Γ : Ctx) → Chg Γ → Ctx)
+    where
+    data Diff (Γ : Ctx) : Set where
 \end{code}
 
 \begin{itemize}
@@ -56,14 +62,14 @@ module Diffs (A : Set) where
     управляющей инструкции)
 
 \begin{code}
-    dempty  : Diff Γ
+      dempty  : Diff Γ
 \end{code}
 
   \item
     либо это изменение, добавленное перед уже имеющимся набором
 
 \begin{code}
-    dchg    : (c : Chg Γ) → Diff (chgapply Γ c) → Diff Γ
+      dchg    : (c : Chg Γ) → Diff (chgapply Γ c) → Diff Γ
 \end{code}
 
 \end{itemize}
@@ -71,18 +77,18 @@ module Diffs (A : Set) where
 Наборы изменений тоже применяются к спискам.
 
 \begin{code}
-  dapply : (Γ : List A) → Diff Γ → List A
-  dapply Γ dempty = Γ
-  dapply Γ (dchg c d) = dapply (chgapply Γ c) d
+    dapply : (Γ : Ctx) → Diff Γ → Ctx
+    dapply Γ dempty = Γ
+    dapply Γ (dchg c d) = dapply (chgapply Γ c) d
 \end{code}
 
 Два набора изменений можно применять последовательно:
 
 \begin{code}
-  dappend : ∀ {Γ} → (d : Diff Γ)
-          → Diff (dapply Γ d) → Diff Γ
-  dappend dempty b = b
-  dappend (dchg c a) b = dchg c (dappend a b)
+    dappend : ∀ {Γ} → (d : Diff Γ)
+            → Diff (dapply Γ d) → Diff Γ
+    dappend dempty b = b
+    dappend (dchg c a) b = dchg c (dappend a b)
 \end{code}
 
 % вообще-то содержательная часть здесь заканчивается
@@ -94,7 +100,8 @@ module Diffs (A : Set) where
 open import DevCore
 
 module FixedHeap (Ψ : HeapTypes) where
-  open Diffs Type
+  open Diffs.ListChg Type
+  open Diffs.Diff chgapply
 \end{code}
 
 Ранее тип блока описывал список добавляемых регистров. Теперь он описывает

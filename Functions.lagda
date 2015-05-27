@@ -96,7 +96,9 @@ module Diffs where
 \begin{code}
   module RegDiff where
     import NotSSA
-    open NotSSA.Diffs RegType public
+    open NotSSA.Diffs
+    open ListChg RegType public
+    open Diff chgapply public
 \end{code}
 
 % фиг знает, что тут писать
