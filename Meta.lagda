@@ -55,7 +55,7 @@ module Meta where
 \begin{code}
   module Blocks
     (ControlInstr : StateType → Set)
-    (Instr : (S : StateType) → Diff (regs S) → Set)
+    (Instr : (S : StateType) → Chg (regs S) → Set)
     where
 \end{code}
 
@@ -65,8 +65,8 @@ module Meta where
     data Block (S : StateType) : Diff (regs S) → Set where
       halt : Block S dempty
       ↝    : ControlInstr S → Block S dempty
-      _∙_  : ∀ {d d'} → Instr S d → Block (sdapply S d) d'
-           → Block S (dappend d d')
+      _∙_  : ∀ {c d} → Instr S c → Block (sdapply S (dchg c dempty)) d
+           → Block S (dchg c d)
 \end{code}
 
 В этой версии вместо сохранения в стеке вызовов самих блоков будем хранить
@@ -275,9 +275,9 @@ module Meta where
 \begin{code}
   module Exec
     (ControlInstr : StateType → Set)
-    (Instr : (S : StateType) → SDiff S → Set)
+    (Instr : (S : StateType) → Chg (regs S) → Set)
     (exec-instr : {S : StateType}
-                → {d : SDiff S} → Instr S d
+                → {c : Chg (regs S)} → Instr S c
                 → Values.Heap
                   (Blocks.Block ControlInstr Instr)
                   (heap S)
@@ -286,10 +286,10 @@ module Meta where
                   S
                 → Values.Heap
                   (Blocks.Block ControlInstr Instr)
-                  (heap $ sdapply S d)
+                  (heap $ sdapply S (dchg c dempty))
                 × Values.Registers
                   (Blocks.Block ControlInstr Instr)
-                  (sdapply S d))
+                  (sdapply S (dchg c dempty)))
     (exec-control : {S : StateType}
                   → ControlInstr S
                   → Values.Heap
@@ -345,12 +345,12 @@ module x86-64 where
 % написать что-нибудь про mov надо
 
 \begin{code}
-  data Instr (S : StateType) : SDiff S → Set where
+  data Instr (S : StateType) : Chg (regs S) → Set where
     mov_,_ : ∀ {τ σ} → (r : σ ∈ regs S)
            → Values.Value
              (Blocks.Block ControlInstr Instr)
              (heap S) τ
-           → Instr S (dchg (chg r τ) dempty)
+           → Instr S (chg r τ)
 \end{code}
 
 Описание семантики определенных инструкций аналогично приведенному ранее.
@@ -376,7 +376,7 @@ module x86-64 where
 
 \begin{code}
   exec-instr : {S : StateType}
-             → {d : SDiff S} → Instr S d
+             → {c : Chg (regs S)} → Instr S c
              → Values.Heap
                (Blocks.Block ControlInstr Instr)
                (heap S)
@@ -385,10 +385,10 @@ module x86-64 where
                S
              → Values.Heap
                (Blocks.Block ControlInstr Instr)
-               (heap $ sdapply S d)
+               (heap $ sdapply S (dchg c dempty))
              × Values.Registers
                (Blocks.Block ControlInstr Instr)
-               (sdapply S d)
+               (sdapply S (dchg c dempty))
   exec-instr = {!!}
 
   open Exec ControlInstr Instr exec-instr exec-control

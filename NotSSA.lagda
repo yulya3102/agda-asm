@@ -144,7 +144,7 @@ module FixedHeap (Ψ : HeapTypes) where
 к контексту регистров заменим на описание набора изменений.
 
 \begin{code}
-  data Instr (Γ : RegFileTypes) : Diff Γ → Set
+  data Instr (Γ : RegFileTypes) : Chg Γ → Set
 \end{code}
 
 Как и в прошлый раз, перед определением инструкций определим возможные
@@ -164,7 +164,7 @@ module FixedHeap (Ψ : HeapTypes) where
 \begin{code}
   data Instr (Γ : RegFileTypes) where
     mov  : ∀ {r τ} → (r∈Γ : r ∈ Γ) → Value τ
-         → Instr Γ (dchg (chg r∈Γ τ) dempty)
+         → Instr Γ (chg r∈Γ τ)
 \end{code}
 
 И, наконец, определим конструкторы блока.
@@ -173,6 +173,6 @@ module FixedHeap (Ψ : HeapTypes) where
   data Block (Γ : RegFileTypes) where
     halt : Block Γ dempty
     ↝    : ControlInstr Γ → Block Γ dempty
-    _∙_  : ∀ {d' d} → Instr Γ d' → Block (dapply Γ d') d
-         → Block Γ (dappend d' d)
+    _∙_  : ∀ {c d} → Instr Γ c → Block (chgapply Γ c) d
+         → Block Γ (dchg c d)
 \end{code}
