@@ -4,15 +4,53 @@ module Functions where
 open import OXIj.BrutalDepTypes
 open Data-List
 open Data-Any
+\end{code}
 
+% мне очень сильно хочется порезать файл на куски и распихать по разным
+% секциям главы
+
+Одной из проблем прошлых решений является неучитывание размеров возможных
+значений, из-за чего возможно написать код, загружающий в регистр значение,
+которое не может быть загружено. Решить эту проблему возможно, поделив
+возможные значения на два класса:
+
+\begin{itemize}
+    
+    \item
+        значения, размер которых равен размеру регистра;
+
+\begin{code}
 data RegType : Set
+
+RegTypes = List RegType
+\end{code}
+
+    \item
+        значения произвольного размера, которые могут располагаться в памяти.
+
+\begin{code}
 data Type : Set
 
-RegTypes      = List RegType
-DataType      = List Type
+DataType = List Type
+\end{code}
+
+\end{itemize}
+
+Еще одной проблемой являлось полное отсутствие динамически аллоцируемой
+памяти, в качестве которой обычно используется стек данных.
+
+Для удобства будем считать стек вызовов и стек данных разными сущностями,
+хотя на практике обычно используется один стек.
+
+\begin{code}
 DataStackType = List RegType
 CallStackType = List (RegTypes × DataStackType)
+\end{code}
 
+Состояния обоих стеков, как и состояния регистров и памяти, входят в
+состояние исполнителя.
+
+\begin{code}
 record StateType : Set where
   constructor statetype
   field
@@ -20,14 +58,24 @@ record StateType : Set where
     memory    : DataType
     datastack : DataStackType
     callstack : CallStackType
+\end{code}
 
+Значениями, размер которых равен размеру регистра, являются указатели и
+целые числа.
+
+\begin{code}
 data RegType where
   _*  : Type → RegType
   int : RegType
+\end{code}
 
+К значениям, которые могут располагаться в памяти, относятся как значения
+размера регистра, так и блоки кода.
+
+\begin{code}
 data Type where
   atom : RegType → Type
-  func : RegTypes → DataStackType → CallStackType → Type
+  block : RegTypes → DataStackType → CallStackType → Type
 
 open Membership {A = Type} _≡_
 _∈R_ = Membership._∈_ {A = RegType} _≡_
@@ -202,14 +250,14 @@ module Meta where
 
     data Value (Ψ : DataType) : Type → Set where
       atom : ∀ {τ} → RegValue Ψ τ → Value Ψ (atom τ)
-      func : ∀ {Γ DS CS d}
-           → Block (statetype Γ Ψ DS CS) d
-           → Value Ψ (func Γ DS CS)
+      block : ∀ {Γ DS CS d}
+            → Block (statetype Γ Ψ DS CS) d
+            → Value Ψ (block Γ DS CS)
 
-    unfunc : ∀ {Ψ Γ DS CS} → Value Ψ (func Γ DS CS)
-           → Σ (Diff (statetype Γ Ψ DS CS))
-               (Block (statetype Γ Ψ DS CS))
-    unfunc (func b) = _ , b
+    unblock : ∀ {Ψ Γ DS CS} → Value Ψ (block Γ DS CS)
+            → Σ (Diff (statetype Γ Ψ DS CS))
+                (Block (statetype Γ Ψ DS CS))
+    unblock (block b) = _ , b
 
     unptr : ∀ {Ψ τ} → Value Ψ (atom (τ *)) → τ ∈ Ψ
     unptr (atom (ptr x)) = x
@@ -248,10 +296,10 @@ module Meta where
       iload (x ∷ H) (here refl) = x
       iload (x ∷ H) (there p) = iload H p
 
-    loadfunc : ∀ {Ψ Γ CS DS} → Data Ψ → func Γ DS CS ∈ Ψ
+    loadfunc : ∀ {Ψ Γ CS DS} → Data Ψ → block Γ DS CS ∈ Ψ
              → Σ (Diff (statetype Γ Ψ DS CS))
                  (Block (statetype Γ Ψ DS CS))
-    loadfunc Ψ f = unfunc $ load Ψ f
+    loadfunc Ψ f = unblock $ load Ψ f
 
     loadptr : ∀ {Ψ τ} → Data Ψ → atom (τ *) ∈ Ψ → τ ∈ Ψ
     loadptr Ψ p = unptr $ load Ψ p
@@ -269,7 +317,7 @@ module Meta where
          → DataStackType
          → CallStackType
          → Set
-    IPRT Ψ Γ DS CS = func Γ DS CS ∈ Ψ
+    IPRT Ψ Γ DS CS = block Γ DS CS ∈ Ψ
 
     DataStack = λ Ψ → Stack {A = RegValue Ψ} Ψ
 
@@ -465,7 +513,7 @@ module AMD64 where
 
 \begin{code}
     call : ∀ {Γ DS}
-         → (f : func
+         → (f : block
            (StateType.registers S)
            (StateType.datastack S)
            ((Γ , DS) ∷ StateType.callstack S)
@@ -476,7 +524,7 @@ module AMD64 where
 % но мне плевать, потому что память неизменна
 
 \begin{code}
-         → (cont : func Γ DS (StateType.callstack S)
+         → (cont : block Γ DS (StateType.callstack S)
                  ∈ StateType.memory S)
          → ControlInstr S (just $ StackDiff.push (Γ , DS))
 \end{code}
@@ -485,13 +533,13 @@ module AMD64 where
 
 \begin{code}
     jmp[_] : (ptr : atom
-           (func
+           (block
            (StateType.registers S)
            (StateType.datastack S)
            (StateType.callstack S) *)
            ∈ StateType.memory S)
          → ControlInstr S nothing
-    jump : (f : func
+    jump : (f : block
            (StateType.registers S)
            (StateType.datastack S)
            (StateType.callstack S)
@@ -567,15 +615,15 @@ module AMD64 where
     pltize : DataType → DataType
     pltize [] = []
     pltize (atom x ∷ Ψ) = atom x ∷ pltize Ψ
-    pltize (func Γ DS CS ∷ Ψ)
+    pltize (block Γ DS CS ∷ Ψ)
 \end{code}
 
 % первое -- plt, второе -- got, третье -- сама функция
 
 \begin{code}
-      = func Γ DS CS
-      ∷ (atom (func Γ DS CS *)
-      ∷ (func Γ DS CS
+      = block Γ DS CS
+      ∷ (atom (block Γ DS CS *)
+      ∷ (block Γ DS CS
       ∷ pltize Ψ))
 \end{code}
 
@@ -585,18 +633,18 @@ module AMD64 where
 % потому эта сигнатура выглядит как говно :(
 
 \begin{code}
-    plt : ∀ {Γ Ψ DS CS} → func Γ DS CS ∈ Ψ
-        → func Γ DS CS ∈ pltize Ψ
+    plt : ∀ {Γ Ψ DS CS} → block Γ DS CS ∈ Ψ
+        → block Γ DS CS ∈ pltize Ψ
     plt (here refl) = here refl
     plt {Ψ = atom x ∷ Ψ} (there f) = there $ plt f
-    plt {Ψ = func Γ DS CS ∷ Ψ} (there f)
+    plt {Ψ = block Γ DS CS ∷ Ψ} (there f)
       = there (there (there (plt f)))
 
-    got : ∀ {Γ Ψ DS CS} → func Γ DS CS ∈ Ψ
-        → atom (func Γ DS CS *) ∈ pltize Ψ
+    got : ∀ {Γ Ψ DS CS} → block Γ DS CS ∈ Ψ
+        → atom (block Γ DS CS *) ∈ pltize Ψ
     got (here refl) = there (here refl)
     got {Ψ = atom x ∷ Ψ} (there f) = there $ got f
-    got {Ψ = func Γ DS CS ∷ Ψ} (there f)
+    got {Ψ = block Γ DS CS ∷ Ψ} (there f)
       = there (there (there (got f)))
 \end{code}
 
@@ -605,14 +653,14 @@ module AMD64 where
 % и эта функция является следствием из этого факта
 
 \begin{code}
-    blk : ∀ {Γ Ψ DS CS} → func Γ DS CS ∈ Ψ
-        → func Γ DS CS ∈ pltize Ψ
+    blk : ∀ {Γ Ψ DS CS} → block Γ DS CS ∈ Ψ
+        → block Γ DS CS ∈ pltize Ψ
     blk (here refl) = there (there (here refl))
     blk {Ψ = atom x ∷ Ψ} (there f) = there $ blk f
-    blk {Ψ = func Γ DS CS ∷ Ψ} (there f)
+    blk {Ψ = block Γ DS CS ∷ Ψ} (there f)
       = there (there (there (blk f)))
 
-    plt-stub : ∀ {Γ Ψ DS CS} → atom (func Γ DS CS *) ∈ Ψ
+    plt-stub : ∀ {Γ Ψ DS CS} → atom (block Γ DS CS *) ∈ Ψ
 \end{code}
 
 % внимание на дифф!
@@ -622,7 +670,7 @@ module AMD64 where
     plt-stub got = jmp[ got ] ∙
 
     exec-ijmp : ∀ {ST} → (S : State ST)
-              → (p : atom (func
+              → (p : atom (block
                    (StateType.registers ST)
                    (StateType.datastack ST)
                    (StateType.callstack ST)
@@ -637,7 +685,7 @@ module AMD64 where
     open ≡-Prop
 
     exec-plt : ∀ {Γ Ψ DS CS}
-             → (f : func Γ DS CS ∈ Ψ)
+             → (f : block Γ DS CS ∈ Ψ)
              → (S : State (statetype Γ (pltize Ψ) DS CS))
              → loadptr (State.memory S) (got f) ≡ blk f
              → exec-block S (plt-stub (got f))
@@ -645,7 +693,7 @@ module AMD64 where
     exec-plt f S p rewrite sym p = exec-ijmp S (got f)
 
     proof : ∀ {Γ Ψ DS CS}
-          → (f : func Γ DS CS ∈ Ψ)
+          → (f : block Γ DS CS ∈ Ψ)
           → (S : State (statetype Γ (pltize Ψ) DS CS))
 \end{code}
 
