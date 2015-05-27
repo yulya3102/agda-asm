@@ -1,4 +1,4 @@
-AGDA = SSA NotSSA Meta Functions
+AGDA = Core SSA NotSSA Meta Functions
 
 agda:
 	@for lagda in $(AGDA) ; do \
