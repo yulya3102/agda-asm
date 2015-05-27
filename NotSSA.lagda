@@ -11,7 +11,7 @@ open import Core
 изменив тип инструкции.
 
 \begin{code}
-module TDiffs where
+module Diffs where
 \end{code}
 
 Определим тип, описывающий одно изменение списка фиксированной длины:
@@ -20,24 +20,23 @@ module TDiffs where
 тип должен ограничивать, к какому списку его можно применять.
 
 \begin{code}
-  data TChg (Γ : RegFileTypes) : Set where
+  data Chg (Γ : List Type) : Set where
 \end{code}
 
 Для того, чтобы описать изменение элемента в списке, необходимо указать,
 какая позиция меняется и на что.
 
 \begin{code}
-    tchgcr : ∀ {r} → r ∈ Γ → (r' : Type) → TChg Γ
+    chg : ∀ {τ} → τ ∈ Γ → Type → Chg Γ
 \end{code}
 
 Сами по себе изменения не несут особого смысла: необходимо указать, как
 они применяются к спискам.
 
 \begin{code}
-  appChg : (Γ : RegFileTypes) → TChg Γ → RegFileTypes
-  appChg (_ ∷ Γ) (tchgcr (here refl) r') = r' ∷ Γ
-  appChg (a ∷ Γ) (tchgcr (there r) r')
-    = a ∷ appChg Γ (tchgcr r r')
+  chgapply : (Γ : List Type) → Chg Γ → List Type
+  chgapply (_ ∷ Γ) (chg (here refl) σ) = σ ∷ Γ
+  chgapply (τ ∷ Γ) (chg (there p)   σ) = τ ∷ chgapply Γ (chg p σ)
 \end{code}
 
 Блок кода последовательно применяет изменения к контексту регистров. Для
@@ -45,7 +44,7 @@ module TDiffs where
 тип:
 
 \begin{code}
-  data TDiff (Γ : RegFileTypes) : Set where
+  data Diff (Γ : List Type) : Set where
 \end{code}
 
 \begin{itemize}
@@ -55,14 +54,14 @@ module TDiffs where
     управляющей инструкции)
 
 \begin{code}
-    tdempty  : TDiff Γ
+    dempty  : Diff Γ
 \end{code}
 
   \item
     либо это изменение, добавленное перед уже имеющимся набором
 
 \begin{code}
-    tdchg    : (tchg : TChg Γ) → TDiff (appChg Γ tchg) → TDiff Γ
+    dchg    : (c : Chg Γ) → Diff (chgapply Γ c) → Diff Γ
 \end{code}
 
 \end{itemize}
@@ -70,20 +69,20 @@ module TDiffs where
 Наборы изменений тоже применяются к спискам.
 
 \begin{code}
-  tdapply : (Γ : RegFileTypes) → TDiff Γ → RegFileTypes
-  tdapply Γ tdempty = Γ
-  tdapply Γ (tdchg tchg td) = tdapply (appChg Γ tchg) td
+  dapply : (Γ : List Type) → Diff Γ → List Type
+  dapply Γ dempty = Γ
+  dapply Γ (dchg c d) = dapply (chgapply Γ c) d
 \end{code}
 
 Два набора изменений можно применять последовательно:
 
 \begin{code}
-  tdappend : ∀ {Γ} → (td : TDiff Γ)
-           → TDiff (tdapply Γ td) → TDiff Γ
-  tdappend tdempty b = b
-  tdappend (tdchg tchg a) b = tdchg tchg (tdappend a b)
+  dappend : ∀ {Γ} → (d : Diff Γ)
+          → Diff (dapply Γ d) → Diff Γ
+  dappend dempty b = b
+  dappend (dchg c a) b = dchg c (dappend a b)
 
-open TDiffs
+open Diffs
 \end{code}
 
 % вообще-то содержательная часть здесь заканчивается
@@ -99,7 +98,7 @@ module FixedHeap (Ψ : HeapTypes) where
 набор изменений, применяемых к уже имеющимся регистрам.
 
 \begin{code}
-  data Block (Γ : RegFileTypes) : TDiff Γ → Set
+  data Block (Γ : RegFileTypes) : Diff Γ → Set
 \end{code}
 
 Управляющие инструкции не меняют регистров, поэтому их определение останется
@@ -117,7 +116,7 @@ module FixedHeap (Ψ : HeapTypes) where
 к контексту регистров заменим на описание набора изменений.
 
 \begin{code}
-  data Instr (Γ : RegFileTypes) : TDiff Γ → Set
+  data Instr (Γ : RegFileTypes) : Diff Γ → Set
 \end{code}
 
 Как и в прошлый раз, перед определением инструкций определим возможные
@@ -125,7 +124,7 @@ module FixedHeap (Ψ : HeapTypes) where
 
 \begin{code}
   data Value : Type → Set where
-    function : {Γ : RegFileTypes} → {d : TDiff Γ} → Block Γ d
+    function : {Γ : RegFileTypes} → {d : Diff Γ} → Block Γ d
              → Value (blk Γ)
     ptr      : ∀ {τ} → τ ∈ Ψ → Value (τ *)
 \end{code}
@@ -137,15 +136,15 @@ module FixedHeap (Ψ : HeapTypes) where
 \begin{code}
   data Instr (Γ : RegFileTypes) where
     mov  : ∀ {r τ} → (r∈Γ : r ∈ Γ) → Value τ
-         → Instr Γ (tdchg (tchgcr r∈Γ τ) tdempty)
+         → Instr Γ (dchg (chg r∈Γ τ) dempty)
 \end{code}
 
 И, наконец, определим конструкторы блока.
   
 \begin{code}
   data Block (Γ : RegFileTypes) where
-    halt : Block Γ tdempty
-    ↝    : ControlInstr Γ → Block Γ tdempty
-    _∙_  : ∀ {d' d} → Instr Γ d' → Block (tdapply Γ d') d
-         → Block Γ (tdappend d' d)
+    halt : Block Γ dempty
+    ↝    : ControlInstr Γ → Block Γ dempty
+    _∙_  : ∀ {d' d} → Instr Γ d' → Block (dapply Γ d') d
+         → Block Γ (dappend d' d)
 \end{code}
