@@ -29,24 +29,8 @@ module Meta where
 
 \begin{code}
   module Diffs where
-    data Chg (Γ : List Type) : Set where
-      chg : ∀ {τ} → τ ∈ Γ → Type → Chg Γ
-
-    chgapply : (Γ : List Type) → Chg Γ → List Type
-    chgapply (_ ∷ Γ) (chg (here refl) σ) = σ ∷ Γ
-    chgapply (τ ∷ Γ) (chg (there p)   σ) = τ ∷ chgapply Γ (chg p σ)
-
-    data Diff (Γ : List Type) : Set where
-      dempty : Diff Γ
-      dchg   : (c : Chg Γ) → Diff (chgapply Γ c) → Diff Γ
-
-    dapply : (Γ : List Type) → Diff Γ → List Type
-    dapply Γ dempty = Γ
-    dapply Γ (dchg c d) = dapply (chgapply Γ c) d
-
-    dappend : ∀ {Γ} → (d : Diff Γ) → Diff (dapply Γ d) → Diff Γ
-    dappend dempty d' = d'
-    dappend (dchg c d) d' = dchg c (dappend d d')
+    import NotSSA
+    open NotSSA.Diffs public
 \end{code}
 
 Так как почти нигде в коде не используется применение изменений к набору
