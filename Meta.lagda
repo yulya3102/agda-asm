@@ -1,7 +1,7 @@
 \begin{code}
 module Meta where
 
-open import Core
+open import DevCore
 \end{code}
 
 Независимо от конкретных инструкций все языки ассемблера имеют общий набор

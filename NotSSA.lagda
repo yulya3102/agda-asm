@@ -91,7 +91,7 @@ module Diffs (A : Set) where
 Используя определенный тип, переопределим типы блоков и инструкций.
 
 \begin{code}
-open import Core
+open import DevCore
 
 module FixedHeap (Ψ : HeapTypes) where
   open Diffs Type

@@ -1,7 +1,7 @@
 \begin{code}
 module SSA where
 
-open import Core
+open import DevCore
 \end{code}
 
 Как говорилось ранее, значения, лежащие в памяти, никогда не изменяются.

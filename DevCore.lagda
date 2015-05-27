@@ -7,7 +7,7 @@
 конкретных типов. То же самое можно сказать и про состояние памяти.
 
 \begin{code}
-module Core where
+module DevCore where
 
 open import OXIj.BrutalDepTypes public
 open Data-List public
