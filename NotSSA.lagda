@@ -1,7 +1,5 @@
 \begin{code}
 module NotSSA where
-
-open import Core
 \end{code}
 
 Ранее для описания типа инструкций использовался список добавляемых к
@@ -11,7 +9,11 @@ open import Core
 изменив тип инструкции.
 
 \begin{code}
-module Diffs where
+module Diffs (A : Set) where
+  open import OXIj.BrutalDepTypes
+  open Data-List
+  open Data-Any
+  open Membership {A = A} _≡_
 \end{code}
 
 Определим тип, описывающий одно изменение списка фиксированной длины:
@@ -20,21 +22,21 @@ module Diffs where
 тип должен ограничивать, к какому списку его можно применять.
 
 \begin{code}
-  data Chg (Γ : List Type) : Set where
+  data Chg (Γ : List A) : Set where
 \end{code}
 
 Для того, чтобы описать изменение элемента в списке, необходимо указать,
 какая позиция меняется и на что.
 
 \begin{code}
-    chg : ∀ {τ} → τ ∈ Γ → Type → Chg Γ
+    chg : ∀ {τ} → τ ∈ Γ → A → Chg Γ
 \end{code}
 
 Сами по себе изменения не несут особого смысла: необходимо указать, как
 они применяются к спискам.
 
 \begin{code}
-  chgapply : (Γ : List Type) → Chg Γ → List Type
+  chgapply : (Γ : List A) → Chg Γ → List A
   chgapply (_ ∷ Γ) (chg (here refl) σ) = σ ∷ Γ
   chgapply (τ ∷ Γ) (chg (there p)   σ) = τ ∷ chgapply Γ (chg p σ)
 \end{code}
@@ -44,7 +46,7 @@ module Diffs where
 тип:
 
 \begin{code}
-  data Diff (Γ : List Type) : Set where
+  data Diff (Γ : List A) : Set where
 \end{code}
 
 \begin{itemize}
@@ -69,7 +71,7 @@ module Diffs where
 Наборы изменений тоже применяются к спискам.
 
 \begin{code}
-  dapply : (Γ : List Type) → Diff Γ → List Type
+  dapply : (Γ : List A) → Diff Γ → List A
   dapply Γ dempty = Γ
   dapply Γ (dchg c d) = dapply (chgapply Γ c) d
 \end{code}
@@ -81,8 +83,6 @@ module Diffs where
           → Diff (dapply Γ d) → Diff Γ
   dappend dempty b = b
   dappend (dchg c a) b = dchg c (dappend a b)
-
-open Diffs
 \end{code}
 
 % вообще-то содержательная часть здесь заканчивается
@@ -91,7 +91,10 @@ open Diffs
 Используя определенный тип, переопределим типы блоков и инструкций.
 
 \begin{code}
+open import Core
+
 module FixedHeap (Ψ : HeapTypes) where
+  open Diffs Type
 \end{code}
 
 Ранее тип блока описывал список добавляемых регистров. Теперь он описывает

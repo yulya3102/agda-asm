@@ -30,7 +30,7 @@ module Meta where
 \begin{code}
   module Diffs where
     import NotSSA
-    open NotSSA.Diffs public
+    open NotSSA.Diffs Type public
 \end{code}
 
 Так как почти нигде в коде не используется применение изменений к набору

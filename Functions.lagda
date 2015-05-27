@@ -39,28 +39,12 @@ data Maybe (A : Set) : Set where
 module Meta where
   module Diffs where
     module RegDiff where
-      data Chg (Γ : RegTypes) : Set where
-        chg : ∀ {τ} → τ ∈R Γ → RegType → Chg Γ
-  
-      chgapply : (Γ : RegTypes) → Chg Γ → RegTypes
-      chgapply (_ ∷ Γ) (chg (here refl) σ) = σ ∷ Γ
-      chgapply (τ ∷ Γ) (chg (there p)   σ) = τ ∷ chgapply Γ (chg p σ)
-  
-      data Diff (Γ : RegTypes) : Set where
-        dempty : Diff Γ
-        dchg   : (c : Chg Γ) → Diff (chgapply Γ c) → Diff Γ
+      import NotSSA
+      open NotSSA.Diffs RegType public
 
       dc : ∀ {Γ} → Chg Γ → Diff Γ
       dc c = dchg c dempty
   
-      dapply : (Γ : RegTypes) → Diff Γ → RegTypes
-      dapply Γ dempty = Γ
-      dapply Γ (dchg c d) = dapply (chgapply Γ c) d
-  
-      dappend : ∀ {Γ} → (d : Diff Γ) → Diff (dapply Γ d) → Diff Γ
-      dappend dempty d' = d'
-      dappend (dchg c d) d' = dchg c (dappend d d')
-
       dappend-dempty-lemma : ∀ {Γ} → (d : Diff Γ)
                            → dappend d dempty ≡ d
       dappend-dempty-lemma dempty = refl
