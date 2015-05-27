@@ -1,24 +1,7 @@
-Все начальные определения идентичны определениям из предыдущей версии.
-
 \begin{code}
 module NotSSA where
 
-open import OXIj.BrutalDepTypes
-open Data-List
-
-data Type : Set
-RegFileTypes : Set
-HeapTypes : Set
-
-RegFileTypes = List Type
-HeapTypes    = List Type
-
-data Type where
-  _*  : Type → Type
-  blk : (Γ : RegFileTypes) → Type
-
-open Data-Any
-open Membership {A = Type} _≡_
+open import Core
 \end{code}
 
 Ранее для описания типа инструкций использовался список добавляемых к

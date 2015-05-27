@@ -1,24 +1,7 @@
-Все первичные определения остаются неизменными.
-% меня уже подзадолбала эта копипаста, наверное, ее стоит вынести в отдельный
-% файл, описать в отдельной секции и просто импортить везде
-
 \begin{code}
 module Meta where
 
-open import OXIj.BrutalDepTypes
-open Data-List
-open Data-Any
-
-data Type : Set
-
-RegFileTypes = List Type
-HeapTypes    = List Type
-
-data Type where
-  _*  : Type → Type
-  blk : RegFileTypes → Type
-
-open Membership {A = Type} _≡_
+open import Core
 \end{code}
 
 Независимо от конкретных инструкций все языки ассемблера имеют общий набор
