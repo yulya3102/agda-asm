@@ -63,7 +63,6 @@ module Meta where
 
 \begin{code}
     data Block (S : StateType) : Diff (regs S) → Set where
-      halt : Block S dempty
       ↝    : ControlInstr S → Block S dempty
       _∙_  : ∀ {c d} → Instr S c → Block (sdapply S (dchg c dempty)) d
            → Block S (dchg c d)

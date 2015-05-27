@@ -144,15 +144,6 @@ module FixedHeap (Ψ : HeapTypes) where
 
     Базовый блок — это конструкция, построенная из следующих примитивов:
 
-\begin{itemize}
-
-    \item
-        блок, завершающий исполнение;
-
-\begin{code}
-    halt : Block Γ []
-\end{code}
-
     \item
         блок, совершающий переход куда-либо в соответствии с результатом
         исполнения управляющей инструкции;
@@ -240,7 +231,6 @@ wk-cinstr ss jmp[ f ] = jmp[ ss f ]
 wk-cinstr ss (jmp f) = jmp (ss f)
 
 wk-blk : ∀ {Ψ Ψ' Γ Δ} → Ψ ⊆ Ψ' → Block Ψ Γ Δ → Block Ψ' Γ Δ
-wk-blk ss halt = halt
 wk-blk ss (↝ x) = ↝ (wk-cinstr ss x)
 wk-blk ss (x ∙ b) = wk-instr ss x ∙ wk-blk ss b
 
@@ -316,7 +306,6 @@ exec-control H (cs , ret) (jmp f)  = cs , loadblk H f
 \begin{code}
 exec-blk : ∀ {Γ Δ Ψ} → Heap Ψ → CallCtx Ψ → Block Ψ Γ Δ
          → CallCtx Ψ
-exec-blk {Γ} H (cs , ret) halt = cs , Γ , _ , halt
 exec-blk H cc (↝ x) = exec-control H cc x
 exec-blk H cc (i ∙ b) = exec-blk H cc b
 \end{code}
@@ -517,7 +506,6 @@ got {Ψ = x * ∷ Ψ} (there f) = there (got f)
 
 \begin{code}
 plt-code : ∀ {Ψ Γ Δ} → Block Ψ Γ Δ → Block (plt-heaptypes Ψ) Γ Δ
-plt-code halt = halt
 plt-code (↝ (call f)) = ↝ (call (plt f))
 plt-code (↝ (jmp[_] f)) = ↝ (jmp[ plt-⊆ f ])
 plt-code (↝ (jmp f)) = ↝ (jmp (plt-⊆ f ))

@@ -171,7 +171,6 @@ module FixedHeap (Ψ : HeapTypes) where
   
 \begin{code}
   data Block (Γ : RegFileTypes) where
-    halt : Block Γ dempty
     ↝    : ControlInstr Γ → Block Γ dempty
     _∙_  : ∀ {c d} → Instr Γ c → Block (chgapply Γ c) d
          → Block Γ (dchg c d)
