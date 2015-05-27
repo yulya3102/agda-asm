@@ -84,143 +84,144 @@ data Maybe (A : Set) : Set where
   just    : A → Maybe A
   nothing : Maybe A
 
-module Meta where
-  module Diffs where
-    module RegDiff where
-      import NotSSA
-      open NotSSA.Diffs RegType public
+module Diffs where
+  module RegDiff where
+    import NotSSA
+    open NotSSA.Diffs RegType public
 
-      dc : ∀ {Γ} → Chg Γ → Diff Γ
-      dc c = dchg c dempty
-  
-      dappend-dempty-lemma : ∀ {Γ} → (d : Diff Γ)
-                           → dappend d dempty ≡ d
-      dappend-dempty-lemma dempty = refl
-      dappend-dempty-lemma (dchg c d)
-        rewrite dappend-dempty-lemma d = refl
+    dc : ∀ {Γ} → Chg Γ → Diff Γ
+    dc c = dchg c dempty
 
-      dappend-dapply-lemma : ∀ S → (d₁ : Diff S)
-                           → (d₂ : Diff (dapply S d₁))
-                           → dapply S (dappend d₁ d₂)
-                           ≡ dapply (dapply S d₁) d₂
-      dappend-dapply-lemma S dempty d₂ = refl
-      dappend-dapply-lemma S (dchg c d₁) d₂
-        = dappend-dapply-lemma (chgapply S c) d₁ d₂
+    dappend-dempty-lemma : ∀ {Γ} → (d : Diff Γ)
+                         → dappend d dempty ≡ d
+    dappend-dempty-lemma dempty = refl
+    dappend-dempty-lemma (dchg c d)
+      rewrite dappend-dempty-lemma d = refl
 
-    module StackDiff (A : Set) where
-      data Chg (S : List A) : Set where
-        push : (i : A) → Chg S
-        pop  : ∀ {Γ S'} → S ≡ Γ ∷ S' → Chg S
+    dappend-dapply-lemma : ∀ S → (d₁ : Diff S)
+                         → (d₂ : Diff (dapply S d₁))
+                         → dapply S (dappend d₁ d₂)
+                         ≡ dapply (dapply S d₁) d₂
+    dappend-dapply-lemma S dempty d₂ = refl
+    dappend-dapply-lemma S (dchg c d₁) d₂
+      = dappend-dapply-lemma (chgapply S c) d₁ d₂
 
-      chgapply : (S : List A) → Chg S → List A
-      chgapply cs (push x) = x ∷ cs
-      chgapply (._ ∷ S') (pop refl) = S'
+  module StackDiff (A : Set) where
+    data Chg (S : List A) : Set where
+      push : (i : A) → Chg S
+      pop  : ∀ {Γ S'} → S ≡ Γ ∷ S' → Chg S
 
-      data Diff (S : List A) : Set where
-        dempty : Diff S
-        dchg   : (c : Chg S) → Diff (chgapply S c) → Diff S
+    chgapply : (S : List A) → Chg S → List A
+    chgapply cs (push x) = x ∷ cs
+    chgapply (._ ∷ S') (pop refl) = S'
 
-      dc : ∀ {S} → Chg S → Diff S
-      dc c = dchg c dempty
+    data Diff (S : List A) : Set where
+      dempty : Diff S
+      dchg   : (c : Chg S) → Diff (chgapply S c) → Diff S
 
-      dmaybe : ∀ {S} → Maybe (Chg S) → Diff S
-      dmaybe (just x) = dc x
-      dmaybe nothing = dempty
-  
-      dapply : (S : List A) → Diff S → List A
-      dapply S dempty = S
-      dapply S (dchg c d) = dapply (chgapply S c) d
+    dc : ∀ {S} → Chg S → Diff S
+    dc c = dchg c dempty
 
-      dappend : ∀ {S} → (d : Diff S) → Diff (dapply S d) → Diff S
-      dappend dempty d' = d'
-      dappend (dchg c d) d' = dchg c (dappend d d')
+    dmaybe : ∀ {S} → Maybe (Chg S) → Diff S
+    dmaybe (just x) = dc x
+    dmaybe nothing = dempty
 
-      dappend-dapply-lemma : ∀ S → (d₁ : Diff S)
-                           → (d₂ : Diff (dapply S d₁))
-                           → dapply S (dappend d₁ d₂)
-                           ≡ dapply (dapply S d₁) d₂
-      dappend-dapply-lemma S dempty d₂ = refl
-      dappend-dapply-lemma S (dchg c d₁) d₂
-        = dappend-dapply-lemma (chgapply S c) d₁ d₂
-
-    record Diff (S : StateType) : Set where
-      constructor diff
-      field
-        rdiff  : RegDiff.Diff (StateType.registers S)
-        dsdiff : StackDiff.Diff RegType (StateType.datastack S)
-        csdiff : StackDiff.Diff (RegTypes × DataStackType)
-                 (StateType.callstack S)
-    open Diff public
-
-    dempty : ∀ {S} → Diff S
-    dempty = diff
-      RegDiff.dempty
-      StackDiff.dempty
-      StackDiff.dempty
-
-    dapply : (S : StateType) → Diff S → StateType
-    dapply (statetype r m d c) (diff rd dd cd) =
-        statetype
-        (RegDiff.dapply r rd)
-        m
-        (StackDiff.dapply RegType d dd)
-        (StackDiff.dapply (RegTypes × DataStackType) c cd)
+    dapply : (S : List A) → Diff S → List A
+    dapply S dempty = S
+    dapply S (dchg c d) = dapply (chgapply S c) d
 
     dappend : ∀ {S} → (d : Diff S) → Diff (dapply S d) → Diff S
-    dappend (diff rd dd cd) (diff rd' dd' cd') =
-        diff
-        (RegDiff.dappend rd rd')
-        (StackDiff.dappend RegType dd dd')
-        (StackDiff.dappend (RegTypes × DataStackType) cd cd')
+    dappend dempty d' = d'
+    dappend (dchg c d) d' = dchg c (dappend d d')
 
-    DataStackChg : StateType → Set
-    DataStackChg S
-      = StackDiff.Chg RegType (StateType.datastack S)
+    dappend-dapply-lemma : ∀ S → (d₁ : Diff S)
+                         → (d₂ : Diff (dapply S d₁))
+                         → dapply S (dappend d₁ d₂)
+                         ≡ dapply (dapply S d₁) d₂
+    dappend-dapply-lemma S dempty d₂ = refl
+    dappend-dapply-lemma S (dchg c d₁) d₂
+      = dappend-dapply-lemma (chgapply S c) d₁ d₂
 
-    CallStackChg : StateType → Set
-    CallStackChg S
-      = StackDiff.Chg
-        (RegTypes × DataStackType)
-        (StateType.callstack S)
+  record Diff (S : StateType) : Set where
+    constructor diff
+    field
+      rdiff  : RegDiff.Diff (StateType.registers S)
+      dsdiff : StackDiff.Diff RegType (StateType.datastack S)
+      csdiff : StackDiff.Diff (RegTypes × DataStackType)
+               (StateType.callstack S)
+  open Diff public
 
-    RegChg : StateType → Set
-    RegChg S = RegDiff.Chg (StateType.registers S)
+  dempty : ∀ {S} → Diff S
+  dempty = diff
+    RegDiff.dempty
+    StackDiff.dempty
+    StackDiff.dempty
 
-    data SmallChg (S : StateType) : Set where
-      onlyreg   : RegChg S → SmallChg S
-      onlystack : DataStackChg S → SmallChg S
-      regstack  : RegChg S → DataStackChg S → SmallChg S
+  dapply : (S : StateType) → Diff S → StateType
+  dapply (statetype r m d c) (diff rd dd cd) =
+      statetype
+      (RegDiff.dapply r rd)
+      m
+      (StackDiff.dapply RegType d dd)
+      (StackDiff.dapply (RegTypes × DataStackType) c cd)
 
-    regChg : ∀ {S} → RegChg S → Diff S
-    regChg c =
-        diff
-        (RegDiff.dchg c RegDiff.dempty)
-        StackDiff.dempty
-        StackDiff.dempty
+  dappend : ∀ {S} → (d : Diff S) → Diff (dapply S d) → Diff S
+  dappend (diff rd dd cd) (diff rd' dd' cd') =
+      diff
+      (RegDiff.dappend rd rd')
+      (StackDiff.dappend RegType dd dd')
+      (StackDiff.dappend (RegTypes × DataStackType) cd cd')
 
-    dsChg : ∀ {S} → DataStackChg S → Diff S
-    dsChg c =
+  DataStackChg : StateType → Set
+  DataStackChg S
+    = StackDiff.Chg RegType (StateType.datastack S)
+
+  CallStackChg : StateType → Set
+  CallStackChg S
+    = StackDiff.Chg
+      (RegTypes × DataStackType)
+      (StateType.callstack S)
+
+  RegChg : StateType → Set
+  RegChg S = RegDiff.Chg (StateType.registers S)
+
+  data SmallChg (S : StateType) : Set where
+    onlyreg   : RegChg S → SmallChg S
+    onlystack : DataStackChg S → SmallChg S
+    regstack  : RegChg S → DataStackChg S → SmallChg S
+
+  regChg : ∀ {S} → RegChg S → Diff S
+  regChg c =
+      diff
+      (RegDiff.dchg c RegDiff.dempty)
+      StackDiff.dempty
+      StackDiff.dempty
+
+  dsChg : ∀ {S} → DataStackChg S → Diff S
+  dsChg c =
+    diff
+    RegDiff.dempty
+    (StackDiff.dchg c StackDiff.dempty)
+    StackDiff.dempty
+
+  sChg : ∀ {S} → SmallChg S → Diff S
+  sChg (onlyreg r) = regChg r
+  sChg (onlystack d) = dsChg d
+  sChg (regstack r d) =
+    diff
+    (RegDiff.dchg r RegDiff.dempty)
+    (StackDiff.dchg d StackDiff.dempty)
+    StackDiff.dempty
+
+  csChg : ∀ S → Maybe (CallStackChg S) → Diff S
+  csChg S nothing = dempty
+  csChg S (just c) =
       diff
       RegDiff.dempty
+      StackDiff.dempty
       (StackDiff.dchg c StackDiff.dempty)
-      StackDiff.dempty
 
-    sChg : ∀ {S} → SmallChg S → Diff S
-    sChg (onlyreg r) = regChg r
-    sChg (onlystack d) = dsChg d
-    sChg (regstack r d) =
-      diff
-      (RegDiff.dchg r RegDiff.dempty)
-      (StackDiff.dchg d StackDiff.dempty)
-      StackDiff.dempty
-
-    csChg : ∀ S → Maybe (CallStackChg S) → Diff S
-    csChg S nothing = dempty
-    csChg S (just c) =
-        diff
-        RegDiff.dempty
-        StackDiff.dempty
-        (StackDiff.dchg c StackDiff.dempty)
+module Meta where
   open Diffs
 
   module Blocks
@@ -381,9 +382,9 @@ module Meta where
 
 module 2Meta
   (ControlInstr : (S : StateType)
-                → Maybe (Meta.Diffs.CallStackChg S)
+                → Maybe (Diffs.CallStackChg S)
                 → Set)
-  (Instr : (S : StateType) → Meta.Diffs.SmallChg S → Set)
+  (Instr : (S : StateType) → Diffs.SmallChg S → Set)
   (exec-control : ∀ {S c}
                → Meta.Values.State
                  (Meta.Blocks.Block ControlInstr Instr)
@@ -393,11 +394,11 @@ module 2Meta
                 (Meta.Blocks.Block ControlInstr Instr)
                 (StateType.memory S)
                 (StateType.callstack
-                  (Meta.Diffs.dapply S (Meta.Diffs.csChg S c)))
-               × Σ (Meta.Diffs.Diff
-                     (Meta.Diffs.dapply S (Meta.Diffs.csChg S c)))
+                  (Diffs.dapply S (Diffs.csChg S c)))
+               × Σ (Diffs.Diff
+                     (Diffs.dapply S (Diffs.csChg S c)))
                    (Meta.Blocks.Block ControlInstr Instr
-                     (Meta.Diffs.dapply S (Meta.Diffs.csChg S c))))
+                     (Diffs.dapply S (Diffs.csChg S c))))
   (exec-instr : ∀ {S c}
               → Meta.Values.State
                 (Meta.Blocks.Block ControlInstr Instr)
@@ -407,7 +408,7 @@ module 2Meta
                (Meta.Blocks.Block ControlInstr Instr)
                (StateType.memory S)
                (StateType.registers
-                 (Meta.Diffs.dapply S (Meta.Diffs.sChg c)))
+                 (Diffs.dapply S (Diffs.sChg c)))
               × (Meta.Values.Data
                 (Meta.Blocks.Block ControlInstr Instr)
                 (StateType.memory S)
@@ -415,7 +416,7 @@ module 2Meta
                (Meta.Blocks.Block ControlInstr Instr)
                (StateType.memory S)
                (StateType.datastack
-                 (Meta.Diffs.dapply S (Meta.Diffs.sChg c)))))
+                 (Diffs.dapply S (Diffs.sChg c)))))
   where
   open Meta
   open Diffs
