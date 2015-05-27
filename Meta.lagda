@@ -15,12 +15,12 @@ module Meta where
 состояние должно описывать не только регистры, но и память.
 
 \begin{code}
-  record State : Set where
+  record StateType : Set where
     constructor state
     field
       heap : HeapTypes
       regs : RegFileTypes
-  open State public
+  open StateType public
 \end{code}
 
 Далее следует определение набора изменений регистров, приведенное в предыдущей
@@ -40,7 +40,7 @@ module Meta where
 применения изменений сразу ко всему контексту.
 
 \begin{code}
-    sdapply : (S : State) → Diff (regs S) → State
+    sdapply : (S : StateType) → Diff (regs S) → StateType
     sdapply (state h r) d = state h (dapply r d)
 
     SDiff = λ S → Diff (regs S)
@@ -54,15 +54,15 @@ module Meta where
 
 \begin{code}
   module Blocks
-    (ControlInstr : State → Set)
-    (Instr : (S : State) → Diff (regs S) → Set)
+    (ControlInstr : StateType → Set)
+    (Instr : (S : StateType) → Diff (regs S) → Set)
     where
 \end{code}
 
 Определение блока аналогично приведенным в предыдущих секциях.
 
 \begin{code}
-    data Block (S : State) : Diff (regs S) → Set where
+    data Block (S : StateType) : Diff (regs S) → Set where
       halt : Block S dempty
       ↝    : ControlInstr S → Block S dempty
       _∙_  : ∀ {d d'} → Instr S d → Block (sdapply S d) d'
@@ -87,7 +87,7 @@ module Meta where
 
 \begin{code}
   module Values
-    (Block : (S : State) → Diff (regs S) → Set)
+    (Block : (S : StateType) → Diff (regs S) → Set)
     where
 
     data Value (Ψ : HeapTypes) : Type → Set where
@@ -143,7 +143,7 @@ module Meta where
       _∷_ : ∀ {τ τs} → Value Ψ τ → IRegisters Ψ τs
           → IRegisters Ψ (τ ∷ τs)
 
-    Registers : State → Set
+    Registers : StateType → Set
     Registers S = IRegisters (heap S) (regs S)
 \end{code}
 
@@ -174,8 +174,8 @@ module Meta where
 
 \begin{code}
   module Eq
-    (Block : (S : State) → Diff (regs S) → Set)
-    (exec-blk : {S : State} {d : Diff (regs S)} {b : Block S d}
+    (Block : (S : StateType) → Diff (regs S) → Set)
+    (exec-blk : {S : StateType} {d : Diff (regs S)} {b : Block S d}
               → (Ψ : Values.Heap Block (heap S))
               → Values._∈B_ Block b Ψ
               → Values.Registers Block S → CallStack (heap S)
@@ -185,7 +185,7 @@ module Meta where
               × CallStack (heap $ sdapply S d))))
     where
     open Values Block
-    module InState (S : State) where
+    module InState (S : StateType) where
       SHeap = Heap (heap S)
       SCallStack = CallStack (heap S)
     open InState
@@ -197,7 +197,7 @@ module Meta where
 
 \begin{code}
     data BlockEq :
-      {S₁ S₂ : State} → {d₁ : SDiff S₁} {d₂ : SDiff S₂} →
+      {S₁ S₂ : StateType} → {d₁ : SDiff S₁} {d₂ : SDiff S₂} →
       (Ψ₁ : SHeap S₁) (Ψ₂ : SHeap S₂) →
       (Γ₁ : Registers S₁) (Γ₂ : Registers S₂) →
       (CC₁ : SCallStack S₁) (CC₂ : SCallStack S₂) →
@@ -274,9 +274,9 @@ module Meta where
 
 \begin{code}
   module Exec
-    (ControlInstr : State → Set)
-    (Instr : (S : State) → SDiff S → Set)
-    (exec-instr : {S : State}
+    (ControlInstr : StateType → Set)
+    (Instr : (S : StateType) → SDiff S → Set)
+    (exec-instr : {S : StateType}
                 → {d : SDiff S} → Instr S d
                 → Values.Heap
                   (Blocks.Block ControlInstr Instr)
@@ -290,7 +290,7 @@ module Meta where
                 × Values.Registers
                   (Blocks.Block ControlInstr Instr)
                   (sdapply S d))
-    (exec-control : {S : State}
+    (exec-control : {S : StateType}
                   → ControlInstr S
                   → Values.Heap
                     (Blocks.Block ControlInstr Instr)
@@ -315,7 +315,7 @@ module Meta where
 функцию `exec-blk` оказалось затруднительно.
 
 \begin{code}
-    exec-blk : {S : State} {d : Diff (regs S)} {b : Block S d}
+    exec-blk : {S : StateType} {d : Diff (regs S)} {b : Block S d}
              → (Ψ : Heap (heap S))
              → b ∈B Ψ
              → Registers S → CallStack (heap S)
@@ -333,7 +333,7 @@ open Meta
 
 \begin{code}
 module x86-64 where
-  data ControlInstr (S : State) : Set where
+  data ControlInstr (S : StateType) : Set where
     jmp call : blk (regs S) ∈ heap S → ControlInstr S
     jmp[_]   : blk (regs S) * ∈ heap S → ControlInstr S
 \end{code}
@@ -345,7 +345,7 @@ module x86-64 where
 % написать что-нибудь про mov надо
 
 \begin{code}
-  data Instr (S : State) : SDiff S → Set where
+  data Instr (S : StateType) : SDiff S → Set where
     mov_,_ : ∀ {τ σ} → (r : σ ∈ regs S)
            → Values.Value
              (Blocks.Block ControlInstr Instr)
@@ -356,7 +356,7 @@ module x86-64 where
 Описание семантики определенных инструкций аналогично приведенному ранее.
 
 \begin{code}
-  exec-control : {S : State}
+  exec-control : {S : StateType}
                → ControlInstr S
                → Values.Heap
                  (Blocks.Block ControlInstr Instr)
@@ -375,7 +375,7 @@ module x86-64 where
 Функция `exec-instr` не была реализована. % потому что потерялся смысл
 
 \begin{code}
-  exec-instr : {S : State}
+  exec-instr : {S : StateType}
              → {d : SDiff S} → Instr S d
              → Values.Heap
                (Blocks.Block ControlInstr Instr)
