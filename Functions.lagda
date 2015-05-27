@@ -32,7 +32,6 @@ data Type where
 open Membership {A = Type} _≡_
 _∈R_ = Membership._∈_ {A = RegType} _≡_
 
--- надо перестать страдать фигнёй и переехать на agda-stdlib
 data Maybe (A : Set) : Set where
   just    : A → Maybe A
   nothing : Maybe A
@@ -391,34 +390,35 @@ module 2Meta
   open Blocks ControlInstr Instr
   open Values Block
 
-  -- вот эти леммы куда-нибудь подвинуть надо бы
-  reg-const : ∀ S → (c : Maybe (CallStackChg S))
-            → rdiff (csChg S c) ≡ RegDiff.dempty
-  reg-const S (just c) = refl
-  reg-const S nothing = refl
+  module DiffLemmas where
+    reg-const : ∀ S → (c : Maybe (CallStackChg S))
+              → rdiff (csChg S c) ≡ RegDiff.dempty
+    reg-const S (just c) = refl
+    reg-const S nothing = refl
+  
+    ds-const : ∀ S → (c : Maybe (CallStackChg S))
+             → dsdiff (csChg S c) ≡ StackDiff.dempty
+    ds-const S (just x) = refl
+    ds-const S nothing = refl
+  
+    cs-lemma : ∀ S → (c : SmallChg S)
+             → csdiff (sChg c) ≡ StackDiff.dempty
+    cs-lemma S (onlyreg x) = refl
+    cs-lemma S (onlystack x) = refl
+    cs-lemma S (regstack x x₁) = refl
 
-  ds-const : ∀ S → (c : Maybe (CallStackChg S))
-           → dsdiff (csChg S c) ≡ StackDiff.dempty
-  ds-const S (just x) = refl
-  ds-const S nothing = refl
+    dapply-csChg : ∀ S → (c : Maybe (CallStackChg S))
+                 → dapply S (csChg S c)
+                 ≡ statetype
+                  (StateType.registers S)
+                  (StateType.memory S)
+                  (StateType.datastack S)
+                  (StackDiff.dapply (RegTypes × DataStackType)
+                    (StateType.callstack S) (csdiff (csChg S c)))
+    dapply-csChg S (just x) = refl
+    dapply-csChg S nothing = refl
 
-  cs-lemma : ∀ S → (c : SmallChg S)
-           → csdiff (sChg c) ≡ StackDiff.dempty
-  cs-lemma S (onlyreg x) = refl
-  cs-lemma S (onlystack x) = refl
-  cs-lemma S (regstack x x₁) = refl
-
-  dapply-csChg : ∀ S → (c : Maybe (CallStackChg S))
-               → dapply S (csChg S c)
-               ≡ statetype
-                (StateType.registers S)
-                (StateType.memory S)
-                (StateType.datastack S)
-                (StackDiff.dapply (RegTypes × DataStackType)
-                  (StateType.callstack S) (csdiff (csChg S c)))
-  dapply-csChg S (just x) = refl
-  dapply-csChg S nothing = refl
-
+  open DiffLemmas
   open ≡-Prop
 
   exec-block : ∀ {ST d} → State ST → Block ST d
@@ -513,7 +513,6 @@ module AMD64 where
            (StateType.callstack S)
            ∈ StateType.memory S)
          → ControlInstr S nothing
-         -- мне сильно не нравится аргумент ret
     ret  : ∀ {CS}
          → (p : StateType.callstack S
          ≡ (StateType.registers S , StateType.datastack S) ∷ CS)
@@ -541,7 +540,6 @@ module AMD64 where
 \begin{code}
     pop  : ∀ {σ τ DS}
          → (r : σ ∈R StateType.registers S)
-         -- этот аргумент мне сильно не нравится
          → (p : StateType.datastack S ≡ τ ∷ DS)
          → Instr S (regstack (RegDiff.chg r τ) (StackDiff.pop p))
 
@@ -665,13 +663,29 @@ module AMD64 where
     proof : ∀ {Γ Ψ DS CS}
           → (f : func Γ DS CS ∈ Ψ)
           → (S : State (statetype Γ (pltize Ψ) DS CS))
-          -- если GOT заполнен корректно, то
+\end{code}
+
+% если GOT заполнено корректно, то
+
+\begin{code}
           → loadptr (State.memory S) (got f) ≡ blk f
-          -- в любом стейте S эквивалентны
+\end{code}
+
+% в любом стейте S эквивалентны
+
+\begin{code}
           → BlockEq Ψ S S
-          -- PLTшный стаб, дергающий нужный GOT
+\end{code}
+
+% PLTшный стаб, дергающий нужный GOT
+
+\begin{code}
             (plt-stub (got f))
-          -- и сама функция
+\end{code}
+
+% и сама функция
+
+\begin{code}
             (projr $ loadfunc (State.memory S) (blk f))
     proof f S p = left (exec-plt f S p) equal
 \end{code}
