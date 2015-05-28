@@ -12,8 +12,7 @@ open import Function
 \end{code}
 }
 
-% мне очень сильно хочется порезать файл на куски и распихать по разным
-% секциям главы
+\section{Основные определения}
 
 Одной из проблем прошлых решений является неучитывание размеров возможных
 значений, из-за чего возможно написать код, загружающий в регистр значение,
@@ -82,11 +81,17 @@ data RegType where
 data Type where
   atom : RegType → Type
   block : RegTypes → DataStackType → CallStackType → Type
+\end{code}
 
+\ignore{
+\begin{code}
 data Maybe (A : Set) : Set where
   just    : A → Maybe A
   nothing : Maybe A
 \end{code}
+}
+
+\section{Изменения}
 
 Все, кроме памяти, может изменять свой тип.
 
@@ -230,6 +235,8 @@ module Diffs where
       StackDiff.dempty
       (StackDiff.dchg c StackDiff.dempty)
 \end{code}
+
+\section{Метаассемблер}
 
 Аналогично описанному ранее определим сущности, общие для различных языков
 ассемблера.
@@ -524,7 +531,11 @@ module 2Meta
     DS' = proj₂ (proj₂ eir)
 
   open Eq Block exec-block public
+\end{code}
 
+\section{Ассемблер amd64}
+
+\begin{code}
 module AMD64 where
   open Meta
   open Diffs
@@ -633,7 +644,7 @@ module AMD64 where
   open 2Meta ControlInstr Instr exec-control exec-instr
 \end{code}
 
-% все еще люто хочется попилить все на секции
+\section{Линковка}
 
 \begin{code}
   module Linkers where
@@ -705,7 +716,7 @@ module AMD64 where
     plt-stub got = ↝ jmp[ got ]
 \end{code}
 
-% вот тут хочется запилить секцию "доказательства"
+\section{Доказательства}
 
 Для доказательства эквивалентности вызовов функции и соответствующего ей
 элемента PLT потребуются несколько лемм:
