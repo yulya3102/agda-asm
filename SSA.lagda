@@ -1,3 +1,4 @@
+\ignore{
 \begin{code}
 module SSA where
 
@@ -10,6 +11,7 @@ open Membership-≡
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import Function
 \end{code}
+}
 
 Как говорилось ранее, значения, лежащие в памяти, никогда не изменяются.
 При этом все определения, касающиеся кода, могут на ссылаться на память,

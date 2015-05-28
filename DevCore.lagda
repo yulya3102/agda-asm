@@ -6,11 +6,15 @@
 потому что блоки кода могут рассчитывать на наличие в регистрах значений
 конкретных типов. То же самое можно сказать и про состояние памяти.
 
+\ignore{
 \begin{code}
 module DevCore where
 
 open import Data.List
+\end{code}
+}
 
+\begin{code}
 data Type : Set
 RegFileTypes : Set
 HeapTypes : Set

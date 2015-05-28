@@ -1,3 +1,4 @@
+\ignore{
 \begin{code}
 module Meta where
 
@@ -10,13 +11,16 @@ open import Data.Product
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import Function
 \end{code}
+}
 
 Независимо от конкретных инструкций все языки ассемблера имеют общий набор
-сущностей. Нижеприведенный модуль определяет эти сущности.
+сущностей.
 
+\ignore{
 \begin{code}
 module Meta where
 \end{code}
+}
 
 В этой версии память больше не считается неизменной, поэтому текущее
 состояние должно описывать не только регистры, но и память.

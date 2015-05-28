@@ -1,3 +1,4 @@
+\ignore{
 \begin{code}
 module NotSSA where
 
@@ -6,6 +7,7 @@ open import Data.List.Any
 open Membership-≡
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 \end{code}
+}
 
 Ранее для описания типа инструкций использовался список добавляемых к
 контексту регистров. Это приводило к тому, что никакая инструкция не

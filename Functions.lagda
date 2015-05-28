@@ -1,3 +1,4 @@
+\ignore{
 \begin{code}
 module Functions where
 
@@ -9,6 +10,7 @@ open import Data.Product
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym)
 open import Function
 \end{code}
+}
 
 % мне очень сильно хочется порезать файл на куски и распихать по разным
 % секциям главы
@@ -232,10 +234,12 @@ module Diffs where
 Аналогично описанному ранее определим сущности, общие для различных языков
 ассемблера.
 
+\ignore{
 \begin{code}
 module Meta where
   open Diffs
 \end{code}
+}
 
 Ранее управляющие инструкции описывали только состояние исполнителя,
 требуемое для выполнения инструкции. С добавлением в состояние исполнителя
