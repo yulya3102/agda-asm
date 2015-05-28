@@ -2,6 +2,13 @@
 module SSA where
 
 open import DevCore
+
+open import Data.List
+open import Data.Product
+open import Data.List.Any
+open Membership-≡
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import Function
 \end{code}
 
 Как говорилось ранее, значения, лежащие в памяти, никогда не изменяются.
@@ -342,7 +349,7 @@ data BlockEq {Ψ : HeapTypes} (H : Heap Ψ) (CC : CallCtx Ψ)
   left   : ∀ {Δ₁ Δ₂ Δ₃ Γ₁ Γ₂ Γ₃}
          → {A : Block Ψ Γ₁ Δ₁} → {B : Block Ψ Γ₂ Δ₂}
          → {C : Block Ψ Γ₃ Δ₃}
-         → projr (exec-blk H CC C) ≡ _ , _ , A
+         → proj₂ (exec-blk H CC C) ≡ _ , _ , A
          → BlockEq H CC A B
          → BlockEq H CC C B
 \end{code}
@@ -354,7 +361,7 @@ data BlockEq {Ψ : HeapTypes} (H : Heap Ψ) (CC : CallCtx Ψ)
   right  : ∀ {Δ₁ Δ₂ Δ₃ Γ₁ Γ₂ Γ₃}
          → {A : Block Ψ Γ₁ Δ₁} → {B : Block Ψ Γ₂ Δ₂}
          → {C : Block Ψ Γ₃ Δ₃}
-         → projr (exec-blk H CC C) ≡ _ , _ , B
+         → proj₂ (exec-blk H CC C) ≡ _ , _ , B
          → BlockEq H CC A B
          → BlockEq H CC A C
 \end{code}
@@ -369,9 +376,9 @@ data BlockEq {Ψ : HeapTypes} (H : Heap Ψ) (CC : CallCtx Ψ)
          → {A' : Block Ψ Γ₁' Δ₁'} {B' : Block Ψ Γ₂' Δ₂'}
          → BlockEq H CC' A' B'
          → {A : Block Ψ Γ₁ Δ₁}
-         → exec-blk H CC A ≡ projl CC' , _ , _ , A'
+         → exec-blk H CC A ≡ proj₁ CC' , _ , _ , A'
          → {B : Block Ψ Γ₂ Δ₂} 
-         → exec-blk H CC B ≡ projl CC' , _ , _ , B'
+         → exec-blk H CC B ≡ proj₁ CC' , _ , _ , B'
          → BlockEq H CC A B
 \end{code}
 
@@ -437,9 +444,9 @@ plt-heaptypes [] = []
 
 \begin{code}
 plt-⊆ : ∀ {Ψ} → Ψ ⊆ plt-heaptypes Ψ
-plt-⊆ {x = blk Γ} (Data-Any.here refl)
-    = Data-Any.there $ Data-Any.there (Data-Any.here refl)
-plt-⊆ {x = x *} (Data-Any.here refl) = Data-Any.here refl
+plt-⊆ {x = blk Γ} (here refl)
+    = there $ there (here refl)
+plt-⊆ {x = x *} (here refl) = here refl
 plt-⊆ {blk Γ ∷ ψs} (there i) = there (there (there (plt-⊆ i)))
 plt-⊆ {ψ * ∷ ψs} (there i) = there (plt-⊆ i)
 \end{code}
@@ -539,7 +546,7 @@ call-proof : ∀ {Ψ Γ} → (CC : CallCtx Ψ) → {A : NewBlk Ψ}
            → (f : (blk Γ) ∈ Ψ)
            → loadblk H f ≡ A
            → exec-blk H CC (↝ (call f))
-           ≡ ((projr CC ∷ projl CC) , A)
+           ≡ ((proj₂ CC ∷ proj₁ CC) , A)
 call-proof CC f p rewrite p = refl
 \end{code}
 
@@ -568,7 +575,7 @@ jmp[]-plt-stub f = refl
 
 \begin{code}
 loadblk-Γ : ∀ {Ψ Γ} → (H : Heap Ψ) → (f : blk Γ ∈ Ψ)
-          → projl (loadblk H f) ≡ Γ
+          → proj₁ (loadblk H f) ≡ Γ
 loadblk-Γ H f = {!!}
 \end{code}
 
@@ -580,7 +587,7 @@ plt-fun-eq : ∀ {Γ Ψ}
            → (cc : CallCtx (plt-heaptypes Ψ))
            → (f : blk Γ ∈ Ψ)
            → BlockEq H cc
-             (projr $ projr (loadblk H (plt-⊆ f)))
+             (proj₂ $ proj₂ (loadblk H (plt-⊆ f)))
              (plt-stub (got f))
 plt-fun-eq H cc f with jmp[]-plt-stub f | loadblk-Γ H (plt-⊆ f)
 plt-fun-eq H cc f | refl | r = {!!}
@@ -600,18 +607,18 @@ proof : ∀ {Γ Ψ}
 proof {Γ = Γ} {Ψ = Ψ} H f ctx = ctxchg after-call just-call plt-call
     where
     newblock-f   = loadblk H (plt-⊆ f)
-    called-block = projr $ projr newblock-f
+    called-block = proj₂ $ proj₂ newblock-f
 
     just-call : exec-blk H ctx (↝ (call $ plt-⊆ f)) ≡
-                projr ctx ∷ projl ctx , newblock-f
+                proj₂ ctx ∷ proj₁ ctx , newblock-f
     just-call = call-proof ctx (plt-⊆ f) refl
 
     plt-call : exec-blk H ctx (↝ (call $ plt f)) ≡
-               projr ctx ∷ projl ctx , _ , _ , ↝ jmp[ got f ]
+               proj₂ ctx ∷ proj₁ ctx , _ , _ , ↝ jmp[ got f ]
     plt-call = call-proof ctx (plt f) (loadplt H f)
 
-    after-call : BlockEq H (projr ctx ∷ projl ctx , newblock-f)
+    after-call : BlockEq H (proj₂ ctx ∷ proj₁ ctx , newblock-f)
                  called-block
                  (↝ jmp[ got f ])
-    after-call = plt-fun-eq H (projr ctx ∷ projl ctx , newblock-f) f
+    after-call = plt-fun-eq H (proj₂ ctx ∷ proj₁ ctx , newblock-f) f
 \end{code}

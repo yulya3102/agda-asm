@@ -9,8 +9,7 @@
 \begin{code}
 module DevCore where
 
-open import OXIj.BrutalDepTypes public
-open Data-List public
+open import Data.List
 
 data Type : Set
 RegFileTypes : Set
@@ -39,7 +38,4 @@ HeapTypes    = List Type
 data Type where
   _*  : Type → Type
   blk : (Γ : RegFileTypes) → Type
-
-open Data-Any public
-open Membership {A = Type} _≡_ public
 \end{code}

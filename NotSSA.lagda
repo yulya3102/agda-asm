@@ -1,5 +1,10 @@
 \begin{code}
 module NotSSA where
+
+open import Data.List
+open import Data.List.Any
+open Membership-≡
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 \end{code}
 
 Ранее для описания типа инструкций использовался список добавляемых к
@@ -18,11 +23,7 @@ module Diffs where
 тип должен ограничивать, к какому списку его можно применять.
 
 \begin{code}
-  open import OXIj.BrutalDepTypes
   module ListChg (A : Set) where
-    open Data-List
-    open Data-Any
-    open Membership {A = A} _≡_
     data Chg (Γ : List A) : Set where
 \end{code}
 

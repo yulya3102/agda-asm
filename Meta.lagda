@@ -2,6 +2,13 @@
 module Meta where
 
 open import DevCore
+
+open import Data.List
+open import Data.List.Any
+open Membership-≡
+open import Data.Product
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import Function
 \end{code}
 
 Независимо от конкретных инструкций все языки ассемблера имеют общий набор

@@ -1,9 +1,13 @@
 \begin{code}
 module Functions where
 
-open import OXIj.BrutalDepTypes
-open Data-List
-open Data-Any
+open import Data.Nat
+open import Data.List
+open import Data.List.Any
+open Membership-≡
+open import Data.Product
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym)
+open import Function
 \end{code}
 
 % мне очень сильно хочется порезать файл на куски и распихать по разным
@@ -76,9 +80,6 @@ data RegType where
 data Type where
   atom : RegType → Type
   block : RegTypes → DataStackType → CallStackType → Type
-
-open Membership {A = Type} _≡_
-_∈R_ = Membership._∈_ {A = RegType} _≡_
 
 data Maybe (A : Set) : Set where
   just    : A → Maybe A
@@ -293,13 +294,13 @@ module Meta where
           → Registers Ψ τs
           → Registers Ψ (τ ∷ τs)
 
-    fromreg : ∀ {Ψ Γ τ} → Registers Ψ Γ → τ ∈R Γ → RegValue Ψ τ
+    fromreg : ∀ {Ψ Γ τ} → Registers Ψ Γ → τ ∈ Γ → RegValue Ψ τ
     fromreg (x ∷ Γ) (here refl) = x
     fromreg (x ∷ Γ) (there p) = fromreg Γ p
 
     toreg : ∀ {Ψ Γ σ τ}
           → Registers Ψ Γ
-          → (r : σ ∈R Γ)
+          → (r : σ ∈ Γ)
           → RegValue Ψ τ
           → Registers Ψ (RegDiff.chgapply Γ (RegDiff.chg r τ))
     toreg (x ∷ Γ) (here refl) v = v ∷ Γ
@@ -475,7 +476,6 @@ module 2Meta
     dapply-csChg S nothing = refl
 
   open DiffLemmas
-  open ≡-Prop
 
   exec-block : ∀ {ST d} → State ST → Block ST d
              → State (dapply ST d)
@@ -485,7 +485,7 @@ module 2Meta
     = (state Γ Ψ DS CS') , blk
     where
     ecr = exec-control (state Γ Ψ DS CS) ci
-    CS' = projl ecr
+    CS' = proj₁ ecr
     blk : Σ
       (Diff
        (statetype (StateType.registers S) (StateType.memory S)
@@ -497,7 +497,7 @@ module 2Meta
         (StateType.datastack S)
         (StackDiff.dapply (RegTypes × DataStackType)
          (StateType.callstack S) (csdiff (csChg S c)))))
-    blk rewrite sym (dapply-csChg S c) = projr ecr
+    blk rewrite sym (dapply-csChg S c) = proj₂ ecr
   exec-block {S} (state Γ Ψ DS CS) (Blocks._∙_ {c} {d} i b)
     rewrite cs-lemma S c
           | RegDiff.dappend-dapply-lemma
@@ -511,9 +511,9 @@ module 2Meta
           = exec-block (state Γ' Ψ' DS' CS) b
     where
     eir = exec-instr (state Γ Ψ DS CS) i
-    Γ'  = projl eir
-    Ψ'  = projl (projr eir)
-    DS' = projr (projr eir)
+    Γ'  = proj₁ eir
+    Ψ'  = proj₁ (proj₂ eir)
+    DS' = proj₂ (proj₂ eir)
 
   open Eq Block exec-block public
 
@@ -576,11 +576,11 @@ module AMD64 where
 
   data Instr (S : StateType) where
     mov  : ∀ {σ τ}
-         → (r : σ ∈R StateType.registers S)
+         → (r : σ ∈ StateType.registers S)
          → RegValue (StateType.memory S) τ
          → Instr S (onlyreg (RegDiff.chg r τ))
     push : ∀ {τ}
-         → τ ∈R StateType.registers S
+         → τ ∈ StateType.registers S
          → Instr S (onlystack (StackDiff.push τ))
 \end{code}
 
@@ -595,7 +595,7 @@ module AMD64 where
 
 \begin{code}
     pop  : ∀ {σ τ DS}
-         → (r : σ ∈R StateType.registers S)
+         → (r : σ ∈ StateType.registers S)
          → (p : StateType.datastack S ≡ τ ∷ DS)
          → Instr S (regstack (RegDiff.chg r τ) (StackDiff.pop p))
 
@@ -706,8 +706,6 @@ module AMD64 where
                 (loadptr (State.memory S) p)
     exec-ijmp S p = refl
 
-    open ≡-Prop
-
     exec-plt : ∀ {Γ Ψ DS CS}
              → (f : block Γ DS CS ∈ Ψ)
              → (S : State (statetype Γ (pltize Ψ) DS CS))
@@ -742,6 +740,6 @@ module AMD64 where
 % и сама функция
 
 \begin{code}
-            (projr $ loadfunc (State.memory S) (blk f))
+            (proj₂ $ loadfunc (State.memory S) (blk f))
     proof f S p = left (exec-plt f S p) equal
 \end{code}
