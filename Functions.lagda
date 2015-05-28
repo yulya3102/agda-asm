@@ -403,7 +403,11 @@ module Meta where
             → exec-block S₁ A₁ ≡ S₂ , d₂ , A₂
             → BlockEq Ψ S S₂ B A₂
             → BlockEq Ψ S S₁ B A₁
+\end{code}
 
+% тут надо написать, почему сигнатуры всяких exec-* такие
+
+\begin{code}
 module 2Meta
   (ControlInstr : (S : StateType)
                 → Maybe (Diffs.CallStackChg S)
@@ -526,36 +530,32 @@ module AMD64 where
 
   open Blocks ControlInstr Instr
   open Values Block
-  
-  data ControlInstr (S : StateType) where
 \end{code}
 
-% везде, где требуется сакральное знание о том, что расположено в памяти
-% за этой инструкцией, я принимаю дополнительный аргумент
-% это сделано для упрощения себе жизни
-% в реальный ассемблер это отобразится одним лишним jump
+Одной из проблем предыдущей реализации было то, что блоки кода, не накладывая
+никаких ограничений на свое расположение в памяти, рассчитывали на некоторый
+контекст. Это происходило в тех местах, где это требовалось управляющим
+инструкциям, например, инструкции вызова функции или условных переходов.
+Эту проблему возможно решить, заменив подобные инструкции на другие,
+принимающие в качестве дополнительного аргумента адрес, по которому должно
+располагаться продолжение кода. В требуемый ассемблер x86\_64 это может
+отображаться одним дополнительным `jmp` на указанный адрес.
+
+Многие реализованные инструкции не требуются для реализации блока PLT и
+приведены здесь, чтобы показать возможность корректного определения
+подобных инструкций.
 
 \begin{code}
+  data ControlInstr (S : StateType) where
     call : ∀ {Γ DS}
          → (f : block
            (StateType.registers S)
            (StateType.datastack S)
            ((Γ , DS) ∷ StateType.callstack S)
            ∈ StateType.memory S)
-\end{code}
-
-% по-хорошему, ниже должно быть не memory S, а что-то другое
-% но мне плевать, потому что память неизменна
-
-\begin{code}
          → (cont : block Γ DS (StateType.callstack S)
                  ∈ StateType.memory S)
          → ControlInstr S (just $ StackDiff.push (Γ , DS))
-\end{code}
-
-% вот тут atom выглядит как говно :(
-
-\begin{code}
     jmp[_] : (ptr : atom
            (block
            (StateType.registers S)
@@ -582,23 +582,16 @@ module AMD64 where
     push : ∀ {τ}
          → τ ∈ StateType.registers S
          → Instr S (onlystack (StackDiff.push τ))
-\end{code}
-
-% pop меняет одновременно и стек, и регистры
-% тут было три варианта:
-% * засунуть в тип дифф, а не чендж
-% * разбить эту инструкцию на мув и поп
-% * сделать, как сделано
-% в первом случае можно будет пилить ЖИРНЫЕ инструкции, и это говно
-% во втором надо будет делать огромную кучу разных видов мувов
-% третий наименьшее зло, хотя непонятно, пригодится ли это ещё где-то
-
-\begin{code}
     pop  : ∀ {σ τ DS}
          → (r : σ ∈ StateType.registers S)
          → (p : StateType.datastack S ≡ τ ∷ DS)
          → Instr S (regstack (RegDiff.chg r τ) (StackDiff.pop p))
+\end{code}
 
+Функции, определяющие результаты исполнения заданных инструкций, определяются
+тривиально.
+
+\begin{code}
   exec-control : ∀ {S c}
                → State S
                → ControlInstr S c
