@@ -627,27 +627,36 @@ module AMD64 where
     = toreg Γ r v , Ψ , DS
   
   open 2Meta ControlInstr Instr exec-control exec-instr
+\end{code}
 
+% все еще люто хочется попилить все на секции
+
+\begin{code}
   module Linkers where
+\end{code}
+
+Преобразование памяти делается аналогично приведенному в первой реализации.
+Все, кроме блоков, остается неизменным, а на каждый блок дополнительно
+добавляются элементы PLT и GOT.
+
+\begin{code}
     pltize : DataType → DataType
     pltize [] = []
     pltize (atom x ∷ Ψ) = atom x ∷ pltize Ψ
     pltize (block Γ DS CS ∷ Ψ)
-\end{code}
-
-% первое -- plt, второе -- got, третье -- сама функция
-
-\begin{code}
       = block Γ DS CS
       ∷ (atom (block Γ DS CS *)
       ∷ (block Γ DS CS
       ∷ pltize Ψ))
 \end{code}
 
-% вообще-то тут результатом является не функция в измененном хипе,
-% а plt-шный блок, соответствующий функции из старого хипа
-% но у функции и plt-шного блока одинаковые типы (что логично),
-% потому эта сигнатура выглядит как говно :(
+Зная, по какому адресу находилась функция в памяти без GOT и PLT, можно
+получить адреса в измененной памяти для:
+
+\begin{itemize}
+
+    \item
+        соответствующего этой функции элемента PLT;
 
 \begin{code}
     plt : ∀ {Γ Ψ DS CS} → block Γ DS CS ∈ Ψ
@@ -656,7 +665,12 @@ module AMD64 where
     plt {Ψ = atom x ∷ Ψ} (there f) = there $ plt f
     plt {Ψ = block Γ DS CS ∷ Ψ} (there f)
       = there (there (there (plt f)))
+\end{code}
 
+    \item
+        соответствующего этой функции элемента GOT;
+
+\begin{code}
     got : ∀ {Γ Ψ DS CS} → block Γ DS CS ∈ Ψ
         → atom (block Γ DS CS *) ∈ pltize Ψ
     got (here refl) = there (here refl)
@@ -665,9 +679,8 @@ module AMD64 where
       = there (there (there (got f)))
 \end{code}
 
-% вот эту часть, по-хорошему, надо заимплементить по-другому
-% ибо по-любому где-нибудь вылезет необходимость доказать, что Ψ ⊆ pltize Ψ
-% и эта функция является следствием из этого факта
+    \item
+        самой функции.
 
 \begin{code}
     blk : ∀ {Γ Ψ DS CS} → block Γ DS CS ∈ Ψ
@@ -676,16 +689,31 @@ module AMD64 where
     blk {Ψ = atom x ∷ Ψ} (there f) = there $ blk f
     blk {Ψ = block Γ DS CS ∷ Ψ} (there f)
       = there (there (there (blk f)))
-
-    plt-stub : ∀ {Γ Ψ DS CS} → atom (block Γ DS CS *) ∈ Ψ
 \end{code}
 
-% внимание на дифф!
+\end{itemize}
+
+Блок PLT выглядит так же, как и в первой реализации.
 
 \begin{code}
+    plt-stub : ∀ {Γ Ψ DS CS} → atom (block Γ DS CS *) ∈ Ψ
              → Block (statetype Γ Ψ DS CS) dempty
     plt-stub got = ↝ jmp[ got ]
+\end{code}
 
+% вот тут хочется запилить секцию "доказательства"
+
+Для доказательства эквивалентности вызовов функции и соответствующего ей
+элемента PLT потребуются несколько лемм:
+
+\begin{itemize}
+
+    \item
+        состояние исполнителя в момент непосредственного вызова функции
+        эквивалентно состоянию исполнителя после исполнения непрямого `jmp`
+        по указателю на ее тело;
+
+\begin{code}
     exec-ijmp : ∀ {ST} → (S : State ST)
               → (p : atom (block
                    (StateType.registers ST)
@@ -698,7 +726,14 @@ module AMD64 where
                 (State.memory S)
                 (loadptr (State.memory S) p)
     exec-ijmp S p = refl
+\end{code}
 
+    \item
+        состояние исполнителя в момент непосредственного вызова функции
+        эквивалентно состоянию исполнителя после исполнения соответствующего
+        этой функции элемента PLT при условии корректно заполненного GOT;
+
+\begin{code}
     exec-plt : ∀ {Γ Ψ DS CS}
              → (f : block Γ DS CS ∈ Ψ)
              → (S : State (statetype Γ (pltize Ψ) DS CS))
@@ -706,33 +741,21 @@ module AMD64 where
              → exec-block S (plt-stub (got f))
              ≡ S , loadfunc (State.memory S) (blk f)
     exec-plt f S p rewrite sym p = exec-ijmp S (got f)
+\end{code}
 
+\end{itemize}
+
+Используя эти леммы, можно доказать, что если GOT заполнен корректно,
+то верна внешняя эквивалентность блока PLT, использующего соответствующий
+функции элемент GOT, и самой функции:
+
+\begin{code}
     proof : ∀ {Γ Ψ DS CS}
           → (f : block Γ DS CS ∈ Ψ)
           → (S : State (statetype Γ (pltize Ψ) DS CS))
-\end{code}
-
-% если GOT заполнено корректно, то
-
-\begin{code}
           → loadptr (State.memory S) (got f) ≡ blk f
-\end{code}
-
-% в любом стейте S эквивалентны
-
-\begin{code}
           → BlockEq Ψ S S
-\end{code}
-
-% PLTшный стаб, дергающий нужный GOT
-
-\begin{code}
             (plt-stub (got f))
-\end{code}
-
-% и сама функция
-
-\begin{code}
             (proj₂ $ loadfunc (State.memory S) (blk f))
     proof f S p = left (exec-plt f S p) equal
 \end{code}
