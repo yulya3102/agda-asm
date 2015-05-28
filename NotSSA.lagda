@@ -15,6 +15,8 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 можно решить, введя тип, описывающий изменение контекста, и соответственно
 изменив тип инструкции.
 
+\subsection{Описание изменений регистров}
+
 \begin{code}
 module Diffs where
 \end{code}
@@ -114,6 +116,8 @@ module Diffs where
 
 % вообще-то содержательная часть здесь заканчивается
 % далее следует proof-of-concept
+
+\subsection{Блоки, инструкции и значения}
 
 Используя определенный тип, переопределим типы блоков и инструкций.
 
