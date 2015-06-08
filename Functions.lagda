@@ -697,6 +697,18 @@ module AMD64 where
     plt-stub got = ↝ jmp[ got ]
 \end{code}
 
+Опишем важное свойство: элемент GOT корректно заполнен, если в нём
+действительно находится указатель на соответствующую этому элементу
+функцию.
+
+\begin{code}
+    GOT[_]-correctness : ∀ {Γ Ψ DS CS}
+                       → (f : block Γ DS CS ∈ Ψ)
+                       → (H : Data (pltize Ψ))
+                       → Set
+    GOT[ f ]-correctness H = loadptr H (got f) ≡ blk f
+\end{code}
+
 ## Доказательства
 
 Для доказательства эквивалентности вызовов функции и соответствующего ей
@@ -729,7 +741,7 @@ module AMD64 where
     exec-plt : ∀ {Γ Ψ DS CS}
              → (f : block Γ DS CS ∈ Ψ)
              → (S : State (statetype Γ (pltize Ψ) DS CS))
-             → loadptr (State.memory S) (got f) ≡ blk f
+             → GOT[ f ]-correctness (State.memory S)
              → exec-block S (plt-stub (got f))
              ≡ S , loadfunc (State.memory S) (blk f)
     exec-plt f S p rewrite sym p = exec-ijmp S (got f)
@@ -743,7 +755,7 @@ module AMD64 where
     proof : ∀ {Γ Ψ DS CS}
           → (f : block Γ DS CS ∈ Ψ)
           → (S : State (statetype Γ (pltize Ψ) DS CS))
-          → loadptr (State.memory S) (got f) ≡ blk f
+          → GOT[ f ]-correctness (State.memory S)
           → BlockEq S S
             (plt-stub (got f))
             (proj₂ $ loadfunc (State.memory S) (blk f))
