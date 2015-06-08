@@ -372,7 +372,7 @@ module Meta where
     where
     open Values Block
 
-    data BlockEq (Ψ : DataType)
+    data BlockEq
       : {ST₁ ST₂ : StateType}
       → {d₁ : Diff ST₁} {d₂ : Diff ST₂}
       → (S₁ : State ST₁) (S₂ : State ST₂)
@@ -381,7 +381,7 @@ module Meta where
       where
       equal : ∀ {ST}
             → {S : State ST} {d : Diff ST} {A : Block ST d}
-            → BlockEq Ψ S S A A
+            → BlockEq S S A A
       left  : ∀ {ST₁ ST}
             → {d₁ : Diff ST₁} {d₂ : Diff (dapply ST₁ d₁)}
             → {d : Diff ST}
@@ -390,8 +390,8 @@ module Meta where
             → {A₁ : Block ST₁ d₁} {A₂ : Block (dapply ST₁ d₁) d₂}
             → {B : Block ST d}
             → exec-block S₁ A₁ ≡ S₂ , d₂ , A₂
-            → BlockEq Ψ S₂ S A₂ B
-            → BlockEq Ψ S₁ S A₁ B
+            → BlockEq S₂ S A₂ B
+            → BlockEq S₁ S A₁ B
       right : ∀ {ST₁ ST}
             → {d₁ : Diff ST₁} {d₂ : Diff (dapply ST₁ d₁)}
             → {d : Diff ST}
@@ -400,8 +400,8 @@ module Meta where
             → {A₁ : Block ST₁ d₁} {A₂ : Block (dapply ST₁ d₁) d₂}
             → {B : Block ST d}
             → exec-block S₁ A₁ ≡ S₂ , d₂ , A₂
-            → BlockEq Ψ S S₂ B A₂
-            → BlockEq Ψ S S₁ B A₁
+            → BlockEq S S₂ B A₂
+            → BlockEq S S₁ B A₁
 \end{code}
 
 <!--- тут надо написать, почему сигнатуры всяких exec-* такие -->
@@ -744,7 +744,7 @@ module AMD64 where
           → (f : block Γ DS CS ∈ Ψ)
           → (S : State (statetype Γ (pltize Ψ) DS CS))
           → loadptr (State.memory S) (got f) ≡ blk f
-          → BlockEq Ψ S S
+          → BlockEq S S
             (plt-stub (got f))
             (proj₂ $ loadfunc (State.memory S) (blk f))
     proof f S p = left (exec-plt f S p) equal
