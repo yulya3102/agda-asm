@@ -213,23 +213,24 @@ deref (vs , x)          (there p)   = there (deref vs p)
 корректности уже имеющегося в памяти:
 
 \begin{code}
-wk-value : ∀ {Ψ Ψ' τ} → Ψ ⊆ Ψ' → Value Ψ τ → Value Ψ' τ
+module WeakeningLemmas {Ψ Ψ' : HeapTypes} (ss : Ψ ⊆ Ψ') where
+  wk-value : ∀ {τ} → Value Ψ τ → Value Ψ' τ
 
-wk-instr : ∀ {Ψ Ψ' Γ Δ} → Ψ ⊆ Ψ' → Instr Ψ Γ Δ → Instr Ψ' Γ Δ
-wk-instr ss (mov x) = mov (wk-value ss x)
+  wk-instr : ∀ {Γ Δ} → Instr Ψ Γ Δ → Instr Ψ' Γ Δ
+  wk-instr (mov x) = mov (wk-value x)
 
-wk-cinstr : ∀ {Ψ Ψ' Γ} → Ψ ⊆ Ψ' → ControlInstr Ψ Γ
-          → ControlInstr Ψ' Γ
-wk-cinstr ss (call f) = call (ss f)
-wk-cinstr ss jmp[ f ] = jmp[ ss f ]
-wk-cinstr ss (jmp f) = jmp (ss f)
+  wk-cinstr : ∀ {Γ} → ControlInstr Ψ Γ → ControlInstr Ψ' Γ
+  wk-cinstr (call f) = call (ss f)
+  wk-cinstr jmp[ f ] = jmp[ ss f ]
+  wk-cinstr (jmp f) = jmp (ss f)
 
-wk-blk : ∀ {Ψ Ψ' Γ Δ} → Ψ ⊆ Ψ' → Block Ψ Γ Δ → Block Ψ' Γ Δ
-wk-blk ss (↝ x) = ↝ (wk-cinstr ss x)
-wk-blk ss (x ∙ b) = wk-instr ss x ∙ wk-blk ss b
+  wk-blk : ∀ {Γ Δ} → Block Ψ Γ Δ → Block Ψ' Γ Δ
+  wk-blk (↝ x) = ↝ (wk-cinstr x)
+  wk-blk (x ∙ b) = wk-instr x ∙ wk-blk b
 
-wk-value ss (function x) = function (wk-blk ss x)
-wk-value ss (ptr x)      = ptr (ss x)
+  wk-value (function x) = function (wk-blk x)
+  wk-value (ptr x)      = ptr (ss x)
+open WeakeningLemmas
 \end{code}
 
 Загрузка значения из памяти по адресу:
