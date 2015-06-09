@@ -21,9 +21,11 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 ### Описание изменений регистров
 
+\ignore{
 \begin{code}
 module Diffs where
 \end{code}
+}
 
 Определим тип, описывающий одно изменение списка фиксированной длины:
 в таком списке можно только менять элементы, что и требуется от регистров.
@@ -51,9 +53,10 @@ module Diffs where
     chgapply (τ ∷ Γ) (chg (there p)   σ) = τ ∷ chgapply Γ (chg p σ)
 \end{code}
 
-Блок кода последовательно применяет изменения к контексту регистров. Для
-того, чтобы описать набор изменений, делаемый блоком кода, введем еще один
-тип:
+Блок кода последовательно применяет изменения к контексту регистров,
+значит, в его типе должен быть описан набор изменений.
+
+Набор изменений является общим для изменений различных видов.
 
 \begin{code}
   module Diff
@@ -61,23 +64,33 @@ module Diffs where
     {Chg : Ctx → Set}
     (chgapply : (Γ : Ctx) → Chg Γ → Ctx)
     where
+\end{code}
+
+Так же, как и для изменения, тип набора изменений ограничивает контекст, к
+которому его можно применять.
+
+\begin{code}
     data Diff (Γ : Ctx) : Set where
 \end{code}
 
-*   набор изменений может быть пустым (например, если блок состоит из одной
-    управляющей инструкции)
+Набор изменений — это:
+
+*   либо пустой набор;
 
 \begin{code}
       dempty  : Diff Γ
 \end{code}
 
-*   либо это изменение, добавленное перед уже имеющимся набором
+*   либо это изменение, добавленное перед уже имеющимся набором.
 
 \begin{code}
       dchg    : (c : Chg Γ) → Diff (chgapply Γ c) → Diff Γ
 \end{code}
 
-Наборы изменений тоже применяются к спискам.
+Для набора изменений определены несколько функций:
+
+*   применение набора к контексту — это последовательное применение всех
+    изменений из набора;
 
 \begin{code}
     dapply : (Γ : Ctx) → Diff Γ → Ctx
@@ -85,7 +98,7 @@ module Diffs where
     dapply Γ (dchg c d) = dapply (chgapply Γ c) d
 \end{code}
 
-Два набора изменений можно применять последовательно:
+*   объединение двух наборов изменений;
 
 \begin{code}
     dappend : ∀ {Γ} → (d : Diff Γ)
@@ -94,7 +107,7 @@ module Diffs where
     dappend (dchg c a) b = dchg c (dappend a b)
 \end{code}
 
-Докажем две полезных леммы про наборы изменений:
+*   лемма, доказывающая, что объединение с пустым набором не меняет набор;
 
 \begin{code}
     dappend-dempty-lemma : ∀ {Γ} → (d : Diff Γ)
@@ -102,7 +115,12 @@ module Diffs where
     dappend-dempty-lemma dempty = refl
     dappend-dempty-lemma (dchg c d)
       rewrite dappend-dempty-lemma d = refl
+\end{code}
 
+*   лемма, доказывающая, что применение объединения наборов эквивалентно
+    последовательному применению этих наборов.
+
+\begin{code}
     dappend-dapply-lemma : ∀ S → (d₁ : Diff S)
                          → (d₂ : Diff (dapply S d₁))
                          → dapply S (dappend d₁ d₂)
@@ -121,13 +139,22 @@ module Diffs where
 
 Используя определенный тип, переопределим типы блоков и инструкций.
 
+\ignore{
 \begin{code}
 open import DevCore
+\end{code}
+}
 
+\begin{code}
 module FixedHeap (Ψ : HeapTypes) where
+\end{code}
+
+\ignore{
+\begin{code}
   open Diffs.ListChg Type
   open Diffs.Diff chgapply
 \end{code}
+}
 
 Ранее тип блока описывал список добавляемых регистров. Теперь он описывает
 набор изменений, применяемых к уже имеющимся регистрам.
@@ -139,6 +166,7 @@ module FixedHeap (Ψ : HeapTypes) where
 Управляющие инструкции не меняют регистров, поэтому их определение останется
 неизменным.
 
+\ignore{
 \begin{code}
   data ControlInstr (Γ : RegFileTypes) : Set
     where
@@ -146,6 +174,7 @@ module FixedHeap (Ψ : HeapTypes) where
     jmp[_] : (f : (blk Γ) * ∈ Ψ) → ControlInstr Γ
     jmp    : (f : blk Γ ∈ Ψ) → ControlInstr Γ
 \end{code}
+}
 
 Тип инструкции изменим так же, как изменился тип блока: список добавляемых
 к контексту регистров заменим на описание набора изменений.
@@ -154,17 +183,15 @@ module FixedHeap (Ψ : HeapTypes) where
   data Instr (Γ : RegFileTypes) : Chg Γ → Set
 \end{code}
 
-Как и в прошлый раз, перед определением инструкций определим возможные
-значения.
-
+\ignore{
 \begin{code}
   data Value : Type → Set where
     function : {Γ : RegFileTypes} → {d : Diff Γ} → Block Γ d
              → Value (blk Γ)
     ptr      : ∀ {τ} → τ ∈ Ψ → Value (τ *)
 \end{code}
+}
   
-Теперь можно определить инструкцию, загружающую некоторое значение в регистр.
 В этой реализации инструкция не добавляет регистр, а описывает изменение
 конкретного регистра из списка на значение нового типа.
 
