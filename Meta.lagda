@@ -176,6 +176,69 @@ module Meta where
                  $ λ ptr → (unfun (load ptr Ψ)) ≡ _ , b
 \end{code}
 
+Конкретный ассемблер можно задать, описав его инструкции и семантику их
+исполнения. По этой информации можно автоматически получать определения
+блоков и семантики их исполнения. Нижеприведенный модуль делает именно это.
+<!--- на самом деле не делает, ибо не осилила -->
+
+<!--- надо еще описать, почему сигнатуры всяких exec-* такие -->
+
+\begin{code}
+  module Exec
+    (ControlInstr : StateType → Set)
+    (Instr : (S : StateType) → Chg (regs S) → Set)
+    (exec-instr : {S : StateType}
+                → {c : Chg (regs S)} → Instr S c
+                → Values.Heap
+                  (Blocks.Block ControlInstr Instr)
+                  (heap S)
+                → Values.Registers
+                  (Blocks.Block ControlInstr Instr)
+                  S
+                → Values.Heap
+                  (Blocks.Block ControlInstr Instr)
+                  (heap $ sdapply S (dchg c dempty))
+                × Values.Registers
+                  (Blocks.Block ControlInstr Instr)
+                  (sdapply S (dchg c dempty)))
+    (exec-control : {S : StateType}
+                  → ControlInstr S
+                  → Values.Heap
+                    (Blocks.Block ControlInstr Instr)
+                    (heap S)
+                  → CallStack (heap S)
+                  → IP (heap S)
+                  → CallStack (heap S)
+                  × IPRFT (heap S) (regs S))
+    where
+    open Blocks ControlInstr Instr public
+    open Values Block public
+\end{code}
+
+<!---
+% описание того, почему сигнатура exec-blk именно такая, должно быть где-то
+% выше
+-->
+
+Одним из результатов исполнения функции `exec-blk` является блок, который
+должен исполняться следующим. Для некоторых блоков (например, блоков,
+заканчивающихся условным переходом или вызовом функции) важно их расположение
+в памяти: за ними должен располагаться блок кода, имеющий подходящий тип.
+Это не было учтено при реализации блоков, из-за чего корректно определить
+функцию `exec-blk` оказалось затруднительно.
+
+\begin{code}
+    exec-blk : {S : StateType} {d : Diff (regs S)} {b : Block S d}
+             → (Ψ : Heap (heap S))
+             → b ∈B Ψ
+             → Registers S → CallStack (heap S)
+             → (Σ (Diff $ dapply (regs S) d) (Block $ sdapply S d))
+             × (Heap (heap $ sdapply S d)
+             × (Registers (sdapply S d)
+             × CallStack (heap $ sdapply S d)))
+    exec-blk {b = b} Ψ p Γ cs = {!!}
+\end{code}
+
 Так как определение блоков не зависит от конкретного ассемблера, то и 
 определение эквивалентности блоков не должно от него зависеть. Требуемыми 
 параметрами являются определение типа блока и функция, описывающая изменение
@@ -274,69 +337,9 @@ module Meta where
             → BlockEq Ψ Ψ₂ Γ Γ₂ CC CC₂ B A₂
 \end{code}
 
-Конкретный ассемблер можно задать, описав его инструкции и семантику их
-исполнения. По этой информации можно автоматически получать определения
-блоков и семантики их исполнения. Нижеприведенный модуль делает именно это.
-<!--- на самом деле не делает, ибо не осилила -->
 
-<!--- надо еще описать, почему сигнатуры всяких exec-* такие -->
 
 \begin{code}
-  module Exec
-    (ControlInstr : StateType → Set)
-    (Instr : (S : StateType) → Chg (regs S) → Set)
-    (exec-instr : {S : StateType}
-                → {c : Chg (regs S)} → Instr S c
-                → Values.Heap
-                  (Blocks.Block ControlInstr Instr)
-                  (heap S)
-                → Values.Registers
-                  (Blocks.Block ControlInstr Instr)
-                  S
-                → Values.Heap
-                  (Blocks.Block ControlInstr Instr)
-                  (heap $ sdapply S (dchg c dempty))
-                × Values.Registers
-                  (Blocks.Block ControlInstr Instr)
-                  (sdapply S (dchg c dempty)))
-    (exec-control : {S : StateType}
-                  → ControlInstr S
-                  → Values.Heap
-                    (Blocks.Block ControlInstr Instr)
-                    (heap S)
-                  → CallStack (heap S)
-                  → IP (heap S)
-                  → CallStack (heap S)
-                  × IPRFT (heap S) (regs S))
-    where
-    open Blocks ControlInstr Instr public
-    open Values Block public
-\end{code}
-
-<!---
-% описание того, почему сигнатура exec-blk именно такая, должно быть где-то
-% выше
--->
-
-Одним из результатов исполнения функции `exec-blk` является блок, который
-должен исполняться следующим. Для некоторых блоков (например, блоков,
-заканчивающихся условным переходом или вызовом функции) важно их расположение
-в памяти: за ними должен располагаться блок кода, имеющий подходящий тип.
-Это не было учтено при реализации блоков, из-за чего корректно определить
-функцию `exec-blk` оказалось затруднительно.
-
-\begin{code}
-    exec-blk : {S : StateType} {d : Diff (regs S)} {b : Block S d}
-             → (Ψ : Heap (heap S))
-             → b ∈B Ψ
-             → Registers S → CallStack (heap S)
-             → (Σ (Diff $ dapply (regs S) d) (Block $ sdapply S d))
-             × (Heap (heap $ sdapply S d)
-             × (Registers (sdapply S d)
-             × CallStack (heap $ sdapply S d)))
-    exec-blk {b = b} Ψ p Γ cs = {!!}
-
-    open Eq Block exec-blk public
 open Meta
 \end{code}
 
@@ -403,6 +406,7 @@ module x86-64 where
   exec-instr = {!!}
 
   open Exec ControlInstr Instr exec-instr exec-control
+  open Eq Block exec-blk
 \end{code}
 
 ### Проблемы этого решения
