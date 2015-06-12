@@ -152,22 +152,22 @@ module Meta where
     Heap Ψ = IHeap Ψ Ψ
 \end{code}
 
-Определим функции для загрузки значений из памяти:
+Определим функцию для загрузки значений из памяти:
 
 \begin{code}
-    ++[]-lemma : {A : Set} (a : A) (as bs : List A)
-          → as ++ a ∷ bs ≡ (as ++ [ a ]) ++ bs
-    ++[]-lemma a [] bs = refl
-    ++[]-lemma a (x ∷ as) bs rewrite ++[]-lemma a as bs = refl
-
-    iload : ∀ {Ψ τ} ψs → τ ∈ Ψ → IHeap (ψs ++ Ψ) Ψ
-          → Value (ψs ++ Ψ) τ
-    iload ψs (here refl) (x ∷ _) = x
-    iload {ψ ∷ Ψ} ψs (there p) (x ∷ h)
-      rewrite ++[]-lemma ψ ψs Ψ = iload (ψs ++ [ ψ ]) p h
-
     load : ∀ {Ψ τ} → τ ∈ Ψ → Heap Ψ → Value Ψ τ
     load p heap = iload [] p heap
+      where
+      ++[]-lemma : {A : Set} (a : A) (as bs : List A)
+            → as ++ a ∷ bs ≡ (as ++ [ a ]) ++ bs
+      ++[]-lemma a [] bs = refl
+      ++[]-lemma a (x ∷ as) bs rewrite ++[]-lemma a as bs = refl
+
+      iload : ∀ {Ψ τ} ψs → τ ∈ Ψ → IHeap (ψs ++ Ψ) Ψ
+            → Value (ψs ++ Ψ) τ
+      iload ψs (here refl) (x ∷ _) = x
+      iload {ψ ∷ Ψ} ψs (there p) (x ∷ h)
+        rewrite ++[]-lemma ψ ψs Ψ = iload (ψs ++ [ ψ ]) p h
 \end{code}
 
 Регистры — список значений, ссылающихся на память, в типе которого описано,
