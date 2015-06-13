@@ -21,7 +21,7 @@ open import Function
 состоянием памяти.
 
 \begin{code}
-module FixedHeap (Ψ : HeapTypes) where
+module FixedHeap (Ψ : DataType) where
 \end{code}
 
 Не все инструкции изменяют одинаковые части контекста исполнения.
@@ -42,7 +42,7 @@ module FixedHeap (Ψ : HeapTypes) where
 добавляемых к этому контексту регистров.
 
 \begin{code}
-  data Block (Γ : RegFileTypes) : (Δ : RegFileTypes) → Set
+  data Block (Γ : RegTypes) : (Δ : RegTypes) → Set
 \end{code}
 
 Управляющая инструкция должна знать, в каком контексте она исполняется,
@@ -50,7 +50,7 @@ module FixedHeap (Ψ : HeapTypes) where
 исполнен корректно.
 
 \begin{code}
-  data ControlInstr (Γ : RegFileTypes) : Set
+  data ControlInstr (Γ : RegTypes) : Set
     where
 \end{code}
 
@@ -60,21 +60,21 @@ module FixedHeap (Ψ : HeapTypes) where
     адресу;
 
 \begin{code}
-    call   : (f : blk Γ ∈ Ψ) → ControlInstr Γ
+    call   : (f : block Γ ∈ Ψ) → ControlInstr Γ
 \end{code}
 
 *   передача управления на блок кода, адрес которого записан в ячейке
     памяти по данному адресу;
 
 \begin{code}
-    jmp[_] : (f : (blk Γ) * ∈ Ψ) → ControlInstr Γ
+    jmp[_] : (f : (block Γ) * ∈ Ψ) → ControlInstr Γ
 \end{code}
 
 *   передача управления на блок кода, расположенный в памяти по данному
     адресу.
 
 \begin{code}
-    jmp    : (f : blk Γ ∈ Ψ) → ControlInstr Γ
+    jmp    : (f : block Γ ∈ Ψ) → ControlInstr Γ
 \end{code}
 
 Стоит отметить, что последняя инструкция не требуется для реализации простой
@@ -95,7 +95,7 @@ module FixedHeap (Ψ : HeapTypes) where
 случае это будет описываться списком регистров, добавляемых к контексту.
 
 \begin{code}
-  data Instr (Γ : RegFileTypes) : (Δ : RegFileTypes) → Set
+  data Instr (Γ : RegTypes) : (Δ : RegTypes) → Set
 \end{code}
 
 Для реализации простой динамической компоновки требуются только управляющие
@@ -120,7 +120,7 @@ module FixedHeap (Ψ : HeapTypes) where
 *   блоки кода;
 
 \begin{code}
-    function : {Γ Δ : RegFileTypes} → Block Γ Δ → Value (blk Γ)
+    block : {Γ Δ : RegTypes} → Block Γ Δ → Value (block Γ)
 \end{code}
 
 *   указатели на значения, лежащие в памяти.
@@ -133,14 +133,14 @@ module FixedHeap (Ψ : HeapTypes) where
 значение типа τ и добавляет к контексту один регистр этого типа.
 
 \begin{code}
-  data Instr (Γ : RegFileTypes) where
+  data Instr (Γ : RegTypes) where
     mov  : ∀ {τ} → Value τ → Instr Γ [ τ ]
 \end{code}
 
 Опишем конструирование базовых блоков кода.
 
 \begin{code}
-  data Block (Γ : RegFileTypes) where
+  data Block (Γ : RegTypes) where
 \end{code}
 
 Базовый блок — это конструкция, построенная из следующих примитивов:
@@ -166,7 +166,7 @@ module FixedHeap (Ψ : HeapTypes) where
 блок кода из памяти.
 
 \begin{code}
-  NewBlk = Σ RegFileTypes (λ Γ → Σ RegFileTypes (Block Γ))
+  NewBlk = Σ RegTypes (λ Γ → Σ RegTypes (Block Γ))
 \end{code}
 
 \ignore{
@@ -181,7 +181,7 @@ open FixedHeap
 описывает, значения каких типов и на каких позициях находятся в памяти.
 
 \begin{code}
-data Heap : HeapTypes → Set where
+data Data : DataType → Set where
 \end{code}
 
 Определение памяти практически аналогично определению односвязного списка.
@@ -190,26 +190,26 @@ data Heap : HeapTypes → Set where
 типе.
 
 \begin{code}
-  []  : Heap []
-  _,_ : ∀ {τ Ψ} → (H : Heap Ψ) → Value Ψ τ → Heap (τ ∷ Ψ)
+  []  : Data []
+  _,_ : ∀ {τ Ψ} → (H : Data Ψ) → Value Ψ τ → Data (τ ∷ Ψ)
 \end{code}
 
 Для работы с памятью необходимо определить разыменование указателя, то есть
 получение значения по указателю на него:
 
 \begin{code}
-deref : ∀ {l Ψ} → Heap Ψ → l * ∈ Ψ → l ∈ Ψ
+deref : ∀ {l Ψ} → Data Ψ → l * ∈ Ψ → l ∈ Ψ
 deref [] ()
-deref (vs , function x) (here ())
-deref (vs , ptr p)      (here refl) = there p
-deref (vs , x)          (there p)   = there (deref vs p)
+deref (vs , block x) (here ())
+deref (vs , ptr p)   (here refl) = there p
+deref (vs , x)       (there p)   = there (deref vs p)
 \end{code}
 
 Для каждой возможной сущности из старого набора данных определено
 корректное преобразование в сущность в новом наборе данных:
 
 \begin{code}
-module WeakeningLemmas {Ψ Ψ' : HeapTypes} (ss : Ψ ⊆ Ψ') where
+module WeakeningLemmas {Ψ Ψ' : DataType} (ss : Ψ ⊆ Ψ') where
 \end{code}
 
 *   значение из старого набора данных корректно преобразуется в
@@ -241,16 +241,16 @@ module WeakeningLemmas {Ψ Ψ' : HeapTypes} (ss : Ψ ⊆ Ψ') where
     блок кода в новом наборе данных.
 
 \begin{code}
-  wk-blk : ∀ {Γ Δ} → Block Ψ Γ Δ → Block Ψ' Γ Δ
-  wk-blk (↝ x) = ↝ (wk-cinstr x)
-  wk-blk (x ∙ b) = wk-instr x ∙ wk-blk b
+  wk-block : ∀ {Γ Δ} → Block Ψ Γ Δ → Block Ψ' Γ Δ
+  wk-block (↝ x) = ↝ (wk-cinstr x)
+  wk-block (x ∙ b) = wk-instr x ∙ wk-block b
 \end{code}
 
 Реализация описанной выше функции `wk-value`:
 
 \begin{code}
-  wk-value (function x) = function (wk-blk x)
-  wk-value (ptr x)      = ptr (ss x)
+  wk-value (block x) = block (wk-block x)
+  wk-value (ptr x)   = ptr (ss x)
 \end{code}
 
 \ignore{
@@ -262,7 +262,7 @@ open WeakeningLemmas
 Определим функцию для загрузки значения из памяти по указанному адресу:
 
 \begin{code}
-load : ∀ {l Ψ} → Heap Ψ → l ∈ Ψ → Value Ψ l
+load : ∀ {l Ψ} → Data Ψ → l ∈ Ψ → Value Ψ l
 load (vs , x) (here refl) = wk-value there x
 load (vs , x) (there p)   = wk-value there (load vs p)
 \end{code}
@@ -270,9 +270,9 @@ load (vs , x) (there p)   = wk-value there (load vs p)
 Так же для удобства определим функцию, загружающую произвольный блок кода:
 
 \begin{code}
-loadblk : ∀ {Γ Ψ} → Heap Ψ → blk Γ ∈ Ψ → NewBlk Ψ
+loadblk : ∀ {Γ Ψ} → Data Ψ → block Γ ∈ Ψ → NewBlk Ψ
 loadblk Ψ f with load Ψ f
-loadblk Ψ f | function x = _ , _ , x
+loadblk Ψ f | block x = _ , _ , x
 \end{code}
 
 ### Исполнение кода
@@ -283,7 +283,7 @@ loadblk Ψ f | function x = _ , _ , x
 простоты определим его как список блоков, а не их адресов.
 
 \begin{code}
-CallStack : HeapTypes → Set
+CallStack : DataType → Set
 CallStack Ψ = List (NewBlk Ψ)
 \end{code}
 
@@ -294,7 +294,7 @@ CallStack Ψ = List (NewBlk Ψ)
 функции, при котором на стеке вызовов оказывается адрес возврата.
 
 \begin{code}
-CallCtx : HeapTypes → Set
+CallCtx : DataType → Set
 CallCtx Ψ = CallStack Ψ × NewBlk Ψ
 \end{code}
 
@@ -303,7 +303,7 @@ CallCtx Ψ = CallStack Ψ × NewBlk Ψ
 памяти.
 
 \begin{code}
-module InCallCtx {Ψ : HeapTypes} (H : Heap Ψ) (cc : CallCtx Ψ)
+module InCallCtx {Ψ : DataType} (H : Data Ψ) (cc : CallCtx Ψ)
   where
 \end{code}
 
@@ -341,9 +341,9 @@ Jump не меняет стек и передает управление так 
 что отражено в описании результата исполнения блока кода.
 
 \begin{code}
-  exec-blk : ∀ {Γ Δ} → Block Ψ Γ Δ → CallCtx Ψ
-  exec-blk (↝ x) = exec-control x
-  exec-blk (i ∙ b) = exec-blk b
+  exec-block : ∀ {Γ Δ} → Block Ψ Γ Δ → CallCtx Ψ
+  exec-block (↝ x) = exec-control x
+  exec-block (i ∙ b) = exec-block b
 \end{code}
 
 \ignore{
@@ -360,8 +360,8 @@ open InCallCtx
 приводящая к одному и тому же блоку с одинаковым контекстом исполнения.
 
 \begin{code}
-data BlockEq {Ψ : HeapTypes} (H : Heap Ψ) (CC : CallCtx Ψ)
-    : {Γ₁ Γ₂ Δ₁ Δ₂ : RegFileTypes}
+data BlockEq {Ψ : DataType} (H : Data Ψ) (CC : CallCtx Ψ)
+    : {Γ₁ Γ₂ Δ₁ Δ₂ : RegTypes}
     → Block Ψ Γ₁ Δ₁ → Block Ψ Γ₂ Δ₂ → Set
     where
 \end{code}
@@ -380,7 +380,7 @@ data BlockEq {Ψ : HeapTypes} (H : Heap Ψ) (CC : CallCtx Ψ)
   left   : ∀ {Δ₁ Δ₂ Δ₃ Γ₁ Γ₂ Γ₃}
          → {A : Block Ψ Γ₁ Δ₁} → {B : Block Ψ Γ₂ Δ₂}
          → {C : Block Ψ Γ₃ Δ₃}
-         → proj₂ (exec-blk H CC C) ≡ _ , _ , A
+         → proj₂ (exec-block H CC C) ≡ _ , _ , A
          → BlockEq H CC A B
          → BlockEq H CC C B
 \end{code}
@@ -391,7 +391,7 @@ data BlockEq {Ψ : HeapTypes} (H : Heap Ψ) (CC : CallCtx Ψ)
   right  : ∀ {Δ₁ Δ₂ Δ₃ Γ₁ Γ₂ Γ₃}
          → {A : Block Ψ Γ₁ Δ₁} → {B : Block Ψ Γ₂ Δ₂}
          → {C : Block Ψ Γ₃ Δ₃}
-         → proj₂ (exec-blk H CC C) ≡ _ , _ , B
+         → proj₂ (exec-block H CC C) ≡ _ , _ , B
          → BlockEq H CC A B
          → BlockEq H CC A C
 \end{code}
@@ -405,9 +405,9 @@ data BlockEq {Ψ : HeapTypes} (H : Heap Ψ) (CC : CallCtx Ψ)
          → {A' : Block Ψ Γ₁' Δ₁'} {B' : Block Ψ Γ₂' Δ₂'}
          → BlockEq H CC' A' B'
          → {A : Block Ψ Γ₁ Δ₁}
-         → exec-blk H CC A ≡ proj₁ CC' , _ , _ , A'
+         → exec-block H CC A ≡ proj₁ CC' , _ , _ , A'
          → {B : Block Ψ Γ₂ Δ₂} 
-         → exec-blk H CC B ≡ proj₁ CC' , _ , _ , B'
+         → exec-block H CC B ≡ proj₁ CC' , _ , _ , B'
          → BlockEq H CC A B
 \end{code}
 
@@ -418,79 +418,79 @@ data BlockEq {Ψ : HeapTypes} (H : Heap Ψ) (CC : CallCtx Ψ)
 поэтому PLT состоит всего из одной инструкции.
 
 \begin{code}
-plt-stub : ∀ {Γ Ψ} → (blk Γ) * ∈ Ψ → Block Ψ Γ []
-plt-stub label = ↝ (jmp[ label ])
+plt-stub : ∀ {Γ Ψ} → (block Γ) * ∈ Ψ → Block Ψ Γ []
+plt-stub got = ↝ (jmp[ got ])
 \end{code}
 
 По сравнению со статической компоновкой при динамической компоновке в память
 добавляются дополнительные значения. Сначала опишем их типы.
 
 \begin{code}
-plt-heaptypes : HeapTypes → HeapTypes
+pltize : DataType → DataType
 \end{code}
 
 На каждый блок кода компоновщиком генерируются:
 
 \begin{code}
-plt-heaptypes (blk Γ ∷ Ψ)
+pltize (block Γ ∷ Ψ)
 \end{code}
 
 *   блок PLT, тип которого совпадает с типом блока, на который происходит
     переход;
 
 \begin{code}
-    = blk Γ
+    = block Γ
 \end{code}
 
 *   элемент GOT, тип которого — указатель на блок, на который происходит
     переход.
 
 \begin{code}
-    ∷ blk Γ *
+    ∷ block Γ *
 \end{code}
 
 При этом сам блок кода остается на месте.
 
 \begin{code}
-    ∷ blk Γ ∷ (plt-heaptypes Ψ)
+    ∷ block Γ ∷ (pltize Ψ)
 \end{code}
 
 Все остальное при этом остается неизменным.
 
 \begin{code}
-plt-heaptypes (x ∷ Ψ) = x ∷ (plt-heaptypes Ψ)
-plt-heaptypes [] = []
+pltize (x ∷ Ψ) = x ∷ (pltize Ψ)
+pltize [] = []
 \end{code}
 
 При этом все, что загружалось в память при статической компоновке, будет
 загружено и при динамической компоновке.
 
 \begin{code}
-plt-⊆ : ∀ {Ψ} → Ψ ⊆ plt-heaptypes Ψ
-plt-⊆ {x = blk Γ} (here refl) = there $ there (here refl)
+plt-⊆ : ∀ {Ψ} → Ψ ⊆ pltize Ψ
+plt-⊆ {x = block Γ} (here refl) = there $ there (here refl)
 plt-⊆ {x = x * } (here refl) = here refl
-plt-⊆ {blk Γ ∷ ψs} (there i) = there $ there (there (plt-⊆ i))
+plt-⊆ {block Γ ∷ ψs} (there i) = there $ there (there (plt-⊆ i))
 plt-⊆ {ψ * ∷ ψs} (there i) = there (plt-⊆ i)
 \end{code}
 
 Опишем, какие значения определенных выше типов появляются в памяти.
 
 \begin{code}
-plt-heap : ∀ {Ψ} → Heap Ψ → Heap (plt-heaptypes Ψ)
-plt-heap [] = []
+pltize-data : ∀ {Ψ} → Data Ψ → Data (pltize Ψ)
+pltize-data [] = []
 \end{code}
 
 На каждый блок кода из исходного набора значений, находящихся в памяти, 
 генерируется:
 
 \begin{code}
-plt-heap (vs , function f) = ((plt-heap vs
+pltize-data (vs , block f) = ((pltize-data vs
 \end{code}
 
 *   сам блок кода;
 
 \begin{code}
-    , function (wk-blk plt-⊆ f))
+    , block (wk-block plt-⊆ f))
 \end{code}
 
 *   элемент GOT, указывающий на блок, лежащий перед ним в памяти;
@@ -502,14 +502,14 @@ plt-heap (vs , function f) = ((plt-heap vs
 *   блок PLT, ссылающийся на элемент GOT, лежащий перед ним в памяти.
 
 \begin{code}
-    , function (plt-stub (here refl))
+    , block (plt-stub (here refl))
 \end{code}
 
 Указатели на значения корректно преобразуются при добавлении в память
 таблиц GOT и PLT.
 
 \begin{code}
-plt-heap (vs , ptr x) = plt-heap vs , ptr (plt-⊆ x)
+pltize-data (vs , ptr x) = pltize-data vs , ptr (plt-⊆ x)
 \end{code}
 
 Зная адрес, по которому блок располагался в памяти при статической компоновке,
@@ -517,14 +517,14 @@ plt-heap (vs , ptr x) = plt-heap vs , ptr (plt-⊆ x)
 располагаться соответствующие ему элементы таблиц GOT и PLT.
 
 \begin{code}
-plt : ∀ {Γ Ψ} → (blk Γ) ∈ Ψ → (blk Γ) ∈ plt-heaptypes Ψ
+plt : ∀ {Γ Ψ} → (block Γ) ∈ Ψ → (block Γ) ∈ pltize Ψ
 plt (here refl) = here refl
-plt {Ψ = blk Δ ∷ Ψ} (there f) = there (there (there (plt f)))
+plt {Ψ = block Δ ∷ Ψ} (there f) = there (there (there (plt f)))
 plt {Ψ = x * ∷ Ψ} (there f) = there (plt f)
 
-got : ∀ {Γ Ψ} → (blk Γ) ∈ Ψ → (blk Γ) * ∈ plt-heaptypes Ψ
+got : ∀ {Γ Ψ} → (block Γ) ∈ Ψ → (block Γ) * ∈ pltize Ψ
 got (here refl) = there (here refl)
-got {Ψ = blk Δ ∷ Ψ} (there f) = there (there (there (got f)))
+got {Ψ = block Δ ∷ Ψ} (there f) = there (there (there (got f)))
 got {Ψ = x * ∷ Ψ} (there f) = there (got f)
 \end{code}
 
@@ -534,11 +534,11 @@ got {Ψ = x * ∷ Ψ} (there f) = there (got f)
 адреса функции.
 
 \begin{code}
-plt-code : ∀ {Ψ Γ Δ} → Block Ψ Γ Δ → Block (plt-heaptypes Ψ) Γ Δ
-plt-code (↝ (call f)) = ↝ (call (plt f))
-plt-code (↝ jmp[ f ]) = ↝ (jmp[ plt-⊆ f ])
-plt-code (↝ (jmp f)) = ↝ (jmp (plt-⊆ f ))
-plt-code (i ∙ b) = wk-instr plt-⊆ i ∙ plt-code b
+pltize-code : ∀ {Ψ Γ Δ} → Block Ψ Γ Δ → Block (pltize Ψ) Γ Δ
+pltize-code (↝ (call f)) = ↝ (call (plt f))
+pltize-code (↝ jmp[ f ]) = ↝ (jmp[ plt-⊆ f ])
+pltize-code (↝ (jmp f)) = ↝ (jmp (plt-⊆ f ))
+pltize-code (i ∙ b) = wk-instr plt-⊆ i ∙ pltize-code b
 \end{code}
 
 ### Доказательства
@@ -551,9 +551,9 @@ plt-code (i ∙ b) = wk-instr plt-⊆ i ∙ plt-code b
 
 \begin{code}
 jmp[]-proof : ∀ {Ψ Γ Δ} → {CC : CallCtx Ψ}
-           → {H : Heap Ψ}
+           → {H : Data Ψ}
            → {A : Block Ψ Γ Δ}
-           → (f : (blk Γ) * ∈ Ψ)
+           → (f : (block Γ) * ∈ Ψ)
            → loadblk H (deref H f) ≡ _ , _ , A
            → BlockEq H CC A (↝ jmp[ f ])
 jmp[]-proof {Ψ} {CC = CC} {H = H} {A = A} f p = right p equal
@@ -564,10 +564,10 @@ jmp[]-proof {Ψ} {CC = CC} {H = H} {A = A} f p = right p equal
 
 \begin{code}
 call-proof : ∀ {Ψ Γ} → (CC : CallCtx Ψ) → {A : NewBlk Ψ}
-           → {H : Heap Ψ}
-           → (f : (blk Γ) ∈ Ψ)
+           → {H : Data Ψ}
+           → (f : (block Γ) ∈ Ψ)
            → loadblk H f ≡ A
-           → exec-blk H CC (↝ (call f))
+           → exec-block H CC (↝ (call f))
            ≡ ((proj₂ CC ∷ proj₁ CC) , A)
 call-proof CC f p rewrite p = refl
 \end{code}
@@ -577,8 +577,8 @@ call-proof CC f p rewrite p = refl
 недоказанной.
 
 \begin{code}
-loadplt : ∀ {Ψ Γ} → (H : Heap (plt-heaptypes Ψ))
-        → (f : blk Γ ∈ Ψ)
+loadplt : ∀ {Ψ Γ} → (H : Data (pltize Ψ))
+        → (f : block Γ ∈ Ψ)
         → loadblk H (plt f) ≡ Γ , [] , ↝ jmp[ got f ]
 loadplt H f = {!!}
 \end{code}
@@ -586,7 +586,7 @@ loadplt H f = {!!}
 Блок PLT для любой функции выглядит заданным образом:
 
 \begin{code}
-jmp[]-plt-stub : ∀ {Ψ Γ} → (f : blk Γ ∈ Ψ)
+jmp[]-plt-stub : ∀ {Ψ Γ} → (f : block Γ ∈ Ψ)
                → plt-stub (got f) ≡ ↝ jmp[ got f ]
 jmp[]-plt-stub f = refl
 \end{code}
@@ -596,7 +596,7 @@ jmp[]-plt-stub f = refl
 именно так. Эта лемма тоже осталась недоказанной.
 
 \begin{code}
-loadblk-Γ : ∀ {Ψ Γ} → (H : Heap Ψ) → (f : blk Γ ∈ Ψ)
+loadblk-Γ : ∀ {Ψ Γ} → (H : Data Ψ) → (f : block Γ ∈ Ψ)
           → proj₁ (loadblk H f) ≡ Γ
 loadblk-Γ H f = {!!}
 \end{code}
@@ -605,9 +605,9 @@ loadblk-Γ H f = {!!}
 
 \begin{code}
 plt-fun-eq : ∀ {Γ Ψ}
-           → (H : Heap (plt-heaptypes Ψ))
-           → (cc : CallCtx (plt-heaptypes Ψ))
-           → (f : blk Γ ∈ Ψ)
+           → (H : Data (pltize Ψ))
+           → (cc : CallCtx (pltize Ψ))
+           → (f : block Γ ∈ Ψ)
            → BlockEq H cc
              (proj₂ $ proj₂ (loadblk H (plt-⊆ f)))
              (plt-stub (got f))
@@ -620,22 +620,22 @@ plt-fun-eq H cc f | refl | r = {!!}
 
 \begin{code}
 proof : ∀ {Γ Ψ}
-      → (H : Heap (plt-heaptypes Ψ))
-      → (f : blk Γ ∈ Ψ)
-      → (cc : CallCtx (plt-heaptypes Ψ))
+      → (H : Data (pltize Ψ))
+      → (f : block Γ ∈ Ψ)
+      → (cc : CallCtx (pltize Ψ))
       → BlockEq H cc
-        (wk-blk plt-⊆ (↝ (call f)))
+        (wk-block plt-⊆ (↝ (call f)))
         (↝ (call (plt f)))
 proof {Γ = Γ} {Ψ = Ψ} H f ctx = ctxchg after-call just-call plt-call
     where
     newblock-f   = loadblk H (plt-⊆ f)
     called-block = proj₂ $ proj₂ newblock-f
 
-    just-call : exec-blk H ctx (↝ (call $ plt-⊆ f)) ≡
+    just-call : exec-block H ctx (↝ (call $ plt-⊆ f)) ≡
                 proj₂ ctx ∷ proj₁ ctx , newblock-f
     just-call = call-proof ctx (plt-⊆ f) refl
 
-    plt-call : exec-blk H ctx (↝ (call $ plt f)) ≡
+    plt-call : exec-block H ctx (↝ (call $ plt f)) ≡
                proj₂ ctx ∷ proj₁ ctx , _ , _ , ↝ jmp[ got f ]
     plt-call = call-proof ctx (plt f) (loadplt H f)
 

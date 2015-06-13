@@ -31,8 +31,8 @@ open import Data.List
 
 \begin{code}
 data Type : Set
-RegFileTypes : Set
-HeapTypes : Set
+RegTypes : Set
+DataType : Set
 \end{code}
 
 Состояние регистров представим списком типов, причем каждому
@@ -42,8 +42,8 @@ HeapTypes : Set
 Аналогичные рассуждения верны и для состояния памяти.
 
 \begin{code}
-RegFileTypes = List Type
-HeapTypes    = List Type
+RegTypes = List Type
+DataType = List Type
 \end{code}
 
 Рассматриваемыми значениями являются только блоки кода и указатели на
@@ -57,5 +57,5 @@ HeapTypes    = List Type
 \begin{code}
 data Type where
   _*  : Type → Type
-  blk : (Γ : RegFileTypes) → Type
+  block : (Γ : RegTypes) → Type
 \end{code}

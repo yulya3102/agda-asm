@@ -57,8 +57,8 @@ module Meta where
   record StateType : Set where
     constructor state
     field
-      heap : HeapTypes
-      regs : RegFileTypes
+      memory : DataType
+      registers : RegTypes
   open StateType public
 \end{code}
 
@@ -79,10 +79,10 @@ module Meta where
 применения изменений сразу ко всему контексту.
 
 \begin{code}
-    sdapply : (S : StateType) → Diff (regs S) → StateType
+    sdapply : (S : StateType) → Diff (registers S) → StateType
     sdapply (state h r) d = state h (dapply r d)
 
-    SDiff = λ S → Diff (regs S)
+    SDiff = λ S → Diff (registers S)
 \end{code}
 
 \ignore{
@@ -100,14 +100,14 @@ module Meta where
 \begin{code}
   module Blocks
     (ControlInstr : StateType → Set)
-    (Instr : (S : StateType) → Chg (regs S) → Set)
+    (Instr : (S : StateType) → Chg (registers S) → Set)
     where
 \end{code}
 
 Определение блока аналогично приведенным в предыдущих секциях.
 
 \begin{code}
-    data Block (S : StateType) : Diff (regs S) → Set where
+    data Block (S : StateType) : Diff (registers S) → Set where
       ↝    : ControlInstr S → Block S dempty
       _∙_  : ∀ {c d} → Instr S c → Block (sdapply S (dchg c dempty)) d
            → Block S (dchg c d)
@@ -119,17 +119,17 @@ module Meta where
 
 \begin{code}
   module Values
-    (Block : (S : StateType) → Diff (regs S) → Set)
+    (Block : (S : StateType) → Diff (registers S) → Set)
     where
 \end{code}
 
 Определение значений аналогично используемому ранее.
 
 \begin{code}
-    data Value (Ψ : HeapTypes) : Type → Set where
-      function : ∀ {Γ} → {d : Diff Γ}
-               → Block (state Ψ Γ) d
-               → Value Ψ (blk Γ) 
+    data Value (Ψ : DataType) : Type → Set where
+      block : ∀ {Γ} → {d : Diff Γ}
+            → Block (state Ψ Γ) d
+            → Value Ψ (block Γ) 
       ptr : ∀ {τ} → τ ∈ Ψ → Value Ψ (τ *)
 \end{code}
 
@@ -139,31 +139,31 @@ module Meta where
 в памяти в действительности располагается.
 
 \begin{code}
-    data IHeap (Ψ : HeapTypes) : HeapTypes → Set where
-      []  : IHeap Ψ []
-      _∷_ : ∀ {τ Δ} → Value Ψ τ → IHeap Ψ Δ → IHeap Ψ (τ ∷ Δ)
+    data IData (Ψ : DataType) : DataType → Set where
+      []  : IData Ψ []
+      _∷_ : ∀ {τ Δ} → Value Ψ τ → IData Ψ Δ → IData Ψ (τ ∷ Δ)
 \end{code}
 
 При этом корректно заполненной память считается тогда, когда эти параметры
 совпадают.
 
 \begin{code}
-    Heap : HeapTypes → Set
-    Heap Ψ = IHeap Ψ Ψ
+    Data : DataType → Set
+    Data Ψ = IData Ψ Ψ
 \end{code}
 
 Определим функцию для загрузки значений из памяти:
 
 \begin{code}
-    load : ∀ {Ψ τ} → τ ∈ Ψ → Heap Ψ → Value Ψ τ
-    load p heap = iload [] p heap
+    load : ∀ {Ψ τ} → τ ∈ Ψ → Data Ψ → Value Ψ τ
+    load p memory = iload [] p memory
       where
       ++[]-lemma : {A : Set} (a : A) (as bs : List A)
             → as ++ a ∷ bs ≡ (as ++ [ a ]) ++ bs
       ++[]-lemma a [] bs = refl
       ++[]-lemma a (x ∷ as) bs rewrite ++[]-lemma a as bs = refl
 
-      iload : ∀ {Ψ τ} ψs → τ ∈ Ψ → IHeap (ψs ++ Ψ) Ψ
+      iload : ∀ {Ψ τ} ψs → τ ∈ Ψ → IData (ψs ++ Ψ) Ψ
             → Value (ψs ++ Ψ) τ
       iload ψs (here refl) (x ∷ _) = x
       iload {ψ ∷ Ψ} ψs (there p) (x ∷ h)
@@ -172,16 +172,16 @@ module Meta where
 
 Регистры — список значений, ссылающихся на память, в типе которого описано,
 значения каких типов он хранит.
-<!--- тут до меня дошло, что это копипаста IHeap :( -->
+<!--- тут до меня дошло, что это копипаста IData :( -->
 
 \begin{code}
-    data IRegisters (Ψ : HeapTypes) : RegFileTypes → Set where
+    data IRegisters (Ψ : DataType) : RegTypes → Set where
       []  : IRegisters Ψ []
       _∷_ : ∀ {τ τs} → Value Ψ τ → IRegisters Ψ τs
           → IRegisters Ψ (τ ∷ τs)
 
     Registers : StateType → Set
-    Registers S = IRegisters (heap S) (regs S)
+    Registers S = IRegisters (memory S) (registers S)
 \end{code}
 
 Ниже приведены вспомогательные функции для работы с значениями.
@@ -190,12 +190,12 @@ module Meta where
     unptr : ∀ {Ψ τ} → Value Ψ (τ *) → τ ∈ Ψ
     unptr (ptr x) = x
 
-    unfun : ∀ {Ψ Γ} → Value Ψ (blk Γ)
+    unfun : ∀ {Ψ Γ} → Value Ψ (block Γ)
           → Σ (Diff Γ) (Block (state Ψ Γ))
-    unfun (function x) = _ , x
+    unfun (block x) = _ , x
 
-    _∈B_ : ∀ {S d} → Block S d → Heap (heap S) → Set
-    _∈B_ {S} b Ψ = Σ (blk (regs S) ∈ heap S)
+    _∈B_ : ∀ {S d} → Block S d → Data (memory S) → Set
+    _∈B_ {S} b Ψ = Σ (block (registers S) ∈ memory S)
                  $ λ ptr → (unfun (load ptr Ψ)) ≡ _ , b
 \end{code}
 
@@ -206,21 +206,21 @@ module Meta where
 компиляции. К ним относятся instruction pointer и стек вызовов.
 
 \begin{code}
-  module Exec-Context (Ψ : HeapTypes) where
+  module Exec-Context (Ψ : DataType) where
 \end{code}
 
 Instruction pointer заданного типа `Γ` — индекс блока, рассчитывающего
 на состояние регистров `Γ`, находящийся в памяти.
 
 \begin{code}
-    IPRFT = λ Γ → blk Γ ∈ Ψ
+    IPRFT = λ Γ → block Γ ∈ Ψ
 \end{code}
 
 Instruction pointer — **TODO: то, что выше, только произвольного типа, и я
 понятия не имею, как это сформулировать**
 
 \begin{code}
-    IP = Σ RegFileTypes IPRFT
+    IP = Σ RegTypes IPRFT
 \end{code}
 
 В этой версии вместо сохранения в стеке вызовов самих блоков будем хранить
@@ -247,7 +247,7 @@ Instruction pointer — **TODO: то, что выше, только произв
 Сигнатуры инструкций и управляющих инструкций уже были описаны ранее.
 
 \begin{code}
-    (Instr : (S : StateType) → Chg (regs S) → Set)
+    (Instr : (S : StateType) → Chg (registers S) → Set)
     (ControlInstr : StateType → Set)
 \end{code}
 
@@ -257,16 +257,16 @@ Instruction pointer — **TODO: то, что выше, только произв
 
 \begin{code}
     (exec-instr : {S : StateType}
-                → {c : Chg (regs S)} → Instr S c
-                → Values.Heap
+                → {c : Chg (registers S)} → Instr S c
+                → Values.Data
                   (Blocks.Block ControlInstr Instr)
-                  (heap S)
+                  (memory S)
                 → Values.Registers
                   (Blocks.Block ControlInstr Instr)
                   S
-                → Values.Heap
+                → Values.Data
                   (Blocks.Block ControlInstr Instr)
-                  (heap $ sdapply S (dchg c dempty))
+                  (memory $ sdapply S (dchg c dempty))
                 × Values.Registers
                   (Blocks.Block ControlInstr Instr)
                   (sdapply S (dchg c dempty)))
@@ -282,13 +282,13 @@ pointer. При этом тип instruction pointer-а заранее извес
 \begin{code}
     (exec-control : {S : StateType}
                   → ControlInstr S
-                  → Values.Heap
+                  → Values.Data
                     (Blocks.Block ControlInstr Instr)
-                    (heap S)
-                  → CallStack (heap S)
-                  → IP (heap S)
-                  → CallStack (heap S)
-                  × IPRFT (heap S) (regs S))
+                    (memory S)
+                  → CallStack (memory S)
+                  → IP (memory S)
+                  → CallStack (memory S)
+                  × IPRFT (memory S) (registers S))
     where
     open Blocks ControlInstr Instr public
     open Values Block public
@@ -304,19 +304,19 @@ pointer. При этом тип instruction pointer-а заранее извес
 Однако, для некоторых блоков (например, блоков, заканчивающихся условным
 переходом или вызовом функции) важно их расположение в памяти: за ними
 должен располагаться блок кода, имеющий подходящий тип.  Это не было учтено
-при реализации блоков, из-за чего корректно определить функцию `exec-blk`
+при реализации блоков, из-за чего корректно определить функцию `exec-block`
 оказалось затруднительно.
 
 \begin{code}
-    exec-blk : {S : StateType} {d : Diff (regs S)} {b : Block S d}
-             → (Ψ : Heap (heap S))
+    exec-block : {S : StateType} {d : Diff (registers S)} {b : Block S d}
+             → (Ψ : Data (memory S))
              → b ∈B Ψ
-             → Registers S → CallStack (heap S)
-             → (Σ (Diff $ dapply (regs S) d) (Block $ sdapply S d))
-             × (Heap (heap $ sdapply S d)
+             → Registers S → CallStack (memory S)
+             → (Σ (Diff $ dapply (registers S) d) (Block $ sdapply S d))
+             × (Data (memory $ sdapply S d)
              × (Registers (sdapply S d)
-             × CallStack (heap $ sdapply S d)))
-    exec-blk {b = b} Ψ p Γ cs = {!!}
+             × CallStack (memory $ sdapply S d)))
+    exec-block {b = b} Ψ p Γ cs = {!!}
 \end{code}
 
 ### Модуль Eq
@@ -326,15 +326,15 @@ pointer. При этом тип instruction pointer-а заранее извес
 
 \begin{code}
   module Eq
-    (Block : (S : StateType) → Diff (regs S) → Set)
-    (exec-blk : {S : StateType} {d : Diff (regs S)} {b : Block S d}
-              → (Ψ : Values.Heap Block (heap S))
+    (Block : (S : StateType) → Diff (registers S) → Set)
+    (exec-block : {S : StateType} {d : Diff (registers S)} {b : Block S d}
+              → (Ψ : Values.Data Block (memory S))
               → Values._∈B_ Block b Ψ
-              → Values.Registers Block S → CallStack (heap S)
-              → (Σ (Diff $ dapply (regs S) d) (Block $ sdapply S d))
-              × (Values.Heap Block (heap $ sdapply S d)
+              → Values.Registers Block S → CallStack (memory S)
+              → (Σ (Diff $ dapply (registers S) d) (Block $ sdapply S d))
+              × (Values.Data Block (memory $ sdapply S d)
               × (Values.Registers Block (sdapply S d)
-              × CallStack (heap $ sdapply S d))))
+              × CallStack (memory $ sdapply S d))))
     where
     open Values Block
 \end{code}
@@ -349,9 +349,9 @@ pointer. При этом тип instruction pointer-а заранее извес
 \begin{code}
     data BlockEq :
       {S₁ S₂ : StateType} → {d₁ : SDiff S₁} {d₂ : SDiff S₂} →
-      (Ψ₁ : Heap (heap S₁)) (Ψ₂ : Heap (heap S₂)) →
+      (Ψ₁ : Data (memory S₁)) (Ψ₂ : Data (memory S₂)) →
       (Γ₁ : Registers S₁) (Γ₂ : Registers S₂) →
-      (CC₁ : CallStack (heap S₁)) (CC₂ : CallStack (heap S₂)) →
+      (CC₁ : CallStack (memory S₁)) (CC₂ : CallStack (memory S₂)) →
       Block S₁ d₁ → Block S₂ d₂ → Set
       where
 \end{code}
@@ -362,7 +362,7 @@ pointer. При этом тип instruction pointer-а заранее извес
 
 \begin{code}
       equal : ∀ {S} → {d : SDiff S}
-            → {Ψ : Heap (heap S)} {CC : CallStack (heap S)}
+            → {Ψ : Data (memory S)} {CC : CallStack (memory S)}
             → {B : Block S d} {Γ : Registers S}
             → BlockEq Ψ Ψ Γ Γ CC CC B B
 \end{code}
@@ -375,17 +375,17 @@ pointer. При этом тип instruction pointer-а заранее извес
             → {d : SDiff S}
             → {A₁ : Block S₁ d₁} {A₂ : Block (sdapply S₁ d₁) d₂}
             → {B : Block S d}
-            → (Ψ₁ : Heap (heap S₁))
-            → (Ψ₂ : Heap (heap (sdapply S₁ d₁)))
-            → (Ψ : Heap (heap S))
+            → (Ψ₁ : Data (memory S₁))
+            → (Ψ₂ : Data (memory (sdapply S₁ d₁)))
+            → (Ψ : Data (memory S))
             → (ip₁ : A₁ ∈B Ψ₁) (ip₂ : A₂ ∈B Ψ₂)
             → (ip : B ∈B Ψ)
             → (Γ₁ : Registers S₁) (Γ₂ : Registers (sdapply S₁ d₁))
             → (Γ : Registers S)
-            → (CC₁ : CallStack (heap S₁))
-            → (CC₂ : CallStack (heap $ sdapply S₁ d₁))
-            → (CC : CallStack (heap S))
-            → exec-blk Ψ₁ ip₁ Γ₁ CC₁ ≡ (_ , A₂) , Ψ₂ , Γ₂ , CC₂
+            → (CC₁ : CallStack (memory S₁))
+            → (CC₂ : CallStack (memory $ sdapply S₁ d₁))
+            → (CC : CallStack (memory S))
+            → exec-block Ψ₁ ip₁ Γ₁ CC₁ ≡ (_ , A₂) , Ψ₂ , Γ₂ , CC₂
             → BlockEq Ψ₁ Ψ Γ₁ Γ CC₁ CC A₁ B
             → BlockEq Ψ₂ Ψ Γ₂ Γ CC₂ CC A₂ B
 \end{code}
@@ -398,17 +398,17 @@ pointer. При этом тип instruction pointer-а заранее извес
             → {d : SDiff S}
             → {A₁ : Block S₁ d₁} {A₂ : Block (sdapply S₁ d₁) d₂}
             → {B : Block S d}
-            → (Ψ₁ : Heap (heap S₁))
-            → (Ψ₂ : Heap (heap (sdapply S₁ d₁)))
-            → (Ψ : Heap (heap S))
+            → (Ψ₁ : Data (memory S₁))
+            → (Ψ₂ : Data (memory (sdapply S₁ d₁)))
+            → (Ψ : Data (memory S))
             → (ip₁ : A₁ ∈B Ψ₁) (ip₂ : A₂ ∈B Ψ₂)
             → (ip : B ∈B Ψ)
             → (Γ₁ : Registers S₁) (Γ₂ : Registers (sdapply S₁ d₁))
             → (Γ : Registers S)
-            → (CC₁ : CallStack (heap S₁))
-            → (CC₂ : CallStack (heap $ sdapply S₁ d₁))
-            → (CC : CallStack (heap S))
-            → exec-blk Ψ₁ ip₁ Γ₁ CC₁ ≡ (_ , A₂) , Ψ₂ , Γ₂ , CC₂
+            → (CC₁ : CallStack (memory S₁))
+            → (CC₂ : CallStack (memory $ sdapply S₁ d₁))
+            → (CC : CallStack (memory S))
+            → exec-block Ψ₁ ip₁ Γ₁ CC₁ ≡ (_ , A₂) , Ψ₂ , Γ₂ , CC₂
             → BlockEq Ψ Ψ₁ Γ Γ₁ CC CC₁ B A₁
             → BlockEq Ψ Ψ₂ Γ Γ₂ CC CC₂ B A₂
 \end{code}
@@ -432,14 +432,14 @@ module x86-64 where
 
 \begin{code}
   data ControlInstr (S : StateType) : Set where
-    jmp call : blk (regs S) ∈ heap S → ControlInstr S
-    jmp[_]   : blk (regs S) * ∈ heap S → ControlInstr S
+    jmp call : block (registers S) ∈ memory S → ControlInstr S
+    jmp[_]   : block (registers S) * ∈ memory S → ControlInstr S
 
-  data Instr (S : StateType) : Chg (regs S) → Set where
-    mov : ∀ {τ σ} → (r : σ ∈ regs S)
+  data Instr (S : StateType) : Chg (registers S) → Set where
+    mov : ∀ {τ σ} → (r : σ ∈ registers S)
         → Values.Value
           (Blocks.Block ControlInstr Instr)
-          (heap S) τ
+          (memory S) τ
         → Instr S (chg r τ)
 \end{code}
 
@@ -452,14 +452,14 @@ module x86-64 where
 \begin{code}
   exec-control : {S : StateType}
                → ControlInstr S
-               → Values.Heap
+               → Values.Data
                  (Blocks.Block ControlInstr Instr)
-                 (heap S)
-               → CallStack (heap S) → IP (heap S)
-               → CallStack (heap S) × IPRFT (heap S) (regs S)
-  exec-control {state heap regs} (jmp x) Ψ cs ip = cs , x
-  exec-control {state heap regs} (call x) Ψ cs ip = ip ∷ cs , x
-  exec-control {state heap regs} (jmp[ x ]) Ψ cs ip
+                 (memory S)
+               → CallStack (memory S) → IP (memory S)
+               → CallStack (memory S) × IPRFT (memory S) (registers S)
+  exec-control {state memory registers} (jmp x) Ψ cs ip = cs , x
+  exec-control {state memory registers} (call x) Ψ cs ip = ip ∷ cs , x
+  exec-control {state memory registers} (jmp[ x ]) Ψ cs ip
     = cs
     , (Values.unptr
       (Blocks.Block ControlInstr Instr)
@@ -470,16 +470,16 @@ module x86-64 where
 
 \begin{code}
   exec-instr : {S : StateType}
-             → {c : Chg (regs S)} → Instr S c
-             → Values.Heap
+             → {c : Chg (registers S)} → Instr S c
+             → Values.Data
                (Blocks.Block ControlInstr Instr)
-               (heap S)
+               (memory S)
              → Values.Registers
                (Blocks.Block ControlInstr Instr)
                S
-             → Values.Heap
+             → Values.Data
                (Blocks.Block ControlInstr Instr)
-               (heap $ sdapply S (dchg c dempty))
+               (memory $ sdapply S (dchg c dempty))
              × Values.Registers
                (Blocks.Block ControlInstr Instr)
                (sdapply S (dchg c dempty))
@@ -494,7 +494,7 @@ module x86-64 where
 
 \begin{code}
   open ExecBlk Instr ControlInstr exec-instr exec-control
-  open Eq Block exec-blk
+  open Eq Block exec-block
 \end{code}
 
 ### Проблемы этого решения

@@ -669,11 +669,11 @@ Instruction pointer — указатель на блок кода в памят�
                × Σ (Diff (dapply ST d)) (Block (dapply ST d))
     exec-block {S} (state Γ Ψ DS CS) (Blocks.↝ {c} ci)
       rewrite reg-const S c | ds-const S c
-      = (state Γ Ψ DS CS') , blk
+      = (state Γ Ψ DS CS') , next-block
       where
       ecr = exec-control (state Γ Ψ DS CS) ci
       CS' = proj₁ ecr
-      blk : Σ
+      next-block : Σ
         (Diff
          (statetype (StateType.registers S) (StateType.memory S)
           (StateType.datastack S)
@@ -684,7 +684,7 @@ Instruction pointer — указатель на блок кода в памят�
           (StateType.datastack S)
           (StackDiff.dapply (RegTypes × DataStackType)
            (StateType.callstack S) (csdiff (csChg S c)))))
-      blk rewrite sym (dapply-csChg S c) = proj₂ ecr
+      next-block rewrite sym (dapply-csChg S c) = proj₂ ecr
     exec-block {S} (state Γ Ψ DS CS) (Blocks._∙_ {c} {d} i b)
       rewrite cs-lemma S c
             | RegDiff.dappend-dapply-lemma
@@ -770,7 +770,7 @@ module AMD64 where
 имеющимися в реальном ассемблере. Такой инструкцией является, например,
 инструкция `call`. Дополнительным параметром она принимает указатель на
 блок, который будет добавлен на стек вызовов. В реальный ассемблер эта
-инструкция может быть транслироваться добавлением `jump` на указанный блок
+инструкция может быть транслироваться добавлением `jmp` на указанный блок
 сразу после `call`.
 
 Многие реализованные инструкции не требуются для реализации блока PLT и
@@ -795,12 +795,12 @@ module AMD64 where
            (StateType.callstack S) *)
            ∈ StateType.memory S)
          → ControlInstr S nothing
-    jump : (f : block
-           (StateType.registers S)
-           (StateType.datastack S)
-           (StateType.callstack S)
-           ∈ StateType.memory S)
-         → ControlInstr S nothing
+    jmp : (f : block
+          (StateType.registers S)
+          (StateType.datastack S)
+          (StateType.callstack S)
+          ∈ StateType.memory S)
+        → ControlInstr S nothing
     ret  : ∀ {CS}
          → (p : StateType.callstack S
          ≡ (StateType.registers S , StateType.datastack S) ∷ CS)
@@ -841,7 +841,7 @@ module AMD64 where
     = cont ∷ CS , loadfunc Ψ f
   exec-control (state Γ Ψ DS CS) (jmp[ p ])
     = CS , loadfunc Ψ (loadptr Ψ p)
-  exec-control (state Γ Ψ DS CS) (jump f)
+  exec-control (state Γ Ψ DS CS) (jmp f)
     = CS , loadfunc Ψ f
   exec-control (state Γ Ψ DS (f ∷ CS)) (ret refl)
     = CS , loadfunc Ψ f
@@ -918,12 +918,12 @@ module AMD64 where
 *   самой функции.
 
 \begin{code}
-    blk : ∀ {Γ Ψ DS CS} → block Γ DS CS ∈ Ψ
+    func : ∀ {Γ Ψ DS CS} → block Γ DS CS ∈ Ψ
         → block Γ DS CS ∈ pltize Ψ
-    blk (here refl) = there (there (here refl))
-    blk {Ψ = atom x ∷ Ψ} (there f) = there $ blk f
-    blk {Ψ = block Γ DS CS ∷ Ψ} (there f)
-      = there (there (there (blk f)))
+    func (here refl) = there (there (here refl))
+    func {Ψ = atom x ∷ Ψ} (there f) = there $ func f
+    func {Ψ = block Γ DS CS ∷ Ψ} (there f)
+      = there (there (there (func f)))
 \end{code}
 
 Блок PLT выглядит так же, как и в первой реализации.
@@ -943,7 +943,7 @@ module AMD64 where
                        → (f : block Γ DS CS ∈ Ψ)
                        → (H : Data (pltize Ψ))
                        → Set
-    GOT[ f ]-correctness H = loadptr H (got f) ≡ blk f
+    GOT[ f ]-correctness H = loadptr H (got f) ≡ func f
 \end{code}
 
 ## Доказательства
@@ -980,7 +980,7 @@ module AMD64 where
              → (S : State (statetype Γ (pltize Ψ) DS CS))
              → GOT[ f ]-correctness (State.memory S)
              → exec-block S (plt-stub (got f))
-             ≡ S , loadfunc (State.memory S) (blk f)
+             ≡ S , loadfunc (State.memory S) (func f)
     exec-plt f S p rewrite sym p = exec-ijmp S (got f)
 \end{code}
 
@@ -995,6 +995,6 @@ module AMD64 where
           → GOT[ f ]-correctness (State.memory S)
           → BlockEq S S
             (plt-stub (got f))
-            (proj₂ $ loadfunc (State.memory S) (blk f))
+            (proj₂ $ loadfunc (State.memory S) (func f))
     proof f S p = left (exec-plt f S p) equal
 \end{code}

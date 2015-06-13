@@ -146,7 +146,7 @@ open import DevCore
 }
 
 \begin{code}
-module FixedHeap (Ψ : HeapTypes) where
+module FixedHeap (Ψ : DataType) where
 \end{code}
 
 \ignore{
@@ -160,7 +160,7 @@ module FixedHeap (Ψ : HeapTypes) where
 набор изменений, применяемых к уже имеющимся регистрам.
 
 \begin{code}
-  data Block (Γ : RegFileTypes) : Diff Γ → Set
+  data Block (Γ : RegTypes) : Diff Γ → Set
 \end{code}
 
 Управляющие инструкции не меняют регистров, поэтому их определение останется
@@ -168,11 +168,11 @@ module FixedHeap (Ψ : HeapTypes) where
 
 \ignore{
 \begin{code}
-  data ControlInstr (Γ : RegFileTypes) : Set
+  data ControlInstr (Γ : RegTypes) : Set
     where
-    call   : (f : blk Γ ∈ Ψ) → ControlInstr Γ
-    jmp[_] : (f : (blk Γ) * ∈ Ψ) → ControlInstr Γ
-    jmp    : (f : blk Γ ∈ Ψ) → ControlInstr Γ
+    call   : (f : block Γ ∈ Ψ) → ControlInstr Γ
+    jmp[_] : (f : (block Γ) * ∈ Ψ) → ControlInstr Γ
+    jmp    : (f : block Γ ∈ Ψ) → ControlInstr Γ
 \end{code}
 }
 
@@ -180,14 +180,14 @@ module FixedHeap (Ψ : HeapTypes) where
 к контексту регистров заменим на описание набора изменений.
 
 \begin{code}
-  data Instr (Γ : RegFileTypes) : Chg Γ → Set
+  data Instr (Γ : RegTypes) : Chg Γ → Set
 \end{code}
 
 \ignore{
 \begin{code}
   data Value : Type → Set where
-    function : {Γ : RegFileTypes} → {d : Diff Γ} → Block Γ d
-             → Value (blk Γ)
+    function : {Γ : RegTypes} → {d : Diff Γ} → Block Γ d
+             → Value (block Γ)
     ptr      : ∀ {τ} → τ ∈ Ψ → Value (τ *)
 \end{code}
 }
@@ -196,7 +196,7 @@ module FixedHeap (Ψ : HeapTypes) where
 конкретного регистра из списка на значение нового типа.
 
 \begin{code}
-  data Instr (Γ : RegFileTypes) where
+  data Instr (Γ : RegTypes) where
     mov  : ∀ {r τ} → (r∈Γ : r ∈ Γ) → Value τ
          → Instr Γ (chg r∈Γ τ)
 \end{code}
@@ -204,7 +204,7 @@ module FixedHeap (Ψ : HeapTypes) where
 И, наконец, определим конструкторы блока.
   
 \begin{code}
-  data Block (Γ : RegFileTypes) where
+  data Block (Γ : RegTypes) where
     ↝    : ControlInstr Γ → Block Γ dempty
     _∙_  : ∀ {c d} → Instr Γ c → Block (chgapply Γ c) d
          → Block Γ (dchg c d)
