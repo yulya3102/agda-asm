@@ -456,6 +456,116 @@ module Meta where
                     (StateType.memory S)
                     (StateType.callstack S)
 
+  module ExecBlk
+    (ControlInstr : (S : StateType)
+                  → Maybe (Diffs.CallStackChg S)
+                  → Set)
+    (Instr : (S : StateType) → Diffs.SmallChg S → Set)
+    (exec-control : ∀ {S c}
+                 → Values.State
+                   (Blocks.Block ControlInstr Instr)
+                   S
+                 → ControlInstr S c
+                 → Values.CallStack
+                  (Blocks.Block ControlInstr Instr)
+                  (StateType.memory S)
+                  (StateType.callstack
+                    (Diffs.dapply S (Diffs.csChg S c)))
+                 × Σ (Diffs.Diff
+                       (Diffs.dapply S (Diffs.csChg S c)))
+                     (Blocks.Block ControlInstr Instr
+                       (Diffs.dapply S (Diffs.csChg S c))))
+    (exec-instr : ∀ {S c}
+                → Values.State
+                  (Blocks.Block ControlInstr Instr)
+                  S
+                → Instr S c
+                → Values.Registers
+                 (Blocks.Block ControlInstr Instr)
+                 (StateType.memory S)
+                 (StateType.registers
+                   (Diffs.dapply S (Diffs.sChg c)))
+                × (Values.Data
+                  (Blocks.Block ControlInstr Instr)
+                  (StateType.memory S)
+                × Values.DataStack
+                 (Blocks.Block ControlInstr Instr)
+                 (StateType.memory S)
+                 (StateType.datastack
+                   (Diffs.dapply S (Diffs.sChg c)))))
+    where
+    open Diffs
+    open Blocks ControlInstr Instr
+    open Values Block
+  
+    module DiffLemmas where
+      reg-const : ∀ S → (c : Maybe (CallStackChg S))
+                → rdiff (csChg S c) ≡ RegDiff.dempty
+      reg-const S (just c) = refl
+      reg-const S nothing = refl
+    
+      ds-const : ∀ S → (c : Maybe (CallStackChg S))
+               → dsdiff (csChg S c) ≡ StackDiff.dempty
+      ds-const S (just x) = refl
+      ds-const S nothing = refl
+    
+      cs-lemma : ∀ S → (c : SmallChg S)
+               → csdiff (sChg c) ≡ StackDiff.dempty
+      cs-lemma S (onlyreg x) = refl
+      cs-lemma S (onlystack x) = refl
+      cs-lemma S (regstack x x₁) = refl
+  
+      dapply-csChg : ∀ S → (c : Maybe (CallStackChg S))
+                   → dapply S (csChg S c)
+                   ≡ statetype
+                    (StateType.registers S)
+                    (StateType.memory S)
+                    (StateType.datastack S)
+                    (StackDiff.dapply (RegTypes × DataStackType)
+                      (StateType.callstack S) (csdiff (csChg S c)))
+      dapply-csChg S (just x) = refl
+      dapply-csChg S nothing = refl
+  
+    open DiffLemmas
+  
+    exec-block : ∀ {ST d} → State ST → Block ST d
+               → State (dapply ST d)
+               × Σ (Diff (dapply ST d)) (Block (dapply ST d))
+    exec-block {S} (state Γ Ψ DS CS) (Blocks.↝ {c} ci)
+      rewrite reg-const S c | ds-const S c
+      = (state Γ Ψ DS CS') , blk
+      where
+      ecr = exec-control (state Γ Ψ DS CS) ci
+      CS' = proj₁ ecr
+      blk : Σ
+        (Diff
+         (statetype (StateType.registers S) (StateType.memory S)
+          (StateType.datastack S)
+          (StackDiff.dapply (RegTypes × DataStackType)
+           (StateType.callstack S) (csdiff (csChg S c)))))
+        (Block
+         (statetype (StateType.registers S) (StateType.memory S)
+          (StateType.datastack S)
+          (StackDiff.dapply (RegTypes × DataStackType)
+           (StateType.callstack S) (csdiff (csChg S c)))))
+      blk rewrite sym (dapply-csChg S c) = proj₂ ecr
+    exec-block {S} (state Γ Ψ DS CS) (Blocks._∙_ {c} {d} i b)
+      rewrite cs-lemma S c
+            | RegDiff.dappend-dapply-lemma
+              (StateType.registers S)
+              (rdiff (sChg c))
+              (rdiff d)
+            | StackDiff.dappend-dapply-lemma RegType
+              (StateType.datastack S)
+              (dsdiff (sChg c))
+              (dsdiff d)
+            = exec-block (state Γ' Ψ' DS' CS) b
+      where
+      eir = exec-instr (state Γ Ψ DS CS) i
+      Γ'  = proj₁ eir
+      Ψ'  = proj₁ (proj₂ eir)
+      DS' = proj₂ (proj₂ eir)
+
   module Eq
     (Block : (S : StateType) → Diff S → Set)
     (exec-block : ∀ {ST d} → Values.State Block ST → Block ST d
@@ -494,123 +604,6 @@ module Meta where
             → exec-block S₁ A₁ ≡ S₂ , d₂ , A₂
             → BlockEq S S₂ B A₂
             → BlockEq S S₁ B A₁
-\end{code}
-
-<!--- тут надо написать, почему сигнатуры всяких exec-* такие -->
-
-\begin{code}
-module 2Meta
-  (ControlInstr : (S : StateType)
-                → Maybe (Diffs.CallStackChg S)
-                → Set)
-  (Instr : (S : StateType) → Diffs.SmallChg S → Set)
-  (exec-control : ∀ {S c}
-               → Meta.Values.State
-                 (Meta.Blocks.Block ControlInstr Instr)
-                 S
-               → ControlInstr S c
-               → Meta.Values.CallStack
-                (Meta.Blocks.Block ControlInstr Instr)
-                (StateType.memory S)
-                (StateType.callstack
-                  (Diffs.dapply S (Diffs.csChg S c)))
-               × Σ (Diffs.Diff
-                     (Diffs.dapply S (Diffs.csChg S c)))
-                   (Meta.Blocks.Block ControlInstr Instr
-                     (Diffs.dapply S (Diffs.csChg S c))))
-  (exec-instr : ∀ {S c}
-              → Meta.Values.State
-                (Meta.Blocks.Block ControlInstr Instr)
-                S
-              → Instr S c
-              → Meta.Values.Registers
-               (Meta.Blocks.Block ControlInstr Instr)
-               (StateType.memory S)
-               (StateType.registers
-                 (Diffs.dapply S (Diffs.sChg c)))
-              × (Meta.Values.Data
-                (Meta.Blocks.Block ControlInstr Instr)
-                (StateType.memory S)
-              × Meta.Values.DataStack
-               (Meta.Blocks.Block ControlInstr Instr)
-               (StateType.memory S)
-               (StateType.datastack
-                 (Diffs.dapply S (Diffs.sChg c)))))
-  where
-  open Meta
-  open Diffs
-  open Blocks ControlInstr Instr
-  open Values Block
-
-  module DiffLemmas where
-    reg-const : ∀ S → (c : Maybe (CallStackChg S))
-              → rdiff (csChg S c) ≡ RegDiff.dempty
-    reg-const S (just c) = refl
-    reg-const S nothing = refl
-  
-    ds-const : ∀ S → (c : Maybe (CallStackChg S))
-             → dsdiff (csChg S c) ≡ StackDiff.dempty
-    ds-const S (just x) = refl
-    ds-const S nothing = refl
-  
-    cs-lemma : ∀ S → (c : SmallChg S)
-             → csdiff (sChg c) ≡ StackDiff.dempty
-    cs-lemma S (onlyreg x) = refl
-    cs-lemma S (onlystack x) = refl
-    cs-lemma S (regstack x x₁) = refl
-
-    dapply-csChg : ∀ S → (c : Maybe (CallStackChg S))
-                 → dapply S (csChg S c)
-                 ≡ statetype
-                  (StateType.registers S)
-                  (StateType.memory S)
-                  (StateType.datastack S)
-                  (StackDiff.dapply (RegTypes × DataStackType)
-                    (StateType.callstack S) (csdiff (csChg S c)))
-    dapply-csChg S (just x) = refl
-    dapply-csChg S nothing = refl
-
-  open DiffLemmas
-
-  exec-block : ∀ {ST d} → State ST → Block ST d
-             → State (dapply ST d)
-             × Σ (Diff (dapply ST d)) (Block (dapply ST d))
-  exec-block {S} (state Γ Ψ DS CS) (Blocks.↝ {c} ci)
-    rewrite reg-const S c | ds-const S c
-    = (state Γ Ψ DS CS') , blk
-    where
-    ecr = exec-control (state Γ Ψ DS CS) ci
-    CS' = proj₁ ecr
-    blk : Σ
-      (Diff
-       (statetype (StateType.registers S) (StateType.memory S)
-        (StateType.datastack S)
-        (StackDiff.dapply (RegTypes × DataStackType)
-         (StateType.callstack S) (csdiff (csChg S c)))))
-      (Block
-       (statetype (StateType.registers S) (StateType.memory S)
-        (StateType.datastack S)
-        (StackDiff.dapply (RegTypes × DataStackType)
-         (StateType.callstack S) (csdiff (csChg S c)))))
-    blk rewrite sym (dapply-csChg S c) = proj₂ ecr
-  exec-block {S} (state Γ Ψ DS CS) (Blocks._∙_ {c} {d} i b)
-    rewrite cs-lemma S c
-          | RegDiff.dappend-dapply-lemma
-            (StateType.registers S)
-            (rdiff (sChg c))
-            (rdiff d)
-          | StackDiff.dappend-dapply-lemma RegType
-            (StateType.datastack S)
-            (dsdiff (sChg c))
-            (dsdiff d)
-          = exec-block (state Γ' Ψ' DS' CS) b
-    where
-    eir = exec-instr (state Γ Ψ DS CS) i
-    Γ'  = proj₁ eir
-    Ψ'  = proj₁ (proj₂ eir)
-    DS' = proj₂ (proj₂ eir)
-
-  open Eq Block exec-block public
 \end{code}
 
 ## Ассемблер amd64
@@ -721,7 +714,8 @@ module AMD64 where
   exec-instr (state Γ Ψ (v ∷ DS) CS) (pop r refl)
     = toreg Γ r v , Ψ , DS
   
-  open 2Meta ControlInstr Instr exec-control exec-instr
+  open ExecBlk ControlInstr Instr exec-control exec-instr
+  open Eq Block exec-block
 \end{code}
 
 ## Линковка
