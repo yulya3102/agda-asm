@@ -346,10 +346,6 @@ pointer. При этом тип instruction pointer-а заранее извес
               × CallStack (heap $ sdapply S d))))
     where
     open Values Block
-    module InState (S : StateType) where
-      SHeap = Heap (heap S)
-      SCallStack = CallStack (heap S)
-    open InState
 \end{code}
 
 Определение эквивалентности блоков почти аналогично приведенному ранее.
@@ -359,9 +355,9 @@ pointer. При этом тип instruction pointer-а заранее извес
 \begin{code}
     data BlockEq :
       {S₁ S₂ : StateType} → {d₁ : SDiff S₁} {d₂ : SDiff S₂} →
-      (Ψ₁ : SHeap S₁) (Ψ₂ : SHeap S₂) →
+      (Ψ₁ : Heap (heap S₁)) (Ψ₂ : Heap (heap S₂)) →
       (Γ₁ : Registers S₁) (Γ₂ : Registers S₂) →
-      (CC₁ : SCallStack S₁) (CC₂ : SCallStack S₂) →
+      (CC₁ : CallStack (heap S₁)) (CC₂ : CallStack (heap S₂)) →
       Block S₁ d₁ → Block S₂ d₂ → Set
       where
 \end{code}
@@ -372,7 +368,7 @@ pointer. При этом тип instruction pointer-а заранее извес
 
 \begin{code}
       equal : ∀ {S} → {d : SDiff S}
-            → {Ψ : SHeap S} {CC : SCallStack S}
+            → {Ψ : Heap (heap S)} {CC : CallStack (heap S)}
             → {B : Block S d} {Γ : Registers S}
             → BlockEq Ψ Ψ Γ Γ CC CC B B
 \end{code}
@@ -385,14 +381,16 @@ pointer. При этом тип instruction pointer-а заранее извес
             → {d : SDiff S}
             → {A₁ : Block S₁ d₁} {A₂ : Block (sdapply S₁ d₁) d₂}
             → {B : Block S d}
-            → (Ψ₁ : SHeap S₁) (Ψ₂ : SHeap (sdapply S₁ d₁))
-            → (Ψ : SHeap S)
+            → (Ψ₁ : Heap (heap S₁))
+            → (Ψ₂ : Heap (heap (sdapply S₁ d₁)))
+            → (Ψ : Heap (heap S))
             → (ip₁ : A₁ ∈B Ψ₁) (ip₂ : A₂ ∈B Ψ₂)
             → (ip : B ∈B Ψ)
             → (Γ₁ : Registers S₁) (Γ₂ : Registers (sdapply S₁ d₁))
             → (Γ : Registers S)
-            → (CC₁ : SCallStack S₁) (CC₂ : SCallStack (sdapply S₁ d₁))
-            → (CC : SCallStack S)
+            → (CC₁ : CallStack (heap S₁))
+            → (CC₂ : CallStack (heap $ sdapply S₁ d₁))
+            → (CC : CallStack (heap S))
             → exec-blk Ψ₁ ip₁ Γ₁ CC₁ ≡ (_ , A₂) , Ψ₂ , Γ₂ , CC₂
             → BlockEq Ψ₁ Ψ Γ₁ Γ CC₁ CC A₁ B
             → BlockEq Ψ₂ Ψ Γ₂ Γ CC₂ CC A₂ B
@@ -406,14 +404,16 @@ pointer. При этом тип instruction pointer-а заранее извес
             → {d : SDiff S}
             → {A₁ : Block S₁ d₁} {A₂ : Block (sdapply S₁ d₁) d₂}
             → {B : Block S d}
-            → (Ψ₁ : SHeap S₁) (Ψ₂ : SHeap (sdapply S₁ d₁))
-            → (Ψ : SHeap S)
+            → (Ψ₁ : Heap (heap S₁))
+            → (Ψ₂ : Heap (heap (sdapply S₁ d₁)))
+            → (Ψ : Heap (heap S))
             → (ip₁ : A₁ ∈B Ψ₁) (ip₂ : A₂ ∈B Ψ₂)
             → (ip : B ∈B Ψ)
             → (Γ₁ : Registers S₁) (Γ₂ : Registers (sdapply S₁ d₁))
             → (Γ : Registers S)
-            → (CC₁ : SCallStack S₁) (CC₂ : SCallStack (sdapply S₁ d₁))
-            → (CC : SCallStack S)
+            → (CC₁ : CallStack (heap S₁))
+            → (CC₂ : CallStack (heap $ sdapply S₁ d₁))
+            → (CC : CallStack (heap S))
             → exec-blk Ψ₁ ip₁ Γ₁ CC₁ ≡ (_ , A₂) , Ψ₂ , Γ₂ , CC₂
             → BlockEq Ψ Ψ₁ Γ Γ₁ CC CC₁ B A₁
             → BlockEq Ψ Ψ₂ Γ Γ₂ CC CC₂ B A₂
