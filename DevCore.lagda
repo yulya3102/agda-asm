@@ -26,9 +26,6 @@ open import Data.List
 \end{code}
 }
 
-**TODO: надо все типы переименовать так, чтобы между версиями одни и те
-же сущности имели одинаковые имена**
-
 \begin{code}
 data Type : Set
 RegTypes : Set
