@@ -366,6 +366,13 @@ module Meta where
   module Values
     (Block : (S : StateType) → Diff S → Set)
     where
+\end{code}
+
+Определения значений аналогичны используемым ранее, но поделены на два
+класса, соответствующие значениям размера регистра и значениям
+произвольного размера.
+
+\begin{code}
     data RegValue (Ψ : DataType) : RegType → Set where
       ptr : ∀ {τ} → τ ∈ Ψ → RegValue Ψ (τ *)
       int : ℕ → RegValue Ψ int
@@ -375,26 +382,50 @@ module Meta where
       block : ∀ {Γ DS CS d}
             → Block (statetype Γ Ψ DS CS) d
             → Value Ψ (block Γ DS CS)
+\end{code}
 
+Определим вспомогательные функции для работы со значениями:
+
+*   получение блока из значения типа `block`;
+
+\begin{code}
     unblock : ∀ {Ψ Γ DS CS} → Value Ψ (block Γ DS CS)
             → Σ (Diff (statetype Γ Ψ DS CS))
                 (Block (statetype Γ Ψ DS CS))
     unblock (block b) = _ , b
+\end{code}
 
+*   получение указателя на `τ` из значения типа `τ *`.
+
+\begin{code}
     unptr : ∀ {Ψ τ} → Value Ψ (atom (τ *)) → τ ∈ Ψ
     unptr (atom (ptr x)) = x
-      
+\end{code}
+
+Определение набора регистров аналогично приведенному ранее.
+
+\begin{code}
     data Registers (Ψ : DataType) : RegTypes → Set where
       []  : Registers Ψ []
       _∷_ : ∀ {τ τs}
           → RegValue Ψ τ
           → Registers Ψ τs
           → Registers Ψ (τ ∷ τs)
+\end{code}
 
+Определим вспомогательные функции для работы с регистрами:
+
+*   загрузка значения из заданного регистра;
+
+\begin{code}
     fromreg : ∀ {Ψ Γ τ} → Registers Ψ Γ → τ ∈ Γ → RegValue Ψ τ
     fromreg (x ∷ Γ) (here refl) = x
     fromreg (x ∷ Γ) (there p) = fromreg Γ p
+\end{code}
 
+*   запись значения в заданный регистр.
+
+\begin{code}
     toreg : ∀ {Ψ Γ σ τ}
           → Registers Ψ Γ
           → (r : σ ∈ Γ)
@@ -402,7 +433,11 @@ module Meta where
           → Registers Ψ (RegDiff.chgapply Γ (RegDiff.chg r τ))
     toreg (x ∷ Γ) (here refl) v = v ∷ Γ
     toreg (x ∷ Γ) (there r) v = x ∷ (toreg Γ r v)
+\end{code}
 
+Состояние памяти определяется аналогично приведенному ранее.
+
+\begin{code}
     data IData (Ψ : DataType) : DataType → Set where
       []  : IData Ψ []
       _∷_ : ∀ {τ τs} → Value Ψ τ → IData Ψ τs → IData Ψ (τ ∷ τs)
@@ -417,37 +452,64 @@ module Meta where
       iload [] ()
       iload (x ∷ H) (here refl) = x
       iload (x ∷ H) (there p) = iload H p
+\end{code}
 
+Определим вспомогательные функции для работы с памятью:
+
+*   загрузка блока кода из памяти по указателю на блок;
+
+\begin{code}
     loadfunc : ∀ {Ψ Γ CS DS} → Data Ψ → block Γ DS CS ∈ Ψ
              → Σ (Diff (statetype Γ Ψ DS CS))
                  (Block (statetype Γ Ψ DS CS))
     loadfunc Ψ f = unblock $ load Ψ f
+\end{code}
 
+*   загрузка указателя на `τ` из памяти по указателю на `τ *`.
+
+\begin{code}
     loadptr : ∀ {Ψ τ} → Data Ψ → atom (τ *) ∈ Ψ → τ ∈ Ψ
     loadptr Ψ p = unptr $ load Ψ p
+\end{code}
 
-    data Stack {I : Set} {A : I → Set} (Ψ : DataType)
-      : List I → Set
+Стек данных — список значений размера регистра, в типе которого указано,
+значения каких типов в нем находятся.
+
+\begin{code}
+    data DataStack (Ψ : DataType) : List RegType → Set
       where
-      []   : Stack Ψ []
-      _∷_  : ∀ {τ S} → A τ
-           → Stack {A = A} Ψ S
-           → Stack Ψ (τ ∷ S)
+      []   : DataStack Ψ []
+      _∷_  : ∀ {τ DS} → RegValue Ψ τ
+           → DataStack Ψ DS
+           → DataStack Ψ (τ ∷ DS)
+\end{code}
 
+Instruction pointer — указатель на блок кода в памяти.
+
+\begin{code}
     IPRT : DataType
          → RegTypes
          → DataStackType
          → CallStackType
          → Set
     IPRT Ψ Γ DS CS = block Γ DS CS ∈ Ψ
+\end{code}
 
-    DataStack = λ Ψ → Stack {A = RegValue Ψ} Ψ
+Стек вызовов — список instruction pointer-ов, в типе которого указано, на
+какие состояния регистров и стека данных этот instruction pointer
+рассчитывает. Ранее было описано, почему в типе стека вызовов не
+указывается требуемое блоком состояние стека вызовов.
 
+\begin{code}
     data CallStack (Ψ : DataType) : CallStackType → Set where
       []  : CallStack Ψ []
       _∷_ : ∀ {Γ DS CS} → IPRT Ψ Γ DS CS → CallStack Ψ CS
           → CallStack Ψ ((Γ , DS) ∷ CS)
+\end{code}
 
+Состояние исполнителя — совокупность состояний регистров, памяти и стеков.
+
+\begin{code}
     record State (S : StateType) : Set where
       constructor state
       field
