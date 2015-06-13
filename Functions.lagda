@@ -529,24 +529,21 @@ Instruction pointer — указатель на блок кода в памят�
 
 \begin{code}
   module ExecBlk
+\end{code}
+
+Сигнатуры инструкций и управляющих инструкций были описаны ранее.
+
+\begin{code}
+    (Instr : (S : StateType) → Diffs.SmallChg S → Set)
     (ControlInstr : (S : StateType)
                   → Maybe (Diffs.CallStackChg S)
                   → Set)
-    (Instr : (S : StateType) → Diffs.SmallChg S → Set)
-    (exec-control : ∀ {S c}
-                 → Values.State
-                   (Blocks.Block ControlInstr Instr)
-                   S
-                 → ControlInstr S c
-                 → Values.CallStack
-                  (Blocks.Block ControlInstr Instr)
-                  (StateType.memory S)
-                  (StateType.callstack
-                    (Diffs.dapply S (Diffs.csChg S c)))
-                 × Σ (Diffs.Diff
-                       (Diffs.dapply S (Diffs.csChg S c)))
-                     (Blocks.Block ControlInstr Instr
-                       (Diffs.dapply S (Diffs.csChg S c))))
+\end{code}
+
+Результат исполнения инструкции заивисит от состояния исполнителя и
+определяет, как изменятся регистры, память и стек данных.
+
+\begin{code}
     (exec-instr : ∀ {S c}
                 → Values.State
                   (Blocks.Block ControlInstr Instr)
@@ -565,28 +562,79 @@ Instruction pointer — указатель на блок кода в памят�
                  (StateType.memory S)
                  (StateType.datastack
                    (Diffs.dapply S (Diffs.sChg c)))))
+\end{code}
+
+Результат исполнения управляющей инструкции тоже зависит от состояния
+исполнителя и определяет, как изменится стек вызовов и какой блок будет
+исполняться следующим.
+
+\begin{code}
+    (exec-control : ∀ {S c}
+                 → Values.State
+                   (Blocks.Block ControlInstr Instr)
+                   S
+                 → ControlInstr S c
+                 → Values.CallStack
+                  (Blocks.Block ControlInstr Instr)
+                  (StateType.memory S)
+                  (StateType.callstack
+                    (Diffs.dapply S (Diffs.csChg S c)))
+                 × Σ (Diffs.Diff
+                       (Diffs.dapply S (Diffs.csChg S c)))
+                     (Blocks.Block ControlInstr Instr
+                       (Diffs.dapply S (Diffs.csChg S c))))
     where
     open Diffs
     open Blocks ControlInstr Instr
     open Values Block
-  
+\end{code}
+
+Для определения функции `exec-block` потребовалось определить несколько
+лемм:
+
+\ignore{
+\begin{code}
     module DiffLemmas where
+\end{code}
+}
+
+*   если набор изменений состояния исполнителя построен как набор изменений
+    стека вызовов, то набор изменений регистров пуст;
+
+\begin{code}
       reg-const : ∀ S → (c : Maybe (CallStackChg S))
                 → rdiff (csChg S c) ≡ RegDiff.dempty
       reg-const S (just c) = refl
       reg-const S nothing = refl
-    
+\end{code}
+
+*   если набор изменений состояния исполнителя построен как набор изменений
+    стека вызовов, то набор изменений стека данных пуст;
+
+\begin{code}
       ds-const : ∀ S → (c : Maybe (CallStackChg S))
                → dsdiff (csChg S c) ≡ StackDiff.dempty
       ds-const S (just x) = refl
       ds-const S nothing = refl
-    
+\end{code}
+
+*   если набор изменений состояния исполнителя построен как набор
+    изменений, производимых инструкцией, то набор изменений стека вызовов
+    пуст;
+
+\begin{code}
       cs-lemma : ∀ S → (c : SmallChg S)
                → csdiff (sChg c) ≡ StackDiff.dempty
       cs-lemma S (onlyreg x) = refl
       cs-lemma S (onlystack x) = refl
       cs-lemma S (regstack x x₁) = refl
-  
+\end{code}
+
+*   применение набора изменений, построенных как набор изменений стека
+    вызовов, к состоянию исполнителя изменяет только стек вызовов, оставляя
+    остальное неизменным.
+
+\begin{code}
       dapply-csChg : ∀ S → (c : Maybe (CallStackChg S))
                    → dapply S (csChg S c)
                    ≡ statetype
@@ -597,9 +645,25 @@ Instruction pointer — указатель на блок кода в памят�
                       (StateType.callstack S) (csdiff (csChg S c)))
       dapply-csChg S (just x) = refl
       dapply-csChg S nothing = refl
-  
+\end{code}
+
+\ignore{
+\begin{code}
     open DiffLemmas
-  
+\end{code}
+}
+
+Проблемой предыдущей реализации было то, что для некоторых блоков важно
+было их расположение в памяти, из-за чего определить, какой блок будет
+исполняться следующим, не всегда представлялось возможным. Если
+потребовать, чтобы все управляющие инструкции задавали явно все требуемые
+значения, не рассчитывая на определенное расположение в памяти, проблема не
+будет возникать. Такие управляющие инструкции могут отличаться от имеющихся
+в реальном ассемблере, но каждая из них должна транслироваться в реальный
+ассемблер с сохранением семантики и возможным добавлением дополнительных
+переходов.
+
+\begin{code}
     exec-block : ∀ {ST d} → State ST → Block ST d
                → State (dapply ST d)
                × Σ (Diff (dapply ST d)) (Block (dapply ST d))
@@ -790,7 +854,7 @@ module AMD64 where
   exec-instr (state Γ Ψ (v ∷ DS) CS) (pop r refl)
     = toreg Γ r v , Ψ , DS
   
-  open ExecBlk ControlInstr Instr exec-control exec-instr
+  open ExecBlk Instr ControlInstr exec-instr exec-control
   open Eq Block exec-block
 \end{code}
 
