@@ -318,8 +318,8 @@ module Diffs where
 
 ## Метаассемблер
 
-Аналогично описанному ранее определим сущности, общие для различных языков
-ассемблера.
+Аналогично приведенному в предыдущей главе, метаассемблер состоит из
+четырех модулей.
 
 \ignore{
 \begin{code}
@@ -327,6 +327,8 @@ module Meta where
   open Diffs
 \end{code}
 }
+
+### Модуль Blocks
 
 Ранее управляющие инструкции описывали только состояние исполнителя,
 требуемое для выполнения инструкции. С добавлением в состояние исполнителя
@@ -356,7 +358,11 @@ module Meta where
            → Instr S c
            → Block (dapply S (sChg c)) d
            → Block S (dappend (sChg c) d)
+\end{code}
 
+### Модуль Values
+
+\begin{code}
   module Values
     (Block : (S : StateType) → Diff S → Set)
     where
@@ -455,7 +461,11 @@ module Meta where
         callstack : CallStack
                     (StateType.memory S)
                     (StateType.callstack S)
+\end{code}
 
+### Модуль ExecBlk
+
+\begin{code}
   module ExecBlk
     (ControlInstr : (S : StateType)
                   → Maybe (Diffs.CallStackChg S)
@@ -565,7 +575,11 @@ module Meta where
       Γ'  = proj₁ eir
       Ψ'  = proj₁ (proj₂ eir)
       DS' = proj₂ (proj₂ eir)
+\end{code}
 
+### Модуль Eq
+
+\begin{code}
   module Eq
     (Block : (S : StateType) → Diff S → Set)
     (exec-block : ∀ {ST d} → Values.State Block ST → Block ST d
