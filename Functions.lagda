@@ -111,25 +111,35 @@ data Maybe (A : Set) : Set where
 \end{code}
 }
 
-## Изменения
+## Наборы изменений
 
-Все, кроме памяти, может изменять свой тип.
-
+\ignore{
 \begin{code}
 module Diffs where
   import NotSSA
 \end{code}
+}
 
-Изменения списка регистров уже были описаны ранее.
+Определение изменений для регистров используется из предыдущих реализаций.
 
 \begin{code}
   module RegDiff where
-    open NotSSA.Diffs.ListChg RegType public
-    open NotSSA.Diffs.Diff chgapply public
 \end{code}
 
-Стек изменяется не так, как список фиксированной длины, поэтому для него
-необходимо отдельно определить возможные изменения.
+\ignore{
+\begin{code}
+    open NotSSA.Diffs
+\end{code}
+}
+
+\begin{code}
+    open ListChg RegType public
+    open Diff chgapply public
+\end{code}
+
+В отличие от предыдущих реализаций, в тип инструкций должны входить и стек
+вызовов, и стек данных. Это означает, что для них необходимо определить
+наборы изменений.
 
 \begin{code}
   module StackDiff (A : Set) where
@@ -157,8 +167,16 @@ module Diffs where
     chgapply : (S : List A) → Chg S → List A
     chgapply cs (push x) = x ∷ cs
     chgapply (._ ∷ S') (pop refl) = S'
+\end{code}
 
-    open NotSSA.Diffs.Diff chgapply public
+\ignore{
+\begin{code}
+    open NotSSA.Diffs
+\end{code}
+}
+
+\begin{code}
+    open Diff chgapply public
 \end{code}
 
 Общим набором изменений состояния исполнителя будет являться структура,
@@ -176,7 +194,9 @@ module Diffs where
 \end{code}
 
 Определим вспомогательные функции и типы для конструирования и применения
-изменений состояния исполнителя.
+изменений состояния исполнителя:
+
+*   конструирование пустого набора изменений;
 
 \begin{code}
   dempty : ∀ {S} → Diff S
@@ -184,7 +204,11 @@ module Diffs where
     RegDiff.dempty
     StackDiff.dempty
     StackDiff.dempty
+\end{code}
 
+*   применение набора изменений к состоянию исполнителя;
+
+\begin{code}
   dapply : (S : StateType) → Diff S → StateType
   dapply (statetype r m d c) (diff rd dd cd) =
       statetype
@@ -192,46 +216,83 @@ module Diffs where
       m
       (StackDiff.dapply RegType d dd)
       (StackDiff.dapply (RegTypes × DataStackType) c cd)
+\end{code}
 
+*   объединение двух наборов изменений;
+
+\begin{code}
   dappend : ∀ {S} → (d : Diff S) → Diff (dapply S d) → Diff S
   dappend (diff rd dd cd) (diff rd' dd' cd') =
       diff
       (RegDiff.dappend rd rd')
       (StackDiff.dappend RegType dd dd')
       (StackDiff.dappend (RegTypes × DataStackType) cd cd')
+\end{code}
 
+*   изменение стека данных;
+
+\begin{code}
   DataStackChg : StateType → Set
   DataStackChg S
     = StackDiff.Chg RegType (StateType.datastack S)
+\end{code}
 
+*   изменение стека вызовов;
+
+\begin{code}
   CallStackChg : StateType → Set
   CallStackChg S
     = StackDiff.Chg
       (RegTypes × DataStackType)
       (StateType.callstack S)
+\end{code}
 
+*   изменение набора регистров;
+
+\begin{code}
   RegChg : StateType → Set
   RegChg S = RegDiff.Chg (StateType.registers S)
+\end{code}
 
+*   изменение, производимое инструкцией: одна инструкция может изменить
+    либо регистры, либо стек, либо и то, и другое (например, при `pop`
+    значения со стека в регистр);
+
+\begin{code}
   data SmallChg (S : StateType) : Set where
     onlyreg   : RegChg S → SmallChg S
     onlystack : DataStackChg S → SmallChg S
     regstack  : RegChg S → DataStackChg S → SmallChg S
+\end{code}
 
+*   конструирование набора изменений состояния исполнителя по одному
+    изменению регистров;
+
+\begin{code}
   regChg : ∀ {S} → RegChg S → Diff S
   regChg c =
       diff
       (RegDiff.dchg c RegDiff.dempty)
       StackDiff.dempty
       StackDiff.dempty
+\end{code}
 
+*   конструирование набора изменений состояния исполнителя по одному
+    изменению стека данных;
+
+\begin{code}
   dsChg : ∀ {S} → DataStackChg S → Diff S
   dsChg c =
     diff
     RegDiff.dempty
     (StackDiff.dchg c StackDiff.dempty)
     StackDiff.dempty
+\end{code}
 
+*   конструирование набора изменений состояния исполнителя по одному
+    изменению, производимому инструкцией;
+
+\begin{code}
   sChg : ∀ {S} → SmallChg S → Diff S
   sChg (onlyreg r) = regChg r
   sChg (onlystack d) = dsChg d
@@ -240,7 +301,12 @@ module Diffs where
     (RegDiff.dchg r RegDiff.dempty)
     (StackDiff.dchg d StackDiff.dempty)
     StackDiff.dempty
+\end{code}
 
+*   конструирование набора изменений состояния исполнителя по одному
+    возможному изменению стека вызовов.
+
+\begin{code}
   csChg : ∀ S → Maybe (CallStackChg S) → Diff S
   csChg S nothing = dempty
   csChg S (just c) =
