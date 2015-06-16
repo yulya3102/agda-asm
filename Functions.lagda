@@ -459,10 +459,10 @@ module Meta where
 *   загрузка блока кода из памяти по указателю на блок;
 
 \begin{code}
-    loadfunc : ∀ {Ψ Γ CS DS} → Data Ψ → block Γ DS CS ∈ Ψ
+    loadblock : ∀ {Ψ Γ CS DS} → Data Ψ → block Γ DS CS ∈ Ψ
              → Σ (Diff (statetype Γ Ψ DS CS))
                  (Block (statetype Γ Ψ DS CS))
-    loadfunc Ψ f = unblock $ load Ψ f
+    loadblock Ψ f = unblock $ load Ψ f
 \end{code}
 
 *   загрузка указателя на `τ` из памяти по указателю на `τ *`.
@@ -484,7 +484,7 @@ module Meta where
            → DataStack Ψ (τ ∷ DS)
 \end{code}
 
-Instruction pointer — указатель на блок кода в памяти.
+Типизированный instruction pointer — указатель на блок кода в памяти.
 
 \begin{code}
     IPRT : DataType
@@ -495,10 +495,9 @@ Instruction pointer — указатель на блок кода в памят�
     IPRT Ψ Γ DS CS = block Γ DS CS ∈ Ψ
 \end{code}
 
-Стек вызовов — список instruction pointer-ов, в типе которого указано, на
-какие состояния регистров и стека данных этот instruction pointer
-рассчитывает. Ранее было описано, почему в типе стека вызовов не
-указывается требуемое блоком состояние стека вызовов.
+Стек вызовов — список типизированных instruction pointer-ов.  Ранее было
+описано, почему в типе стека вызовов не указывается требуемое блоком
+состояние стека вызовов.
 
 \begin{code}
     data CallStack (Ψ : DataType) : CallStackType → Set where
@@ -838,13 +837,13 @@ module x86-64 where
                × Σ (Diff (dapply S (csChg S c)))
                    (Block (dapply S (csChg S c)))
   exec-control (state Γ Ψ DS CS) (call f cont)
-    = cont ∷ CS , loadfunc Ψ f
+    = cont ∷ CS , loadblock Ψ f
   exec-control (state Γ Ψ DS CS) (jmp[ p ])
-    = CS , loadfunc Ψ (loadptr Ψ p)
+    = CS , loadblock Ψ (loadptr Ψ p)
   exec-control (state Γ Ψ DS CS) (jmp f)
-    = CS , loadfunc Ψ f
+    = CS , loadblock Ψ f
   exec-control (state Γ Ψ DS (f ∷ CS)) (ret refl)
-    = CS , loadfunc Ψ f
+    = CS , loadblock Ψ f
 
   exec-instr : ∀ {S c}
              → State S
@@ -867,7 +866,7 @@ module x86-64 where
   open Eq Block exec-block
 \end{code}
 
-## Линковка
+## Компоновка кода
 
 \ignore{
 \begin{code}
@@ -964,7 +963,7 @@ module x86-64 where
                  *) ∈ StateType.memory ST)
               → exec-block S (↝ jmp[ p ])
               ≡ S
-              , loadfunc
+              , loadblock
                 (State.memory S)
                 (loadptr (State.memory S) p)
     exec-ijmp S p = refl
@@ -980,7 +979,7 @@ module x86-64 where
              → (S : State (statetype Γ (pltize Ψ) DS CS))
              → GOT[ f ]-correctness (State.memory S)
              → exec-block S (plt-stub (got f))
-             ≡ S , loadfunc (State.memory S) (func f)
+             ≡ S , loadblock (State.memory S) (func f)
     exec-plt f S p rewrite sym p = exec-ijmp S (got f)
 \end{code}
 
@@ -995,7 +994,7 @@ module x86-64 where
           → GOT[ f ]-correctness (State.memory S)
           → BlockEq S S
             (plt-stub (got f))
-            (proj₂ $ loadfunc (State.memory S) (func f))
+            (proj₂ $ loadblock (State.memory S) (func f))
     proof f S p = left (exec-plt f S p) equal
 \end{code}
 

@@ -190,13 +190,13 @@ module Meta where
     unptr : ∀ {Ψ τ} → Value Ψ (τ *) → τ ∈ Ψ
     unptr (ptr x) = x
 
-    unfun : ∀ {Ψ Γ} → Value Ψ (block Γ)
+    unblock : ∀ {Ψ Γ} → Value Ψ (block Γ)
           → Σ (Diff Γ) (Block (state Ψ Γ))
-    unfun (block x) = _ , x
+    unblock (block x) = _ , x
 
     _∈B_ : ∀ {S d} → Block S d → Data (memory S) → Set
     _∈B_ {S} b Ψ = Σ (block (registers S) ∈ memory S)
-                 $ λ ptr → (unfun (load ptr Ψ)) ≡ _ , b
+                 $ λ ptr → (unblock (load ptr Ψ)) ≡ _ , b
 \end{code}
 
 ### Модуль ExecBlk
@@ -213,8 +213,8 @@ module Meta where
 на указанное состояние регистров, находящийся в памяти.
 
 \begin{code}
-    IPRFT : RegTypes → Set
-    IPRFT Γ = block Γ ∈ Ψ
+    IPRT : RegTypes → Set
+    IPRT Γ = block Γ ∈ Ψ
 \end{code}
 
 В таком случае _instruction pointer-ом_ в обычном понимании является
@@ -222,7 +222,7 @@ module Meta where
 pointer-а.
 
 \begin{code}
-    IP = Σ RegTypes IPRFT
+    IP = Σ RegTypes IPRT
 \end{code}
 
 В этой версии вместо сохранения в стеке вызовов самих блоков будем хранить
@@ -288,7 +288,7 @@ instruction pointer, и определяет, как изменится стек
                   → CallStack (memory S)
                   → IP (memory S)
                   → CallStack (memory S)
-                  × IPRFT (memory S) (registers S))
+                  × IPRT (memory S) (registers S))
     where
     open Blocks ControlInstr Instr public
     open Values Block public
@@ -427,7 +427,7 @@ module x86-64 where
 \end{code}
 }
 
-Определения инструкций и управляющих инструкций аналогично приведенным
+Определения инструкций и управляющих инструкций аналогичны приведенным
 ранее.
 
 \begin{code}
@@ -453,7 +453,7 @@ module x86-64 where
                  (Blocks.Block ControlInstr Instr)
                  (memory S)
                → CallStack (memory S) → IP (memory S)
-               → CallStack (memory S) × IPRFT (memory S) (registers S)
+               → CallStack (memory S) × IPRT (memory S) (registers S)
   exec-control {state memory registers} (jmp x) Ψ cs ip = cs , x
   exec-control {state memory registers} (call x) Ψ cs ip = ip ∷ cs , x
   exec-control {state memory registers} (jmp[ x ]) Ψ cs ip
@@ -506,8 +506,8 @@ module x86-64 where
 *   Блок кода не накладывает никаких ограничений на свое расположение в
     памяти, но может рассчитывать на то, что после него лежит подходящий
     блок. Это означает, что существует возможность после блока,
-    завершающегося call, поместить блок данных, что приведет к некорректному
-    состоянию стека вызовов.
+    завершающегося вызовом функции, поместить блок данных, что приведет к
+    некорректному состоянию стека вызовов.
 *   Нет никакой динамической аллокации памяти, которая нужна хотя бы
     для того, чтобы можно было сохранить значения регистров.
 *   Инструкции не накладывают ограничений на состояние стека вызовов. Это
