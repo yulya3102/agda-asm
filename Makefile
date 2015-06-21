@@ -1,2 +1,2 @@
 %.tex: %.lagda
-	agda -i /usr/share/agda-stdlib/ -i . --latex --latex-dir report/agda-latex/ --allow-unsolved-metas $<
+	agda -i ./agda-stdlib/src -i . --latex --latex-dir report/agda-latex/ --allow-unsolved-metas $<
