@@ -1,2 +1,9 @@
+AGDA_INCLUDE = -i . -i ./agda-stdlib/src
+
 %.tex: %.lagda
-	agda -i ./agda-stdlib/src -i . --latex --latex-dir . --allow-unsolved-metas $<
+	agda $(AGDA_INCLUDE) --latex --latex-dir . --allow-unsolved-metas $<
+
+.PHONY: checkall
+
+checkall:
+	agda $(AGDA_INCLUDE) Functions.lagda
