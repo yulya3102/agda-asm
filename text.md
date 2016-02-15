@@ -9,6 +9,9 @@ and no allocation is taken.
 
 ## ??? (why and how)
 
+???: should it be all-detailed typecheckable paper or
+overview-with-key-ideas and some formalizations
+
 ## Typed assembly language definition
 
 ### Machine state types
@@ -34,15 +37,21 @@ is not limited, but that's not necessary since we only care for small part
 of program lifetime that allocates finite amount of stack memory needed to
 run allocator at most ??? times.
 
-It
-can be viewed as redistributing memory within some static hunk (and that's
-pretty much how it's really implemented in real life), but dealing with
-types would get too messy in that case. So, it is much easier to say that
-stack is just another part of machine state.
-
 TODO: memory, registers and stacks definition (types)
 
 ???: RegType/Type difference does not really matter
+
+There is another difficulty in stack definition. Stack actually serves for
+two purposes: tracking return addresses and saving stack frames with local
+variables. These two purposes are similar, but for type system they are
+quite different. For local variables it only should only check ???, but for
+return address it should make sure that `ret` is executed only in suitable
+machine state. So, in our model there will be two different stacks: call
+stack and data stack.
+
+TODO: callstacktype should refer to itself, but that's not problem
+
+TODO: callstacktype and datastacktype definitions
 
 ### Meta-assembler
 
