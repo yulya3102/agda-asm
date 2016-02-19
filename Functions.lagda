@@ -116,25 +116,120 @@ data Maybe (A : Set) : Set where
 \ignore{
 \begin{code}
 module Diffs where
-  import NotSSA
 \end{code}
 }
+
+Определим тип, описывающий одно изменение списка фиксированной длины:
+в таком списке можно только менять элементы, что и требуется от регистров.
+Так как не любое изменение можно применить к произвольному списку, его
+тип должен ограничивать, к какому списку его можно применять.
+
+\begin{code}
+  module ListChg (A : Set) where
+    data Chg (Γ : List A) : Set where
+\end{code}
+
+Для того, чтобы описать изменение элемента в списке, необходимо указать,
+какая позиция меняется и на что.
+
+\begin{code}
+      chg : ∀ {τ} → τ ∈ Γ → A → Chg Γ
+\end{code}
+
+Сами по себе изменения не несут особого смысла: необходимо указать, как
+они применяются к спискам.
+
+\begin{code}
+    chgapply : (Γ : List A) → Chg Γ → List A
+    chgapply (_ ∷ Γ) (chg (here refl) σ) = σ ∷ Γ
+    chgapply (τ ∷ Γ) (chg (there p)   σ) = τ ∷ chgapply Γ (chg p σ)
+\end{code}
+
+Блок кода последовательно применяет изменения к списку регистров,
+значит, в его типе должен быть описан набор изменений.
+
+Набор изменений является общим для изменений различных видов. То, к чему
+применяется изменение, будем называть _контекстом_.
+
+\begin{code}
+  module DiffDefinition
+    {Ctx : Set}
+    {Chg : Ctx → Set}
+    (chgapply : (Γ : Ctx) → Chg Γ → Ctx)
+    where
+\end{code}
+
+Так же, как и для изменения, тип набора изменений ограничивает контекст, к
+которому его можно применять.
+
+\begin{code}
+    data Diff (Γ : Ctx) : Set where
+\end{code}
+
+Набор изменений — это:
+
+*   либо пустой набор;
+
+\begin{code}
+      dempty  : Diff Γ
+\end{code}
+
+*   либо это изменение, добавленное перед уже имеющимся набором.
+
+\begin{code}
+      dchg    : (c : Chg Γ) → Diff (chgapply Γ c) → Diff Γ
+\end{code}
+
+Для набора изменений определены несколько функций:
+
+*   применение набора к контексту — это последовательное применение всех
+    изменений из набора;
+
+\begin{code}
+    dapply : (Γ : Ctx) → Diff Γ → Ctx
+    dapply Γ dempty = Γ
+    dapply Γ (dchg c d) = dapply (chgapply Γ c) d
+\end{code}
+
+*   объединение двух наборов изменений;
+
+\begin{code}
+    dappend : ∀ {Γ} → (d : Diff Γ)
+            → Diff (dapply Γ d) → Diff Γ
+    dappend dempty b = b
+    dappend (dchg c a) b = dchg c (dappend a b)
+\end{code}
+
+*   лемма, доказывающая, что объединение с пустым набором не меняет набор;
+
+\begin{code}
+    dappend-dempty-lemma : ∀ {Γ} → (d : Diff Γ)
+                         → dappend d dempty ≡ d
+    dappend-dempty-lemma dempty = refl
+    dappend-dempty-lemma (dchg c d)
+      rewrite dappend-dempty-lemma d = refl
+\end{code}
+
+*   лемма, доказывающая, что применение объединения наборов эквивалентно
+    последовательному применению этих наборов.
+
+\begin{code}
+    dappend-dapply-lemma : ∀ S → (d₁ : Diff S)
+                         → (d₂ : Diff (dapply S d₁))
+                         → dapply S (dappend d₁ d₂)
+                         ≡ dapply (dapply S d₁) d₂
+    dappend-dapply-lemma S dempty d₂ = refl
+    dappend-dapply-lemma S (dchg c d₁) d₂
+      = dappend-dapply-lemma (chgapply S c) d₁ d₂
+\end{code}
 
 Определение изменений для регистров используется из предыдущих реализаций.
 
 \begin{code}
   module RegDiff where
-\end{code}
 
-\ignore{
-\begin{code}
-    open NotSSA.Diffs
-\end{code}
-}
-
-\begin{code}
     open ListChg RegType public
-    open Diff chgapply public
+    open DiffDefinition chgapply public
 \end{code}
 
 В отличие от предыдущих реализаций, в тип инструкций должны входить и стек
@@ -167,16 +262,8 @@ module Diffs where
     chgapply : (S : List A) → Chg S → List A
     chgapply cs (push x) = x ∷ cs
     chgapply (._ ∷ S') (pop refl) = S'
-\end{code}
 
-\ignore{
-\begin{code}
-    open NotSSA.Diffs
-\end{code}
-}
-
-\begin{code}
-    open Diff chgapply public
+    open DiffDefinition chgapply public
 \end{code}
 
 Общим набором изменений состояния исполнителя будет являться структура,
