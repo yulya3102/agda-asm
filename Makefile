@@ -7,3 +7,9 @@ AGDA_INCLUDE = -i . -i ./agda-stdlib/src
 
 checkall:
 	agda $(AGDA_INCLUDE) Functions.lagda
+
+%.pdf: %.md include.tex
+	pandoc -w latex --include-in-header include.tex --latex-engine xelatex $< -o $@
+
+%.md: %.tex
+	mv $< $@
