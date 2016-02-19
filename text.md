@@ -55,8 +55,15 @@ TODO: callstacktype and datastacktype definitions
 
 ### Meta-assembler
 
-Any assembler code can be represented as a sequence of basic blocks (link?).
-TODO: why blocks
+TODO: reusable agda code is nice
+
+Actual assembler code has to know exact instruction set, it wouldn't make
+much sense to write any code without any knowledge about instructions. On
+the other hand, any assembler code can be represented as a sequence of
+basic blocks (?), and other concepts can be defined using basic blocks
+definition. Using this method, concepts like memory and registers can have
+block type as parameter and don't depend on instruction set directly. This
+helps to keep code much more generic.
 
 To statically analyze types of different parts of machine state we need to
 know how blocks change them. For us to do this, type of block needs to have
@@ -73,9 +80,26 @@ TODO: memory, registers and stacks definition
 TODO: block equivalence definition
 TODO: why it can be considered as program equivalence
 
-## Statically linked program
+## Static vs. dynamic linking
 
-"default" code version - statically linked
+We will consider programs after they are loaded to memory. Due to this
+assumption we can ignore memory mapping problems.
+
+Statically linked program is just all binaries merged together without any
+transformations. Dynamically linked program is a bunch of object files with
+PLT and GOT added and calls to functions replaced with calls to
+correspondent PLT elements. But when they are loaded into memory, there's no
+separations between libraries left, so the only difference between
+statically and dynamically linked programs is in GOT, PLT and calls to
+functions. Therefore, we don't even need to define dynamically linked
+program as several object files.
+
+???: dynamically linked program cat have more than one PLT entry
+correspondent to some function
+TODO: what is input
+TODO: how to get dynamically linked program
+
+## Statically linked program
 
 ## Dynamically linked program
 
