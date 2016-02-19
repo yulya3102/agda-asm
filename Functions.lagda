@@ -55,6 +55,16 @@ TODO: memory, registers and stacks definition (types)
 
 ???: RegType/Type difference does not really matter
 
+\begin{code}
+data RegType : Set
+
+RegTypes = List RegType
+
+data Type : Set
+
+DataType = List Type
+\end{code}
+
 There is another difficulty in stack definition. Stack actually serves for
 two purposes: tracking return addresses and saving stack frames with local
 variables. These two purposes are similar, but for type system they are
@@ -67,43 +77,20 @@ TODO: callstacktype should refer to itself, but that's not problem
 
 TODO: callstacktype and datastacktype definitions
 
-## Основные определения
-
-Одной из проблем прошлых решений является неучитывание размеров возможных
-значений, из-за чего возможно написать код, загружающий в регистр значение,
-которое не может быть загружено. Решить эту проблему можно, поделив
-возможные значения на два класса:
-
-*   значения, которые могут располагаться в регистрах;
-
-\begin{code}
-data RegType : Set
-
-RegTypes = List RegType
-\end{code}
-
-*   значения произвольного размера, которые могут располагаться в памяти.
-
-\begin{code}
-data Type : Set
-
-DataType = List Type
-\end{code}
-
-Еще одной проблемой являлось полное отсутствие динамически аллоцируемой
-памяти, в качестве которой можно использовать стек данных.
-
-Для удобства будем считать стек вызовов и стек данных разными сущностями,
-хотя на практике обычно используется один стек.
-
 \begin{code}
 DataStackType : Set
 CallStackType : Set
 \end{code}
 
-Состояния обоих стеков, как и состояния регистров и памяти, входят в
-состояние исполнителя.
+\begin{code}
+DataStackType = List RegType
+\end{code}
 
+\begin{code}
+CallStackType = List (RegTypes × DataStackType)
+\end{code}
+
+\ignore{
 \begin{code}
 record StateType : Set where
   constructor statetype
@@ -114,49 +101,18 @@ record StateType : Set where
     callstack : CallStackType
 \end{code}
 
-Значениями, размер которых равен размеру регистра, являются указатели и
-целые числа.
-
 \begin{code}
 data RegType where
   _*  : Type → RegType
   int : RegType
 \end{code}
 
-К значениям, которые могут располагаться в памяти, относятся как значения
-размера регистра, так и блоки кода. Тип блока кода описывает состояния
-регистров и обоих стеков, при которых он может быть корректно исполнен.
-
 \begin{code}
 data Type where
   atom : RegType → Type
   block : RegTypes → DataStackType → CallStackType → Type
 \end{code}
-
-Стек данных может хранить только значения размера регистра. Его тип можно
-описать списком типов находящихся в нем значений.
-
-\begin{code}
-DataStackType = List RegType
-\end{code}
-
-<!--- вот тут на самом деле нетривиально — тип стека вызовов должен
-ссылаться сам на себя, но это успешно обходится -->
-
-Стек вызовов хранит указатели на блоки в памяти. Параметрами типа блока
-<!--- вот тут до меня дошло, что здесь происходит какое-то ambiguity между
-фразами "тип блока" здесь (конструктор block типа Type) и далее (тип Block)
---> являются типы регистров, тип стека данных и тип стека вызовов. При этом
-сохраненный в стеке вызовов указатель на блок может быть исполнен только
-при снятии его со стека. Это означает, что добавить указатель на блок в
-стек вызовов можно только в тот момент исполнения, когда тип стека вызовов
-совпадает с тем, на который рассчитывает блок. Это позволяет описать тип
-стека вызовов как список пар типов регистров и стека данных, считая, что
-тип стека вызовов задан неявно.
-
-\begin{code}
-CallStackType = List (RegTypes × DataStackType)
-\end{code}
+}
 
 \ignore{
 \begin{code}
@@ -178,6 +134,12 @@ definition. Using this method, concepts like memory and registers can have
 block type as parameter and don't depend on instruction set directly. This
 helps to keep code much more generic.
 
+\ignore{
+\begin{code}
+module Diffs where
+\end{code}
+}
+
 To statically analyze types of different parts of machine state we need to
 know how blocks change them. For us to do this, type of block needs to have
 information about changes of machine state types applied by the block.
@@ -187,14 +149,6 @@ TODO: diffs definition
 TODO: block definition
 
 TODO: memory, registers and stacks definition
-
-## Наборы изменений
-
-\ignore{
-\begin{code}
-module Diffs where
-\end{code}
-}
 
 Определим тип, описывающий одно изменение списка фиксированной длины:
 в таком списке можно только менять элементы, что и требуется от регистров.
@@ -1196,12 +1150,3 @@ equivalence proof
             (proj₂ $ loadblock (State.memory S) (func f))
     proof f S p = left (exec-plt f S p) equal
 \end{code}
-
-## Выводы по главе
-
-В данной главе была представлена реализация метода доказательства
-экиввалентности ассемблерных кодов, не обладающая
-недостатками первых решений, и на основе этого доказана эквивалентность
-вызова функции и соответствующего ей блока PLT.  Благодаря удачно
-подобранным определениям результирующие доказательства получились весьма
-короткими.
