@@ -1032,13 +1032,19 @@ considered statically linked.
 
 ## Dynamically linked program
 
-code with PLT and GOT
+Dynamic linking adds some changes to program code:
 
-GOT-correctness
+*   each function gets its own GOT and PLT entries;
+*   every function call is replaced with corresponding PLT entry call.
 
-generic code proofs (???)
+Program transformed this way can be considered dynamically linked.
 
-equivalence proof
+TODO: GOT-correctness
+
+TODO: generic code proofs (???)
+
+TODO: equivalence proof
+
 ## Компоновка кода
 
 Преобразование памяти определяется аналогично приведенному в первой
