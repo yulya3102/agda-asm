@@ -1010,6 +1010,25 @@ TODO: how to get dynamically linked program
 
 ## Statically linked program
 
+Static linking does not change program code, so any code without undefined
+symbols can be considered statically linked. However, undefined symbols can
+appear only when one binary uses symbols from another binary. Since this
+formalisation doesn't have any notion of binaries and considers programs as
+code loaded into memory, notion of 'undefined symbol' can't possibly make
+sense. Therefore, any program in this typed assembly language can be
+considered statically linked.
+
+\ignore{
+\begin{code}
+  module Linkers where
+\end{code}
+}
+
+\begin{code}
+    static : DataType → DataType
+    static = id
+\end{code}
+
 ## Dynamically linked program
 
 code with PLT and GOT
@@ -1020,12 +1039,6 @@ generic code proofs (???)
 
 equivalence proof
 ## Компоновка кода
-
-\ignore{
-\begin{code}
-  module Linkers where
-\end{code}
-}
 
 Преобразование памяти определяется аналогично приведенному в первой
 реализации.  Все, кроме блоков, остается неизменным, а на каждый блок
