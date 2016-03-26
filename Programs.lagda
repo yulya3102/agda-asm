@@ -9,7 +9,8 @@ open import Data.Product
 open import Data.List
 open import Data.List.Any
 open Membership-≡
-open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym)
+open import Data.List.Any.Properties
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; cong)
 
 open import Functions
 open x86-64
@@ -129,6 +130,27 @@ func (here refl) = there (there (here refl))
 func {Ψ = atom x ∷ Ψ} (there f) = there $ func f
 func {Ψ = block Γ DS CS ∷ Ψ} (there f)
   = there (there (there (func f)))
+
+pltize-ptr : ∀ {Ψ τ} → τ ∈ Ψ → τ ∈ pltize Ψ
+pltize-ptr {[]} ()
+pltize-ptr {_ ∷ Ψ} {atom _}      (here refl) = here refl
+pltize-ptr {_ ∷ Ψ} {block _ _ _} (here refl) = here refl
+pltize-ptr {atom _ ∷ Ψ}          (there px)  = there (pltize-ptr px)
+pltize-ptr {block _ _ _ ∷ Ψ}     (there px)  = there (there (there (pltize-ptr px)))
+
+pltize-atom : ∀ {Ψ τ} → RegValue Ψ τ → RegValue (pltize Ψ) τ
+pltize-atom (ptr x) = ptr (pltize-ptr x)
+pltize-atom (int x) = int x
+
+pltize-state : StateType → StateType
+pltize-state ST = record ST { memory = pltize $ StateType.memory ST }
+
+pltize-diff : ∀ {ST} → Diff ST → Diff (pltize-state ST)
+pltize-diff (diff rdiff dsdiff csdiff) = diff rdiff dsdiff csdiff
+
+pltize-block : ∀ {ST d} → Block ST d → Block (pltize-state ST) (pltize-diff d)
+pltize-block (Blocks.↝ x) = {!!}
+pltize-block (x Blocks.∙ b) = {!!}
 \end{code}
 
 Блок PLT выглядит так же, как и в первой реализации.
@@ -137,6 +159,38 @@ func {Ψ = block Γ DS CS ∷ Ψ} (there f)
 plt-stub : ∀ {Γ Ψ DS CS} → atom (block Γ DS CS *) ∈ Ψ
          → Block (statetype Γ Ψ DS CS) dempty
 plt-stub got = ↝ jmp[ got ]
+
+_++[_]++_ : ∀ {α} → {A : Set α} → (σs : List A) → (τ : A) → (τs : List A)
+          → σs ++ τ ∷ τs ≡ (σs ++ [ τ ]) ++ τs
+[] ++[ τ ]++ τs = refl
+(σ ∷ σs) ++[ τ ]++ τs = cong (_∷_ σ) (σs ++[ τ ]++ τs)
+
+pltize-idata : ∀ Γ {Ψ} → IData (Γ ++ Ψ) Ψ → IData (pltize $ Γ ++ Ψ) (pltize Ψ)
+pltize-idata Γ [] = []
+pltize-idata Γ (_∷_ {atom τ} {τs} (atom x) Ψ)
+  = (atom (pltize-atom x)) ∷ Ψ-tail
+  where
+    lemma : Γ ++ atom τ ∷ τs ≡ (Γ ++ [ atom τ ]) ++ τs
+    lemma = Γ ++[ atom τ ]++ τs
+    Ψ' : IData ((Γ ++ [ atom τ ]) ++ τs) τs
+    Ψ' rewrite sym lemma = Ψ
+    Ψ-tail : IData (pltize $ Γ ++ atom τ ∷ τs) (pltize τs)
+    Ψ-tail rewrite lemma = pltize-idata (Γ ++ [ atom τ ]) Ψ'
+pltize-idata Δ (_∷_ {block Γ DS CS} {τs} (block x) Ψ)
+  = Values.block (plt-stub {!!})
+  ∷ (Values.atom (Values.ptr {!!})
+  ∷ (Values.block (pltize-block x)
+  ∷ Ψ-tail))
+  where
+    lemma : Δ ++ block Γ DS CS ∷ τs ≡ (Δ ++ [ block Γ DS CS ]) ++ τs
+    lemma = Δ ++[ block Γ DS CS ]++ τs
+    Ψ' : IData ((Δ ++ [ block Γ DS CS ]) ++ τs) τs
+    Ψ' rewrite sym lemma = Ψ
+    Ψ-tail : IData (pltize $ Δ ++ block Γ DS CS ∷ τs) (pltize τs)
+    Ψ-tail rewrite lemma = pltize-idata (Δ ++ [ block Γ DS CS ]) Ψ'
+
+pltize-data : ∀ {Ψ} → Data Ψ → Data (pltize Ψ)
+pltize-data = pltize-idata []
 \end{code}
 
 Опишем важное свойство: элемент GOT корректно заполнен, если в нём
