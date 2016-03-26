@@ -989,10 +989,31 @@ module x86-64 where
   open Eq Block exec-block
 \end{code}
 
-## Static vs. dynamic linking
+## Programs
 
-We will consider programs after they are loaded to memory. Due to this
-assumption we can ignore memory mapping problems.
+\ignore{
+\begin{code}
+  module Linkers where
+\end{code}
+}
+
+We will think of program as of binary loaded to memory. Due to this
+assumption we can ignore memory mapping problems. With this assumption, we
+can say that *program* is pair of memory state (with code and data) and
+start block.
+
+\begin{code}
+    record Program (ST : StateType) : Set where
+      constructor program
+      field
+        memory : Data (StateType.memory ST)
+        start  : IPRT (StateType.memory ST)
+                      (StateType.registers ST)
+                      (StateType.datastack ST)
+                      (StateType.callstack ST)
+\end{code}
+
+## Static vs. dynamic linking
 
 Statically linked program is just all binaries merged together without any
 transformations. Dynamically linked program is a bunch of object files with
@@ -1018,14 +1039,8 @@ code loaded into memory, notion of 'undefined symbol' can't possibly make
 sense. Therefore, any program in this typed assembly language can be
 considered statically linked.
 
-\ignore{
 \begin{code}
-  module Linkers where
-\end{code}
-}
-
-\begin{code}
-    static : DataType → DataType
+    static : ∀ {ST} → Program ST → Program ST
     static = id
 \end{code}
 
