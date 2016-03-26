@@ -1,4 +1,10 @@
+all: main.pdf
+
 AGDA_INCLUDE = -i . -i ./agda-stdlib/src
+
+SOURCES = \
+	Intro.md \
+	Functions.md
 
 %.tex: %.lagda
 	agda $(AGDA_INCLUDE) --latex --latex-dir . --allow-unsolved-metas $<
@@ -13,3 +19,6 @@ checkall:
 
 %.md: %.tex
 	mv $< $@
+
+main.md: $(SOURCES)
+	pandoc $^ -o $@
