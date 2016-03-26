@@ -4,7 +4,8 @@ AGDA_INCLUDE = -i . -i ./agda-stdlib/src
 
 SOURCES = \
 	Intro.md \
-	Functions.md
+	Functions.md \
+	Programs.md
 
 %.tex: %.lagda
 	agda $(AGDA_INCLUDE) --latex --latex-dir . --allow-unsolved-metas $<
