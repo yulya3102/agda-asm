@@ -14,7 +14,7 @@ SOURCES = \
 .PHONY: checkall
 
 checkall:
-	agda $(AGDA_INCLUDE) Functions.lagda
+	agda $(AGDA_INCLUDE) --allow-unsolved-metas Programs.lagda
 
 %.pdf: %.md include.tex
 	pandoc -w latex --include-in-header include.tex --latex-engine xelatex $< -o $@
