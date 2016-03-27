@@ -148,9 +148,14 @@ pltize-state ST = record ST { memory = pltize $ StateType.memory ST }
 pltize-diff : ∀ {ST} → Diff ST → Diff (pltize-state ST)
 pltize-diff (diff rdiff dsdiff csdiff) = diff rdiff dsdiff csdiff
 
+postulate
+  pltize-block : ∀ {ST d} → Block ST d → Block (pltize-state ST) (pltize-diff d)
+
+{-
 pltize-block : ∀ {ST d} → Block ST d → Block (pltize-state ST) (pltize-diff d)
 pltize-block (Blocks.↝ x) = {!!}
 pltize-block (x Blocks.∙ b) = {!!}
+-}
 \end{code}
 
 Блок PLT выглядит так же, как и в первой реализации.
@@ -165,6 +170,10 @@ _++[_]++_ : ∀ {α} → {A : Set α} → (σs : List A) → (τ : A) → (τs :
 [] ++[ τ ]++ τs = refl
 (σ ∷ σs) ++[ τ ]++ τs = cong (_∷_ σ) (σs ++[ τ ]++ τs)
 
+postulate
+  pltize-idata : ∀ Γ {Ψ} → IData (Γ ++ Ψ) Ψ → IData (pltize $ Γ ++ Ψ) (pltize Ψ)
+
+{-
 pltize-idata : ∀ Γ {Ψ} → IData (Γ ++ Ψ) Ψ → IData (pltize $ Γ ++ Ψ) (pltize Ψ)
 pltize-idata Γ [] = []
 pltize-idata Γ (_∷_ {atom τ} {τs} (atom x) Ψ)
@@ -188,6 +197,7 @@ pltize-idata Δ (_∷_ {block Γ DS CS} {τs} (block x) Ψ)
     Ψ' rewrite sym lemma = Ψ
     Ψ-tail : IData (pltize $ Δ ++ block Γ DS CS ∷ τs) (pltize τs)
     Ψ-tail rewrite lemma = pltize-idata (Δ ++ [ block Γ DS CS ]) Ψ'
+-}
 
 pltize-data : ∀ {Ψ} → Data Ψ → Data (pltize Ψ)
 pltize-data = pltize-idata []
