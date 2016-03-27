@@ -13,7 +13,7 @@ open import Data.List.Any.Properties
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; cong)
 
 open import Functions
-open x86-64
+open import Asm
 \end{code}
 }
 

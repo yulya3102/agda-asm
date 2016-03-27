@@ -5,6 +5,7 @@ AGDA_INCLUDE = -i . -i ./agda-stdlib/src
 SOURCES = \
 	Intro.md \
 	Functions.md \
+	Asm.md \
 	Programs.md
 
 %.tex: %.lagda
