@@ -124,5 +124,5 @@ exec-instr (state Γ Ψ (v ∷ DS) CS) (pop r refl)
   = toreg Γ r v , Ψ , DS
 
 open ExecBlk Instr ControlInstr exec-instr exec-control public
-open Eq Block exec-block public
+open import BlockEq Block exec-block public
 \end{code}

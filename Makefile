@@ -5,6 +5,7 @@ AGDA_INCLUDE = -i . -i ./agda-stdlib/src
 SOURCES = \
 	Intro.md \
 	MetaAsm.md \
+	BlockEq.md \
 	Asm.md \
 	Programs.md
 
