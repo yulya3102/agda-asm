@@ -2,7 +2,7 @@
 
 \ignore{
 \begin{code}
-module Functions where
+module MetaAsm where
 
 open import Data.Nat
 open import Data.List

@@ -11,7 +11,7 @@ open Membership-≡
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym)
 open import Function
 
-open import Functions public
+open import MetaAsm public
 
 open Meta public
 open Diffs public
