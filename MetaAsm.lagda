@@ -37,6 +37,8 @@ is not limited, but that's not necessary since we only care for small part
 of program lifetime that allocates finite amount of stack memory needed to
 run allocator at most ??? times.
 
+\ignore{
+
 TODO: memory, registers and stacks definition (types)
 
 ???: RegType/Type difference does not really matter
@@ -50,6 +52,8 @@ data Type : Set
 
 DataType = List Type
 \end{code}
+
+}
 
 There is another difficulty in stack definition. Stack actually serves for
 two purposes: tracking return addresses and saving stack frames with local
@@ -135,6 +139,8 @@ TODO: diffs definition
 TODO: block definition
 
 TODO: memory, registers and stacks definition
+
+\ignore{
 
 Определим тип, описывающий одно изменение списка фиксированной длины:
 в таком списке можно только менять элементы, что и требуется от регистров.
@@ -805,3 +811,4 @@ module Meta where
       Ψ'  = proj₁ (proj₂ eir)
       DS' = proj₂ (proj₂ eir)
 \end{code}
+}

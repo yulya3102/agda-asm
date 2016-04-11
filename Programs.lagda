@@ -79,6 +79,8 @@ TODO: generic code proofs (???)
 
 TODO: equivalence proof
 
+\ignore{
+
 ## Компоновка кода
 
 Преобразование памяти определяется аналогично приведенному в первой
@@ -267,3 +269,5 @@ proof : ∀ {Γ Ψ DS CS}
         (proj₂ $ loadblock (State.memory S) (func f))
 proof f S p = left (exec-plt f S p) equal
 \end{code}
+
+}

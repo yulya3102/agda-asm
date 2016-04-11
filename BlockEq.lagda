@@ -3,6 +3,8 @@
 TODO: block equivalence definition
 TODO: why it can be considered as program equivalence
 
+\ignore{
+
 ### Модуль Eq
 
 Эквивалентность блоков определяется аналогично приведенному выше.
@@ -56,3 +58,5 @@ module BlockEq
           → BlockEq S S₂ B A₂
           → BlockEq S S₁ B A₁
 \end{code}
+
+}

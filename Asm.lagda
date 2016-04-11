@@ -1,3 +1,4 @@
+\ignore{
 ## Ассемблер x86-64
 
 \ignore{
@@ -126,3 +127,4 @@ exec-instr (state Γ Ψ (v ∷ DS) CS) (pop r refl)
 open ExecBlk Instr ControlInstr exec-instr exec-control public
 open import BlockEq Block exec-block public
 \end{code}
+}
