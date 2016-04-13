@@ -1,5 +1,27 @@
 ## Typed assembly language definition
 
+As stated earlier, we need a formalisation of typed assembly language that
+looks just like real assembly language. The problem is that it's too
+hard to write it for every supported instruction set, so it would be
+reasonable to extract some common parts and make it reusable. We will refer
+to this reusable set of definitions as "meta assembly language".
+
+What differs one assembly language from another is instruction set and its
+execution semantics. Other concepts, like memory, registers and stack, are
+common and can be defined once for some supported set of assembly languages.
+
+Our meta assembly language formalises common concepts as Agda modules
+parametrised with instruction set. As a result, particular assembly
+language can be formalised with implementing its instruction set and
+importing Agda module with proper arguments.
+
+Formalised meta assembly language includes:
+
+*   basic blocks;
+*   registers and "small" values that can be contained in registers;
+*   memory and values that can be contained in it;
+*   execution semantics for given basic block.
+
 \ignore{
 \begin{code}
 module MetaAsm where
