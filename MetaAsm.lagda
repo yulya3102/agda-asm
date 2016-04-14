@@ -18,8 +18,8 @@ importing Agda module with proper arguments.
 Formalised meta assembly language includes:
 
 *   basic blocks;
-*   registers and "small" values that can be contained in registers;
-*   memory and values that can be contained in it;
+*   registers and "small" values that can be stored in registers;
+*   memory and values that can be stored in it;
 *   execution semantics for given basic block.
 
 \ignore{
@@ -36,9 +36,18 @@ open import Function
 \end{code}
 }
 
-### Machine state types
+### Core
 
-TODO: write somewhere about different sizeof(type) for different types
+The core of meta assembly language is considered common for any assembly
+language. It includes machine state and supported data types, which
+naturally fall into two categories:
+
+*   register-sized types;
+*   arbitrary-sized types.
+
+Values with types from the first category can be stored in registers, and
+values with types from the second category can be stored in memory. The
+first category is a subset of the second category.
 
 There are three common parts of machine state used in assembly languages:
 registers, memory and stack. Although stack is usually appears to be part
@@ -58,6 +67,8 @@ top of it. We could also assume that stack can grow indefinitely and memory
 is not limited, but that's not necessary since we only care for small part
 of program lifetime that allocates finite amount of stack memory needed to
 run allocator at most ??? times.
+
+TODO
 
 \ignore{
 
