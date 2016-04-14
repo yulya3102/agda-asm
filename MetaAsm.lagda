@@ -36,7 +36,7 @@ open import Function
 \end{code}
 }
 
-### Core
+### The core of assembly language
 
 The core of meta assembly language is considered common for any assembly
 language. It includes machine state and supported data types, which
@@ -77,9 +77,26 @@ is not limited, but that's not necessary since we only care for small part
 of program lifetime that allocates finite amount of stack memory needed to
 run allocator at most ??? times.
 
+There is another difficulty in stack definition. Stack actually serves for
+two purposes: tracking return addresses and saving stack frames with local
+variables. These two purposes are similar, but for type system they are
+quite different. For local variables it only should only check ???, but for
+return address it should make sure that `ret` is executed only in suitable
+machine state. So, in our model there will be two different stacks: call
+stack and data stack, with different typing rules.
+
+\begin{code}
+DataStackType : Set
+CallStackType : Set
+\end{code}
+
+TODO: callstacktype should refer to itself, but that's not problem
+
 TODO
 
 \ignore{
+
+TODO: callstacktype and datastacktype definitions
 
 TODO: memory, registers and stacks definition (types)
 
@@ -91,25 +108,6 @@ RegTypes = List RegType
 DataType = List Type
 \end{code}
 
-}
-
-There is another difficulty in stack definition. Stack actually serves for
-two purposes: tracking return addresses and saving stack frames with local
-variables. These two purposes are similar, but for type system they are
-quite different. For local variables it only should only check ???, but for
-return address it should make sure that `ret` is executed only in suitable
-machine state. So, in our model there will be two different stacks: call
-stack and data stack.
-
-TODO: callstacktype should refer to itself, but that's not problem
-
-TODO: callstacktype and datastacktype definitions
-
-\begin{code}
-DataStackType : Set
-CallStackType : Set
-\end{code}
-
 \begin{code}
 DataStackType = List RegType
 \end{code}
@@ -117,6 +115,8 @@ DataStackType = List RegType
 \begin{code}
 CallStackType = List (RegTypes × DataStackType)
 \end{code}
+
+}
 
 \ignore{
 \begin{code}
