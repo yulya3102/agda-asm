@@ -90,35 +90,48 @@ DataStackType : Set
 CallStackType : Set
 \end{code}
 
-TODO: callstacktype should refer to itself, but that's not problem
-
-TODO
-
-\ignore{
-
-TODO: callstacktype and datastacktype definitions
-
-TODO: memory, registers and stacks definition (types)
-
-???: RegType/Type difference does not really matter
+Registers, memory and data stack are typed with list of types of its elements.
 
 \begin{code}
 RegTypes = List RegType
-
 DataType = List Type
-\end{code}
-
-\begin{code}
 DataStackType = List RegType
 \end{code}
+
+TODO: how instruction pointers should be typed
+
+Call stack should be typed with list ot its elements, too. But elements of
+call stack are instruction pointers, which types include types of call
+stack itself: type of instruction pointer is a type of underlying basic
+block, type of basic block is a type of machine state required to correctly
+execute this block, and type of machine state includes type of call stack.
+Therefore, list of types of instruction pointers can't be used as call
+stack type.
+
+However, we have some knowledge about operations on call stack elements:
+an element of type `IP` from call stack can be used only when this element
+was taken from top of the stack with type `IP ∷ CS`. Typically this happens
+when `ret` instruction is executed, and execution continues with block from
+extracted instuction pointer with type `IP`. Execution can be continued
+only with block typed with current machine state type, and current machine
+state has callstack with type `CS`. Therefore, `IP` can't have callstack
+type other than `CS`.
+
+Now, we have a restriction on type of instruction pointer that allows us to
+infer its call stack type from call stack that contains it. Therefore, type
+of call stack element doesn't have to have information about its call stack
+type, and we can think that it's defined implicitly. Type of call stack
+element doesn't have to have type of memory either, because it's static and
+does not change during program lifetime. The only parts of machine state
+type that should be stored in type of call stack element are its registers
+type and data stack type:
 
 \begin{code}
 CallStackType = List (RegTypes × DataStackType)
 \end{code}
 
-}
+Machine state type is simply record of types of its parts.
 
-\ignore{
 \begin{code}
 record StateType : Set where
   constructor statetype
@@ -129,18 +142,23 @@ record StateType : Set where
     callstack : CallStackType
 \end{code}
 
+Supported register-sized types are pointers and integers.
+
 \begin{code}
 data RegType where
   _*  : Type → RegType
   int : RegType
 \end{code}
 
+The only arbitrary-sized type that is not also register type is "block
+type", which contains all parts of machine state type except for static
+memory.
+
 \begin{code}
 data Type where
   atom : RegType → Type
   block : RegTypes → DataStackType → CallStackType → Type
 \end{code}
-}
 
 \ignore{
 \begin{code}
