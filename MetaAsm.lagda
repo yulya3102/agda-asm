@@ -43,7 +43,16 @@ language. It includes machine state and supported data types, which
 naturally fall into two categories:
 
 *   register-sized types;
+
+\begin{code}
+data RegType : Set
+\end{code}
+
 *   arbitrary-sized types.
+
+\begin{code}
+data Type : Set
+\end{code}
 
 Values with types from the first category can be stored in registers, and
 values with types from the second category can be stored in memory. The
@@ -77,11 +86,7 @@ TODO: memory, registers and stacks definition (types)
 ???: RegType/Type difference does not really matter
 
 \begin{code}
-data RegType : Set
-
 RegTypes = List RegType
-
-data Type : Set
 
 DataType = List Type
 \end{code}
