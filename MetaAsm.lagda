@@ -168,17 +168,15 @@ data Maybe (A : Set) : Set where
 \end{code}
 }
 
-### Meta-assembler
+### Meta assembly language
 
-TODO: reusable agda code is nice
+The key idea of meta definitions is to define everything in terms of basic
+blocks. The defintion of basic block should have instruction set as a
+parameter, but once this parameter applied, basic block definition can be
+used in other definitions without direct dependency on particular
+instrution set.
 
-Actual assembler code has to know exact instruction set, it wouldn't make
-much sense to write any code without any knowledge about instructions. On
-the other hand, any assembler code can be represented as a sequence of
-basic blocks (?), and other concepts can be defined using basic blocks
-definition. Using this method, concepts like memory and registers can have
-block type as parameter and don't depend on instruction set directly. This
-helps to keep code much more generic.
+### Diffs
 
 \ignore{
 \begin{code}
@@ -186,49 +184,27 @@ module Diffs where
 \end{code}
 }
 
-To statically analyze types of different parts of machine state we need to
-know how blocks change them. For us to do this, type of block needs to have
-information about changes of machine state types applied by the block.
+The type of basic block should contain information about machine state type
+required to execute this block correctly. But to statically analyze
+sequence of blocks execution we need to keep track of machine state type
+changes. Consider following example:
 
-TODO: diffs definition
+    f:
+        mov rax, 42
+        jmp g
 
-TODO: block definition
+    g:
+        store ptr, rax
+        ret
 
-TODO: memory, registers and stacks definition
+Knowing types of block `f` and block `g`, we need to statically check that
+after executing block `f` machine state type will be exact the same as the
+type of block `g`. To achieve this, we will save in block type information
+about set of changes of machine type applied by the block. We will refer to
+this set of changes as "diff".
 
-\ignore{
-
-Определим тип, описывающий одно изменение списка фиксированной длины:
-в таком списке можно только менять элементы, что и требуется от регистров.
-Так как не любое изменение можно применить к произвольному списку, его
-тип должен ограничивать, к какому списку его можно применять.
-
-\begin{code}
-  module ListChg (A : Set) where
-    data Chg (Γ : List A) : Set where
-\end{code}
-
-Для того, чтобы описать изменение элемента в списке, необходимо указать,
-какая позиция меняется и на что.
-
-\begin{code}
-      chg : ∀ {τ} → τ ∈ Γ → A → Chg Γ
-\end{code}
-
-Сами по себе изменения не несут особого смысла: необходимо указать, как
-они применяются к спискам.
-
-\begin{code}
-    chgapply : (Γ : List A) → Chg Γ → List A
-    chgapply (_ ∷ Γ) (chg (here refl) σ) = σ ∷ Γ
-    chgapply (τ ∷ Γ) (chg (there p)   σ) = τ ∷ chgapply Γ (chg p σ)
-\end{code}
-
-Блок кода последовательно применяет изменения к списку регистров,
-значит, в его типе должен быть описан набор изменений.
-
-Набор изменений является общим для изменений различных видов. То, к чему
-применяется изменение, будем называть _контекстом_.
+Diff on some context consists of sequence of atomic changes. Atomic change
+type defines type of context that can be changed by this change.
 
 \begin{code}
   module DiffDefinition
@@ -236,29 +212,14 @@ TODO: memory, registers and stacks definition
     {Chg : Ctx → Set}
     (chgapply : (Γ : Ctx) → Chg Γ → Ctx)
     where
-\end{code}
-
-Так же, как и для изменения, тип набора изменений ограничивает контекст, к
-которому его можно применять.
-
-\begin{code}
     data Diff (Γ : Ctx) : Set where
-\end{code}
-
-Набор изменений — это:
-
-*   либо пустой набор;
-
-\begin{code}
       dempty  : Diff Γ
-\end{code}
-
-*   либо это изменение, добавленное перед уже имеющимся набором.
-
-\begin{code}
       dchg    : (c : Chg Γ) → Diff (chgapply Γ c) → Diff Γ
 \end{code}
 
+\ignore{
+Набор изменений является общим для изменений различных видов. То, к чему
+применяется изменение, будем называть _контекстом_.
 Для набора изменений определены несколько функций:
 
 *   применение набора к контексту — это последовательное применение всех
@@ -302,6 +263,35 @@ TODO: memory, registers and stacks definition
       = dappend-dapply-lemma (chgapply S c) d₁ d₂
 \end{code}
 
+Определим тип, описывающий одно изменение списка фиксированной длины:
+в таком списке можно только менять элементы, что и требуется от регистров.
+Так как не любое изменение можно применить к произвольному списку, его
+тип должен ограничивать, к какому списку его можно применять.
+
+\begin{code}
+  module ListChg (A : Set) where
+    data Chg (Γ : List A) : Set where
+\end{code}
+
+Для того, чтобы описать изменение элемента в списке, необходимо указать,
+какая позиция меняется и на что.
+
+\begin{code}
+      chg : ∀ {τ} → τ ∈ Γ → A → Chg Γ
+\end{code}
+
+Сами по себе изменения не несут особого смысла: необходимо указать, как
+они применяются к спискам.
+
+\begin{code}
+    chgapply : (Γ : List A) → Chg Γ → List A
+    chgapply (_ ∷ Γ) (chg (here refl) σ) = σ ∷ Γ
+    chgapply (τ ∷ Γ) (chg (there p)   σ) = τ ∷ chgapply Γ (chg p σ)
+\end{code}
+
+Блок кода последовательно применяет изменения к списку регистров,
+значит, в его типе должен быть описан набор изменений.
+
 Определение изменений для регистров используется из предыдущих реализаций.
 
 \begin{code}
@@ -314,34 +304,28 @@ TODO: memory, registers and stacks definition
 В отличие от предыдущих реализаций, в тип инструкций должны входить и стек
 вызовов, и стек данных. Это означает, что для них необходимо определить
 наборы изменений.
+}
+
+Atomic changes are defined for each machine state part. For example, atomic
+stack change includes `push` and `pop` operations.
 
 \begin{code}
   module StackDiff (A : Set) where
     data Chg (S : List A) : Set where
-\end{code}
-
-Возможными изменениями стека являются:
-
-*   добавление значения на вершину стека;
-
-\begin{code}
       push : (i : A) → Chg S
-\end{code}
-
-*   снятие значения с вершины стека, если стек не пуст.
-
-\begin{code}
       pop  : ∀ {Γ S'} → S ≡ Γ ∷ S' → Chg S
-\end{code}
 
-Определим, как изменения применяются к стеку, и используем определенный
-ранее тип набора изменений.
-
-\begin{code}
     chgapply : (S : List A) → Chg S → List A
     chgapply cs (push x) = x ∷ cs
     chgapply (._ ∷ S') (pop refl) = S'
+\end{code}
 
+TODO: block definition
+
+TODO: memory, registers and stacks definition
+
+\ignore{
+\begin{code}
     open DiffDefinition chgapply public
 \end{code}
 
