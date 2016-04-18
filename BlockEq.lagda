@@ -1,14 +1,75 @@
-## Program equivalence as block equivalence
+## Basic block equivalence and program equivalence
 
-TODO: block equivalence definition
-TODO: why it can be considered as program equivalence
+The main goal of this paper is formalisation of some program equivalence.
+But which programs should be considered equivalent? Consider following
+example:
+
+```asm
+    main:
+        mov rax, 1
+        ret
+```
+
+This program puts `1` integer value to the `rax` register. Let's change it
+a bit:
+
+```asm
+    main:
+        call f
+        mov rax, 1
+        ret
+
+    f:
+        nop
+        ret
+```
+
+These two programs are executed identically in some way: they transform
+machine state in the same way, producing same results from same initial
+machine states. To define program equivalence this way, let us define
+block equivalence first. In given two programs, `main` blocks will be
+equivalent in the same way: they produce same results from same initial
+states.
+
+Note that block type is machine state type required to correcly execute
+this block, and machine state type includes memory type. For different
+programs memory type will probably be different, therefore, blocks in
+different programs will have different types and can't be equivalent. So,
+technically, it will make sense to formalise blocks equivalence only inside
+one program. However, we can think of two different programs `A` and `B` as
+one big program `C` with blocks from `A` program and `B` program, and speak
+of block equivalence inside program `C`.
+
+Auxiliary defintion: "executable block of type `T`" is a pair of block of
+type `T` and machine state of the same type `T`. Execution of this block
+has exactly one result, even if there are conditional execution in blocks.
+Uniqueness of the block execution result allows us to reason about
+executable blocks.
+
+Two executable blocks `A` and `B` are equivalent, if there exists two
+execution sequences starting from `A` and `B`, leading to same executable
+block `C`. For example, two following blocks can be equivalent for some
+initial machine states.
+
+```asm
+    f:
+        mov rax, 2
+        ret
+```
+
+```asm
+    f:
+        mov rbx, 1
+        ret
+```
+
+In previous example, executable blocks `main` will be equivalent for any
+equivalent initial machine states. This gives us the definition of blocks
+equivalence: two blocks are equivalent, if for any equivalent initial
+machine states there exist execution sequences leading to the same
+executable block.
 
 \ignore{
-
-### Модуль Eq
-
-Эквивалентность блоков определяется аналогично приведенному выше.
-
 \begin{code}
 open import Data.Product
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym)
@@ -17,6 +78,7 @@ open import MetaAsm
 open Diffs
 open Meta
 \end{code}
+}
 
 \begin{code}
 module BlockEq
@@ -25,8 +87,13 @@ module BlockEq
               → Values.State Block (dapply ST d)
               × Σ (Diff (dapply ST d)) (Block (dapply ST d)))
   where
+\end{code}
+\ignore{
+\begin{code}
   open Values Block
-
+\end{code}
+}
+\begin{code}
   data BlockEq
     : {ST₁ ST₂ : StateType}
     → {d₁ : Diff ST₁} {d₂ : Diff ST₂}
@@ -59,4 +126,9 @@ module BlockEq
           → BlockEq S S₁ B A₁
 \end{code}
 
-}
+"The program" is a set of blocks with given start block. Two programs are
+equivalent, if their start blocks are equivalent.
+
+Defined block equivalence is special case of bisimulation relation. This
+relation is substitutive, so a block can be replaced with equivalent block
+without changing the result of execution.
