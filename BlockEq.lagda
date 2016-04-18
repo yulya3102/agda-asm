@@ -40,11 +40,65 @@ one program. However, we can think of two different programs `A` and `B` as
 one big program `C` with blocks from `A` program and `B` program, and speak
 of block equivalence inside program `C`.
 
+\ignore{
+\begin{code}
+open import Data.Product
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym)
+
+open import MetaAsm
+open Diffs
+open Meta
+\end{code}
+
+\begin{code}
+module BlockEq
+  (Block : (S : StateType) → Diff S → Set)
+  (exec-block : ∀ {ST d} → Values.State Block ST → Block ST d
+              → Values.State Block (dapply ST d)
+              × Σ (Diff (dapply ST d)) (Block (dapply ST d)))
+  where
+\end{code}
+\begin{code}
+  open Values Block
+\end{code}
+}
+
 Auxiliary defintion: "executable block of type `T`" is a pair of block of
 type `T` and machine state of the same type `T`. Execution of this block
 has exactly one result, even if there are conditional execution in blocks.
 Uniqueness of the block execution result allows us to reason about
 executable blocks.
+
+\begin{code}
+  record ExecutableBlock (ST : StateType) : Set where
+    constructor block
+    field
+      {exdiff} : Diff ST
+      exblock  : Block ST exdiff
+      exstate  : State ST
+\end{code}
+
+\ignore{
+\begin{code}
+    exec-exblock : ExecutableBlock (dapply ST exdiff)
+    exec-exblock = record { exblock = next-block ; exstate = next-state }
+      where
+      r : State (dapply ST exdiff) ×
+          Σ (Diff (dapply ST exdiff)) (Block (dapply ST exdiff))
+      r = exec-block exstate exblock
+      next-state = proj₁ r
+      next-block = proj₂ (proj₂ r)
+  open ExecutableBlock
+
+  exec-block-≡ : ∀ {ST}
+               → {d₁ : Diff ST}     → {d₂ : Diff (dapply ST d₁)}
+               → (b₁ : Block ST d₁) → (b₂ : Block (dapply ST d₁) d₂)
+               → (S₁ : State ST)    → (S₂ : State (dapply ST d₁))
+               → exec-block S₁ b₁ ≡ S₂ , d₂ , b₂
+               → exec-exblock (block b₁ S₁) ≡ block b₂ S₂
+  exec-block-≡ _ _ _ _ refl = refl
+\end{code}
+}
 
 Two executable blocks `A` and `B` are equivalent, if there exists two
 execution sequences starting from `A` and `B`, leading to same executable
@@ -67,67 +121,29 @@ In previous example, executable blocks `main` will be equivalent for any
 equivalent initial machine states. This gives us the definition of blocks
 equivalence: two blocks are equivalent, if for any equivalent initial
 machine states there exist execution sequences leading to the same
-executable block.
-
-\ignore{
-\begin{code}
-open import Data.Product
-open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym)
-
-open import MetaAsm
-open Diffs
-open Meta
-\end{code}
-}
+executable block:
 
 \begin{code}
-module BlockEq
-  (Block : (S : StateType) → Diff S → Set)
-  (exec-block : ∀ {ST d} → Values.State Block ST → Block ST d
-              → Values.State Block (dapply ST d)
-              × Σ (Diff (dapply ST d)) (Block (dapply ST d)))
-  where
-\end{code}
-\ignore{
-\begin{code}
-  open Values Block
-\end{code}
-}
-\begin{code}
-  record ExecutableBlock (ST : StateType) : Set where
-    constructor block
-    field
-      {exdiff} : Diff ST
-      exblock  : Block ST exdiff
-      exstate  : State ST
-
-    exec-exblock : ExecutableBlock (dapply ST exdiff)
-    exec-exblock = record { exblock = next-block ; exstate = next-state }
-      where
-      r : State (dapply ST exdiff) ×
-          Σ (Diff (dapply ST exdiff)) (Block (dapply ST exdiff))
-      r = exec-block exstate exblock
-      next-state = proj₁ r
-      next-block = proj₂ (proj₂ r)
-  open ExecutableBlock
-
-  exec-block-≡ : ∀ {ST}
-               → {d₁ : Diff ST}     → {d₂ : Diff (dapply ST d₁)}
-               → (b₁ : Block ST d₁) → (b₂ : Block (dapply ST d₁) d₂)
-               → (S₁ : State ST)    → (S₂ : State (dapply ST d₁))
-               → exec-block S₁ b₁ ≡ S₂ , d₂ , b₂
-               → exec-exblock (block b₁ S₁) ≡ block b₂ S₂
-  exec-block-≡ _ _ _ _ refl = refl
-
   data BlockEq
     : {ST₁ ST₂ : StateType}
     → ExecutableBlock ST₁
     → ExecutableBlock ST₂
     → Set
     where
+\end{code}
+
+*   execution sequence can be empty if executable blocks are already same;
+
+\begin{code}
     equal : ∀ {ST}
           → {A : ExecutableBlock ST}
           → BlockEq A A
+\end{code}
+
+*   execution sequence include execution of the first block if second block
+    and result of execution of the first block are equivalent;
+
+\begin{code}
     left  : ∀ {ST₁ ST}
           → {A₁ : ExecutableBlock ST₁}
           → {A₂ : ExecutableBlock (dapply ST₁ (exdiff A₁))}
@@ -135,6 +151,13 @@ module BlockEq
           → exec-exblock A₁ ≡ A₂
           → BlockEq A₂ B
           → BlockEq A₁ B
+\end{code}
+
+*   and vice versa, execution sequence include execution of the second
+    block if first block and result of execution of the second block are
+    equivalent.
+
+\begin{code}
     right : ∀ {ST₁ ST}
           → {A₁ : ExecutableBlock ST₁}
           → {A₂ : ExecutableBlock (dapply ST₁ (exdiff A₁))}
