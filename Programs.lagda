@@ -264,9 +264,9 @@ proof : ∀ {Γ Ψ DS CS}
       → (f : block Γ DS CS ∈ Ψ)
       → (S : State (statetype Γ (pltize Ψ) DS CS))
       → GOT[ f ]-correctness (State.memory S)
-      → BlockEq S S
-        (plt-stub (got f))
-        (proj₂ $ loadblock (State.memory S) (func f))
+      → BlockEq
+        (block (plt-stub (got f)) S)
+        (block (proj₂ $ loadblock (State.memory S) (func f)) S)
 proof f S p = left (exec-plt f S p) equal
 \end{code}
 

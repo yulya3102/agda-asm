@@ -94,16 +94,22 @@ module BlockEq
 \end{code}
 }
 \begin{code}
+  record ExecutableBlock (ST : StateType) : Set where
+    constructor block
+    field
+      {d}     : Diff ST
+      exblock : Block ST d
+      exstate : State ST
+
   data BlockEq
     : {ST₁ ST₂ : StateType}
-    → {d₁ : Diff ST₁} {d₂ : Diff ST₂}
-    → (S₁ : State ST₁) (S₂ : State ST₂)
-    → Block ST₁ d₁ → Block ST₂ d₂
+    → ExecutableBlock ST₁
+    → ExecutableBlock ST₂
     → Set
     where
     equal : ∀ {ST}
           → {S : State ST} {d : Diff ST} {A : Block ST d}
-          → BlockEq S S A A
+          → BlockEq (block A S) (block A S)
     left  : ∀ {ST₁ ST}
           → {d₁ : Diff ST₁} {d₂ : Diff (dapply ST₁ d₁)}
           → {d : Diff ST}
@@ -112,8 +118,8 @@ module BlockEq
           → {A₁ : Block ST₁ d₁} {A₂ : Block (dapply ST₁ d₁) d₂}
           → {B : Block ST d}
           → exec-block S₁ A₁ ≡ S₂ , d₂ , A₂
-          → BlockEq S₂ S A₂ B
-          → BlockEq S₁ S A₁ B
+          → BlockEq (block A₂ S₂) (block B S)
+          → BlockEq (block A₁ S₁) (block B S)
     right : ∀ {ST₁ ST}
           → {d₁ : Diff ST₁} {d₂ : Diff (dapply ST₁ d₁)}
           → {d : Diff ST}
@@ -122,8 +128,8 @@ module BlockEq
           → {A₁ : Block ST₁ d₁} {A₂ : Block (dapply ST₁ d₁) d₂}
           → {B : Block ST d}
           → exec-block S₁ A₁ ≡ S₂ , d₂ , A₂
-          → BlockEq S S₂ B A₂
-          → BlockEq S S₁ B A₁
+          → BlockEq (block B S) (block A₂ S₂)
+          → BlockEq (block B S) (block A₁ S₁)
 \end{code}
 
 "The program" is a set of blocks with given start block. Two programs are
