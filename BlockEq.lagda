@@ -97,9 +97,27 @@ module BlockEq
   record ExecutableBlock (ST : StateType) : Set where
     constructor block
     field
-      {d}     : Diff ST
-      exblock : Block ST d
-      exstate : State ST
+      {exdiff} : Diff ST
+      exblock  : Block ST exdiff
+      exstate  : State ST
+
+    exec-exblock : ExecutableBlock (dapply ST exdiff)
+    exec-exblock = record { exblock = next-block ; exstate = next-state }
+      where
+      r : State (dapply ST exdiff) ×
+          Σ (Diff (dapply ST exdiff)) (Block (dapply ST exdiff))
+      r = exec-block exstate exblock
+      next-state = proj₁ r
+      next-block = proj₂ (proj₂ r)
+  open ExecutableBlock
+
+  exec-block-≡ : ∀ {ST}
+               → {d₁ : Diff ST}     → {d₂ : Diff (dapply ST d₁)}
+               → (b₁ : Block ST d₁) → (b₂ : Block (dapply ST d₁) d₂)
+               → (S₁ : State ST)    → (S₂ : State (dapply ST d₁))
+               → exec-block S₁ b₁ ≡ S₂ , d₂ , b₂
+               → exec-exblock (block b₁ S₁) ≡ block b₂ S₂
+  exec-block-≡ _ _ _ _ refl = refl
 
   data BlockEq
     : {ST₁ ST₂ : StateType}
@@ -108,28 +126,22 @@ module BlockEq
     → Set
     where
     equal : ∀ {ST}
-          → {S : State ST} {d : Diff ST} {A : Block ST d}
-          → BlockEq (block A S) (block A S)
+          → {A : ExecutableBlock ST}
+          → BlockEq A A
     left  : ∀ {ST₁ ST}
-          → {d₁ : Diff ST₁} {d₂ : Diff (dapply ST₁ d₁)}
-          → {d : Diff ST}
-          → {S₁ : State ST₁} {S₂ : State (dapply ST₁ d₁)}
-          → {S : State ST}
-          → {A₁ : Block ST₁ d₁} {A₂ : Block (dapply ST₁ d₁) d₂}
-          → {B : Block ST d}
-          → exec-block S₁ A₁ ≡ S₂ , d₂ , A₂
-          → BlockEq (block A₂ S₂) (block B S)
-          → BlockEq (block A₁ S₁) (block B S)
+          → {A₁ : ExecutableBlock ST₁}
+          → {A₂ : ExecutableBlock (dapply ST₁ (exdiff A₁))}
+          → {B : ExecutableBlock ST}
+          → exec-exblock A₁ ≡ A₂
+          → BlockEq A₂ B
+          → BlockEq A₁ B
     right : ∀ {ST₁ ST}
-          → {d₁ : Diff ST₁} {d₂ : Diff (dapply ST₁ d₁)}
-          → {d : Diff ST}
-          → {S₁ : State ST₁} {S₂ : State (dapply ST₁ d₁)}
-          → {S : State ST}
-          → {A₁ : Block ST₁ d₁} {A₂ : Block (dapply ST₁ d₁) d₂}
-          → {B : Block ST d}
-          → exec-block S₁ A₁ ≡ S₂ , d₂ , A₂
-          → BlockEq (block B S) (block A₂ S₂)
-          → BlockEq (block B S) (block A₁ S₁)
+          → {A₁ : ExecutableBlock ST₁}
+          → {A₂ : ExecutableBlock (dapply ST₁ (exdiff A₁))}
+          → {B : ExecutableBlock ST}
+          → exec-exblock A₁ ≡ A₂
+          → BlockEq B A₂
+          → BlockEq B A₁
 \end{code}
 
 "The program" is a set of blocks with given start block. Two programs are
