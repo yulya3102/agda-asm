@@ -15,7 +15,6 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; cong)
 open import MetaAsm
 open import Asm
 \end{code}
-}
 
 We will think of program as of binary loaded to memory. Due to this
 assumption we can ignore memory mapping problems. With this assumption, we
@@ -78,8 +77,6 @@ TODO: GOT-correctness
 TODO: generic code proofs (???)
 
 TODO: equivalence proof
-
-\ignore{
 
 ## Компоновка кода
 

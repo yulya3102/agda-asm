@@ -24,6 +24,9 @@ almost like x86-84 assembly language that makes it suitable for reasoning
 about linkers. This language differs from actual x86-64 assembly language
 in instructions that involve control flow and concept of basic blocks.
 
+TODO
+
+\ignore{
 \begin{code}
 data ControlInstr (S : StateType) : Maybe (CallStackChg S) → Set
 data Instr (S : StateType) : SmallChg S → Set
@@ -32,7 +35,6 @@ open Blocks ControlInstr Instr public
 open Values Block public
 \end{code}
 
-\ignore{
 Как было сказано ранее, определяемые инструкции могут не совпадать с
 имеющимися в реальном ассемблере. Такой инструкцией является, например,
 инструкция `call`. Дополнительным параметром она принимает указатель на
