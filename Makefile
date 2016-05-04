@@ -28,6 +28,7 @@ checkall:
 
 main.latex: $(SOURCES) sigplanconf-template.tex
 	pandoc \
+		-R \
 		--template=sigplanconf-template.tex \
 		-o $@ \
 		$(SOURCES)
