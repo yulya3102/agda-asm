@@ -200,6 +200,11 @@ pltize-idata Δ (_∷_ {block Γ DS CS} {τs} (block x) Ψ)
 
 pltize-data : ∀ {Ψ} → Data Ψ → Data (pltize Ψ)
 pltize-data = pltize-idata []
+
+dynamic : ∀ {ST} → Program ST → Program (pltize-state ST)
+dynamic (program memory start)
+  -- TODO: replace every `call f` with `call (plt f)`
+  = program (pltize-data memory) (func start)
 \end{code}
 
 Опишем важное свойство: элемент GOT корректно заполнен, если в нём
@@ -265,6 +270,8 @@ proof : ∀ {Γ Ψ DS CS}
         (block (plt-stub (got f)) S)
         (block (proj₂ $ loadblock (State.memory S) (func f)) S)
 proof f S p = left (exec-block-≡ (plt-stub (got f)) _ S S (exec-plt f S p)) equal
+
+-- TODO: program equivalence
 \end{code}
 
 }
