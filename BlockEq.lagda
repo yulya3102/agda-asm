@@ -124,7 +124,7 @@ machine states there exist execution sequences leading to the same
 executable block:
 
 \begin{code}
-  data BlockEq
+  data ExBlockEq
     : {ST₁ ST₂ : StateType}
     → ExecutableBlock ST₁
     → ExecutableBlock ST₂
@@ -137,7 +137,7 @@ executable block:
 \begin{code}
     equal : ∀ {ST}
           → {A : ExecutableBlock ST}
-          → BlockEq A A
+          → ExBlockEq A A
 \end{code}
 
 *   execution sequence include execution of the first block if second block
@@ -149,8 +149,8 @@ executable block:
           → {A₂ : ExecutableBlock (dapply ST₁ (exdiff A₁))}
           → {B : ExecutableBlock ST}
           → exec-exblock A₁ ≡ A₂
-          → BlockEq A₂ B
-          → BlockEq A₁ B
+          → ExBlockEq A₂ B
+          → ExBlockEq A₁ B
 \end{code}
 
 *   and vice versa, execution sequence include execution of the second
@@ -163,6 +163,6 @@ executable block:
           → {A₂ : ExecutableBlock (dapply ST₁ (exdiff A₁))}
           → {B : ExecutableBlock ST}
           → exec-exblock A₁ ≡ A₂
-          → BlockEq B A₂
-          → BlockEq B A₁
+          → ExBlockEq B A₂
+          → ExBlockEq B A₁
 \end{code}
