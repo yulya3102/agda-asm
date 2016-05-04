@@ -26,8 +26,8 @@ checkall:
 %.latex: %.md
 	pandoc $^ -o $@
 
-main.latex: $(SOURCES) include.tex
+main.latex: $(SOURCES) sigplanconf-template.tex
 	pandoc \
-		--include-in-header=include.tex \
+		--template=sigplanconf-template.tex \
 		-o $@ \
 		$(SOURCES)
