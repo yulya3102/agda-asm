@@ -224,6 +224,12 @@ GOT[_]-correctness : ∀ {Γ Ψ DS CS}
                    → (H : Data (pltize Ψ))
                    → Set
 GOT[ f ]-correctness H = loadptr H (got f) ≡ func f
+
+PLT[_]-correctness : ∀ {Γ Ψ DS CS}
+                   → (f : block Γ DS CS ∈ Ψ)
+                   → (H : Data (pltize Ψ))
+                   → Set
+PLT[ f ]-correctness H = loadblock H (plt f) ≡ dempty , plt-stub (got f)
 \end{code}
 
 ## Доказательства
@@ -269,14 +275,32 @@ exec-plt f S p rewrite sym p = exec-ijmp S (got f)
 функции элемент GOT, и самой функции:
 
 \begin{code}
-proof : ∀ {Γ Ψ DS CS}
+lemma : ∀ {Γ Ψ DS CS}
       → (f : block Γ DS CS ∈ Ψ)
       → (S : State (statetype Γ (pltize Ψ) DS CS))
       → GOT[ f ]-correctness (State.memory S)
       → ExBlockEq
         (block (plt-stub (got f)) S)
         (block (proj₂ $ loadblock (State.memory S) (func f)) S)
-proof f S p = left (exec-block-≡ (plt-stub (got f)) _ S S (exec-plt f S p)) equal
+lemma f S p = left (exec-block-≡ (plt-stub (got f)) _ S S (exec-plt f S p)) equal
+
+proof : ∀ {Γ Ψ DS CS}
+      → (f : block Γ DS CS ∈ Ψ)
+      → BlockEqAssuming
+        (λ S → (GOT[ f ]-correctness $ State.memory S)
+             × (PLT[ f ]-correctness $ State.memory S))
+        (plt f)
+        (func f)
+proof {Γ} {Ψ} {DS} {CS} f = block-eq-assuming lemma2
+  where
+    ST = statetype Γ Ψ DS CS
+    lemma2 : (S : State $ pltize-state ST)
+           → (GOT[ f ]-correctness $ State.memory S)
+           × (PLT[ f ]-correctness $ State.memory S)
+           → ExBlockEq (block (proj₂ $ loadblock (State.memory S) (plt f)) S)
+                       (block (proj₂ $ loadblock (State.memory S) (func f)) S)
+    lemma2 S (got-correctness , plt-correctness)
+      rewrite plt-correctness = lemma f S got-correctness
 
 -- TODO: program equivalence
 \end{code}

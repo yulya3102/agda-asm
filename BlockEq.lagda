@@ -43,7 +43,9 @@ of block equivalence inside program `C`.
 \ignore{
 \begin{code}
 open import Data.Product
+open import Data.Unit
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym)
+open import Function
 
 open import MetaAsm
 open Diffs
@@ -165,4 +167,37 @@ executable block:
           → exec-exblock A₁ ≡ A₂
           → ExBlockEq B A₂
           → ExBlockEq B A₁
+\end{code}
+
+TODO
+
+\begin{code}
+  record BlockEqAssuming
+    {ST : StateType}
+    (assumption : State ST → Set)
+    (A : IPST ST)
+    (B : IPST ST)
+    : Set₁
+    where
+    constructor block-eq-assuming
+    field
+      eq : (S : State ST) → assumption S
+         → ExBlockEq (block (proj₂ $ loadblock (State.memory S) A) S)
+                     (block (proj₂ $ loadblock (State.memory S) B) S)
+  open BlockEqAssuming public
+
+  BlockEq : {ST : StateType}
+          → (A : IPST ST)
+          → (B : IPST ST)
+          → Set₁
+  BlockEq A B = BlockEqAssuming (λ S → ⊤) A B
+
+  block-eq : {ST : StateType}
+           → {A : IPST ST}
+           → {B : IPST ST}
+           → ((S : State ST)
+             → ExBlockEq (block (proj₂ $ loadblock (State.memory S) A) S)
+                         (block (proj₂ $ loadblock (State.memory S) B) S))
+           → BlockEq A B
+  block-eq eq = block-eq-assuming (λ S _ → eq S)
 \end{code}

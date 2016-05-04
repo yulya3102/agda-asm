@@ -643,6 +643,9 @@ module Meta where
          → CallStackType
          → Set
     IPRT Ψ Γ DS CS = block Γ DS CS ∈ Ψ
+
+    IPST : StateType → Set
+    IPST (statetype Γ Ψ DS CS) = IPRT Ψ Γ DS CS
 \end{code}
 
 Стек вызовов — список типизированных instruction pointer-ов.  Ранее было
