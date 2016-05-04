@@ -166,10 +166,3 @@ executable block:
           → BlockEq B A₂
           → BlockEq B A₁
 \end{code}
-
-"The program" is a set of blocks with given start block. Two programs are
-equivalent, if their start blocks are equivalent.
-
-Defined block equivalence is special case of bisimulation relation. This
-relation is substitutive, so a block can be replaced with equivalent block
-without changing the result of execution.

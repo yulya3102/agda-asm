@@ -32,6 +32,13 @@ record Program (ST : StateType) : Set where
                   (StateType.callstack ST)
 \end{code}
 
+"The program" is a set of blocks with given start block. Two programs are
+equivalent, if their start blocks are equivalent.
+
+Defined block equivalence is special case of bisimulation relation. This
+relation is substitutive, so a block can be replaced with equivalent block
+without changing the result of execution.
+
 ## Static vs. dynamic linking
 
 Statically linked program is just all binaries merged together without any
