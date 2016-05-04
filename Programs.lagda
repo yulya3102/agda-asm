@@ -35,6 +35,14 @@ record Program (ST : StateType) : Set where
 "The program" is a set of blocks with given start block. Two programs are
 equivalent, if their start blocks are equivalent.
 
+\begin{code}
+record ProgramEq {ST : StateType} (P₁ P₂ : Program ST) : Set₁ where
+  constructor program-eq
+  field
+    start-eq : BlockEq (Program.start P₁)
+                       (Program.start P₂)
+\end{code}
+
 Defined block equivalence is special case of bisimulation relation. This
 relation is substitutive, so a block can be replaced with equivalent block
 without changing the result of execution.
