@@ -3,11 +3,11 @@ all: main.pdf
 AGDA_INCLUDE = -i . -i ./agda-stdlib/src
 
 SOURCES = \
-	Intro.md \
-	MetaAsm.md \
-	BlockEq.md \
-	Asm.md \
-	Programs.md
+	Intro.latex \
+	MetaAsm.latex \
+	BlockEq.latex \
+	Asm.latex \
+	Programs.latex
 
 %.tex: %.lagda
 	agda $(AGDA_INCLUDE) --latex --latex-dir . --allow-unsolved-metas $<
@@ -17,11 +17,17 @@ SOURCES = \
 checkall:
 	agda $(AGDA_INCLUDE) --allow-unsolved-metas Programs.lagda
 
-%.pdf: %.md include.tex
-	pandoc -w latex --include-in-header include.tex --latex-engine xelatex $< -o $@
+%.pdf: %.latex
+	xelatex $<
 
 %.md: %.tex
 	cp $< $@
 
-main.md: $(SOURCES)
+%.latex: %.md
 	pandoc $^ -o $@
+
+main.latex: $(SOURCES) include.tex
+	pandoc \
+		--include-in-header=include.tex \
+		-o $@ \
+		$(SOURCES)
