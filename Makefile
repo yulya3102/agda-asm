@@ -21,7 +21,7 @@ checkall:
 	pandoc -w latex --include-in-header include.tex --latex-engine xelatex $< -o $@
 
 %.md: %.tex
-	mv $< $@
+	cp $< $@
 
 main.md: $(SOURCES)
 	pandoc $^ -o $@
