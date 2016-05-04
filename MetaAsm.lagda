@@ -1,3 +1,4 @@
+\ignore{
 ## Typed assembly language definition
 
 As stated earlier, we need a formalisation of typed assembly language that
@@ -22,7 +23,6 @@ Formalised meta assembly language includes:
 *   memory and values that can be stored in it;
 *   execution semantics for given basic block.
 
-\ignore{
 \begin{code}
 module MetaAsm where
 
@@ -34,7 +34,6 @@ open import Data.Product
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym)
 open import Function
 \end{code}
-}
 
 ### The core of assembly language
 
@@ -854,4 +853,5 @@ module Meta where
       Ψ'  = proj₁ (proj₂ eir)
       DS' = proj₂ (proj₂ eir)
 \end{code}
+}
 }

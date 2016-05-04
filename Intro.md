@@ -1,13 +1,12 @@
+\ignore{
 ## Introduction
 
 TODO
 
-\ignore{
 (TODO something about low-level memory problems) However, discussed in this
 paper properties of dynamic linking does not require dynamic memory
 management. Keeping that in mind, we can assume that all memory is static
 and no allocation is taken.
-}
 
 ## Who needs this and who did something related
 
@@ -43,3 +42,4 @@ addressable data and addressable code.
 In dynamic linking addresses of loaded code are stored in runtime in global
 offset table (GOT), and indirect jumps to GOT entries happen instead of
 direct call to functions.
+}

@@ -1,3 +1,4 @@
+\ignore{
 ## Basic block equivalence and program equivalence
 
 The main goal of this paper is formalisation of some program equivalence.
@@ -40,7 +41,6 @@ one program. However, we can think of two different programs `A` and `B` as
 one big program `C` with blocks from `A` program and `B` program, and speak
 of block equivalence inside program `C`.
 
-\ignore{
 \begin{code}
 open import Data.Product
 open import Data.Unit
@@ -63,7 +63,6 @@ module BlockEq
 \begin{code}
   open Values Block
 \end{code}
-}
 
 Auxiliary defintion: "executable block of type `T`" is a pair of block of
 type `T` and machine state of the same type `T`. Execution of this block
@@ -201,3 +200,4 @@ TODO
            → BlockEq A B
   block-eq eq = block-eq-assuming (λ S _ → eq S)
 \end{code}
+}

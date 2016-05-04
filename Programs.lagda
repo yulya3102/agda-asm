@@ -1,6 +1,6 @@
+\ignore{
 ## Programs
 
-\ignore{
 \begin{code}
 module Programs where
 

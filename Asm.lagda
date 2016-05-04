@@ -1,6 +1,6 @@
+\ignore{
 ## x86-64-like assembly language
 
-\ignore{
 \begin{code}
 module Asm where
 
@@ -16,7 +16,6 @@ open import MetaAsm public
 open Meta public
 open Diffs public
 \end{code}
-}
 
 Using framework described above, we can define subset of assembly language
 large enough to formalise dynamic linking ABI. This assembly language looks
@@ -26,7 +25,6 @@ in instructions that involve control flow and concept of basic blocks.
 
 TODO
 
-\ignore{
 \begin{code}
 data ControlInstr (S : StateType) : Maybe (CallStackChg S) → Set
 data Instr (S : StateType) : SmallChg S → Set
