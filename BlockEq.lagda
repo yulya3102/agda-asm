@@ -1,3 +1,5 @@
+# Эквивалентность программ
+
 \ignore{
 ## Basic block equivalence and program equivalence
 
