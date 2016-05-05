@@ -1,8 +1,8 @@
 \ignore{
-## Programs
+## Linkers
 
 \begin{code}
-module Programs where
+module Linkers where
 
 open import Function
 open import Data.Product

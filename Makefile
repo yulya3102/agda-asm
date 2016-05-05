@@ -7,7 +7,7 @@ SOURCES = \
 	MetaAsm.latex \
 	BlockEq.latex \
 	Asm.latex \
-	Programs.latex
+	Linkers.latex
 
 %.tex: %.lagda
 	agda $(AGDA_INCLUDE) --latex --latex-dir . --allow-unsolved-metas $<
@@ -15,7 +15,7 @@ SOURCES = \
 .PHONY: checkall
 
 checkall:
-	agda $(AGDA_INCLUDE) --allow-unsolved-metas Programs.lagda
+	agda $(AGDA_INCLUDE) --allow-unsolved-metas Linkers.lagda
 
 %.pdf: %.latex
 	xelatex $<
