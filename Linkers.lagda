@@ -68,6 +68,7 @@ TODO: equivalence proof
 Преобразование памяти определяется аналогично приведенному в первой
 реализации.  Все, кроме блоков, остается неизменным, а на каждый блок
 дополнительно добавляются элементы PLT и GOT.
+}
 
 \begin{code}
 pltize : DataType → DataType
@@ -114,7 +115,10 @@ func (here refl) = there (there (here refl))
 func {Ψ = atom x ∷ Ψ} (there f) = there $ func f
 func {Ψ = block Γ DS CS ∷ Ψ} (there f)
   = there (there (there (func f)))
+\end{code}
 
+\ignore{
+\begin{code}
 pltize-ptr : ∀ {Ψ τ} → τ ∈ Ψ → τ ∈ pltize Ψ
 pltize-ptr {[]} ()
 pltize-ptr {_ ∷ Ψ} {atom _}      (here refl) = here refl
@@ -261,7 +265,10 @@ lemma : ∀ {Γ Ψ DS CS}
         (block (plt-stub (got f)) S)
         (block (proj₂ $ loadblock (State.memory S) (func f)) S)
 lemma f S p = left (exec-block-≡ (plt-stub (got f)) _ S S (exec-plt f S p)) equal
+\end{code}
+}
 
+\begin{code}
 proof : ∀ {Γ Ψ DS CS}
       → (f : block Γ DS CS ∈ Ψ)
       → BlockEqAssuming
@@ -279,8 +286,8 @@ proof {Γ} {Ψ} {DS} {CS} f = block-eq-assuming lemma2
                        (block (proj₂ $ loadblock (State.memory S) (func f)) S)
     lemma2 S (got-correctness , plt-correctness)
       rewrite plt-correctness = lemma f S got-correctness
-
--- TODO: program equivalence
 \end{code}
 
-}
+\begin{code}
+-- TODO: program equivalence
+\end{code}

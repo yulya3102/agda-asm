@@ -124,6 +124,7 @@ equivalent initial machine states. This gives us the definition of blocks
 equivalence: two blocks are equivalent, if for any equivalent initial
 machine states there exist execution sequences leading to the same
 executable block:
+}
 
 \begin{code}
   data ExBlockEq
@@ -169,6 +170,7 @@ executable block:
           → ExBlockEq B A₁
 \end{code}
 
+\ignore{
 \begin{code}
   isEquivalence : ∀ {ST} → IsEquivalence (ExBlockEq {ST})
   isEquivalence = record
@@ -197,6 +199,7 @@ executable block:
 \end{code}
 
 TODO
+}
 
 \begin{code}
   record BlockEqAssuming
@@ -212,7 +215,10 @@ TODO
          → ExBlockEq (block (proj₂ $ loadblock (State.memory S) A) S)
                      (block (proj₂ $ loadblock (State.memory S) B) S)
   open BlockEqAssuming public
+\end{code}
 
+\ignore{
+\begin{code}
   BlockEq : {ST : StateType}
           → (A : IPST ST)
           → (B : IPST ST)
