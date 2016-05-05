@@ -7,6 +7,7 @@ SOURCES = \
 	MetaAsm.latex \
 	BlockEq.latex \
 	Asm.latex \
+	Programs.latex \
 	Linkers.latex
 
 %.tex: %.lagda
