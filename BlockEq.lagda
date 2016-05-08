@@ -98,7 +98,7 @@ executable blocks.
                → {d₁ : Diff ST}     → {d₂ : Diff (dapply ST d₁)}
                → (b₁ : Block ST d₁) → (b₂ : Block (dapply ST d₁) d₂)
                → (S₁ : State ST)    → (S₂ : State (dapply ST d₁))
-               → exec-block S₁ b₁ ≡ S₂ , d₂ , b₂
+               → exec-block S₁ b₁ ≡ (S₂ , d₂ , b₂)
                → exec-exblock (block b₁ S₁) ≡ block b₂ S₂
   exec-block-≡ _ _ _ _ refl = refl
 \end{code}

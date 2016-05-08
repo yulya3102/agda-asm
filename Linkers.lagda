@@ -213,7 +213,7 @@ PLT[_]-correctness : ∀ {Γ Ψ DS CS}
                    → (f : block Γ DS CS ∈ Ψ)
                    → (H : Data (pltize Ψ))
                    → Set
-PLT[ f ]-correctness H = loadblock H (plt f) ≡ dempty , plt-stub (got f)
+PLT[ f ]-correctness H = loadblock H (plt f) ≡ (dempty , plt-stub (got f))
 \end{code}
 
 ## Доказательства
@@ -233,10 +233,10 @@ exec-ijmp : ∀ {ST} → (S : State ST)
                (StateType.callstack ST)
              *) ∈ StateType.memory ST)
           → exec-block S (↝ jmp[ p ])
-          ≡ S
+          ≡ (S
           , loadblock
             (State.memory S)
-            (loadptr (State.memory S) p)
+            (loadptr (State.memory S) p))
 exec-ijmp S p = refl
 \end{code}
 
@@ -250,7 +250,7 @@ exec-plt : ∀ {Γ Ψ DS CS}
          → (S : State (statetype Γ (pltize Ψ) DS CS))
          → GOT[ f ]-correctness (State.memory S)
          → exec-block S (plt-stub (got f))
-         ≡ S , loadblock (State.memory S) (func f)
+         ≡ (S , loadblock (State.memory S) (func f))
 exec-plt f S p rewrite sym p = exec-ijmp S (got f)
 \end{code}
 
