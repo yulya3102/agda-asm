@@ -56,6 +56,9 @@ MTAL. На этом всем определяется, какие элемент
 данных. Пожалуй, больше ничем существенным формализация от TAL не
 отличается.
 
+Никаких кусков кода пока тут нет, потому что пока не очень понятно, что
+здесь должно быть.
+
 \ignore{
 (TODO something about low-level memory problems) However, discussed in this
 paper properties of dynamic linking does not require dynamic memory

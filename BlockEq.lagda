@@ -1,11 +1,17 @@
 # Эквивалентность программ
 
+Чтобы доказать какую-то там эквивалентность, надо определить эту самую
+эквивалентность!
+
 \ignore{
 ## Basic block equivalence and program equivalence
 
 The main goal of this paper is formalisation of some program equivalence.
 But which programs should be considered equivalent? Consider following
 example:
+}
+
+Мотивирующий пример, программа, кладущая число `1` в регистр `rax`:
 
 ```asm
     main:
@@ -13,8 +19,12 @@ example:
         ret
 ```
 
+Слегка изменим эту программу:
+
+\ignore{
 This program puts `1` integer value to the `rax` register. Let's change it
 a bit:
+}
 
 ```asm
     main:
@@ -27,6 +37,20 @@ a bit:
         ret
 ```
 
+Эти программы исполняются одинаково в смысле семантики большого шага:
+одинаковые начальные состояния исполнителя они преобразуют в одинаковые
+конечные состояния исполнителя. Чтобы определить эквивалентность программ
+таким образом, сначала определим эквивалентность блоков. В указанных
+программах блоки `main` будут эквивалентны в том же смысле: они дают
+одинаковые результаты из одинаковых начальных состояний.
+
+Тут надо сказать, что эквивалентность программ в таком виде хрен
+определишь, потому что, как минимум, в них блоки будут иметь разные типы
+(так как тип блока включает в себя тип памяти, а память у разных программ
+разная). Вообще, с эквивалентностью программ надо бы перестать махать
+руками и сделать что-то формализованное.
+
+\ignore{
 These two programs are executed identically in some way: they transform
 machine state in the same way, producing same results from same initial
 machine states. To define program equivalence this way, let us define
@@ -72,6 +96,13 @@ type `T` and machine state of the same type `T`. Execution of this block
 has exactly one result, even if there are conditional execution in blocks.
 Uniqueness of the block execution result allows us to reason about
 executable blocks.
+}
+
+Вспомогательное определение: "исполняемый блок" --- это пара из блока и
+состояния исполнителя соответствующего типа. Прикол тут в том, что
+блок, исполняемый в заданном состоянии исполнителя, будет давать ровно один
+результат, даже если сам блок содержит условные переходы. Единственность
+результата позволяет как-то рассуждать об исполнении блоков.
 
 \begin{code}
   record ExecutableBlock (ST : StateType) : Set where
@@ -82,9 +113,15 @@ executable blocks.
       exstate  : State ST
 \end{code}
 
-\ignore{
+Результатом исполнения исполняемого блока является следующий исполняемый
+блок.
+
 \begin{code}
     exec-exblock : ExecutableBlock (dapply ST exdiff)
+\end{code}
+
+\ignore{
+\begin{code}
     exec-exblock = record { exblock = next-block ; exstate = next-state }
       where
       r : State (dapply ST exdiff) ×
@@ -104,6 +141,9 @@ executable blocks.
 \end{code}
 }
 
+Тут текст на тему того, почему определение ExBlockEq выглядит именно так.
+
+\ignore{
 Two executable blocks `A` and `B` are equivalent, if there exists two
 execution sequences starting from `A` and `B`, leading to same executable
 block `C`. For example, two following blocks can be equivalent for some
@@ -137,7 +177,9 @@ executable block:
     where
 \end{code}
 
+\ignore{
 *   execution sequence can be empty if executable blocks are already same;
+}
 
 \begin{code}
     equal : ∀ {ST}
@@ -145,8 +187,10 @@ executable block:
           → ExBlockEq A A
 \end{code}
 
+\ignore{
 *   execution sequence include execution of the first block if second block
     and result of execution of the first block are equivalent;
+}
 
 \begin{code}
     left  : ∀ {ST₁ ST}
@@ -158,9 +202,11 @@ executable block:
           → ExBlockEq A₁ B
 \end{code}
 
+\ignore{
 *   and vice versa, execution sequence include execution of the second
     block if first block and result of execution of the second block are
     equivalent.
+}
 
 \begin{code}
     right : ∀ {ST₁ ST}
@@ -171,6 +217,10 @@ executable block:
           → ExBlockEq B A₂
           → ExBlockEq B A₁
 \end{code}
+
+Еще есть доказательство того, что это определение действительно является
+отношением эквивалентности, но по факту оно нигде дальше не используется,
+потому я не знаю, надо ли его сюда.
 
 \ignore{
 \begin{code}
@@ -199,9 +249,11 @@ executable block:
     exblock-eq-trans ab equal = ab
     exblock-eq-trans ab (right p bc) = right p (exblock-eq-trans ab bc)
 \end{code}
-
-TODO
 }
+
+Эквивалентность (не исполняемых) блоков в некотором предположении. Дальше
+будет исплоьзоваться для доказательства эквивалентности функции и ее
+PLT-блока в предположении корректно заполненной памяти.
 
 \begin{code}
   record BlockEqAssuming
@@ -216,10 +268,13 @@ TODO
       eq : (S : State ST) → assumption S
          → ExBlockEq (block (proj₂ $ loadblock (State.memory S) A) S)
                      (block (proj₂ $ loadblock (State.memory S) B) S)
-  open BlockEqAssuming public
 \end{code}
 
 \ignore{
+\begin{code}
+  open BlockEqAssuming public
+\end{code}
+
 \begin{code}
   BlockEq : {ST : StateType}
           → (A : IPST ST)

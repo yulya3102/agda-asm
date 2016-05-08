@@ -290,6 +290,9 @@ proof {Γ} {Ψ} {DS} {CS} f = block-eq-assuming lemma2
       rewrite plt-correctness = lemma f S got-correctness
 \end{code}
 
+Хотелось бы еще сюда засунуть формализованное определение и доказательство
+эквивалентности программ, а то пока я умею только махать руками на эту тему
+
 \begin{code}
 -- TODO: program equivalence
 \end{code}
