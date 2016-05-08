@@ -25,7 +25,9 @@ checkall:
 	cp $< $@
 
 %.latex: %.md
-	pandoc $^ -o $@
+	pandoc \
+		--listings \
+		$^ -o $@
 
 main.latex: $(SOURCES) sigplanconf-template.tex
 	pandoc \
