@@ -146,7 +146,8 @@ postulate
 Блок PLT:
 
 \begin{code}
-plt-stub : ∀ {Γ Ψ DS CS} → atom (block Γ DS CS *) ∈ Ψ
+plt-stub : ∀ {Γ Ψ DS CS}
+         → atom (block Γ DS CS *) ∈ Ψ
          → Block (statetype Γ Ψ DS CS) dempty
 plt-stub got = ↝ jmp[ got ]
 \end{code}
@@ -213,13 +214,15 @@ GOT[_]-correctness : ∀ {Γ Ψ DS CS}
                    → (f : block Γ DS CS ∈ Ψ)
                    → (H : Data (pltize Ψ))
                    → Set
-GOT[ f ]-correctness H = loadptr H (got f) ≡ func f
+GOT[ f ]-correctness H
+    = loadptr H (got f) ≡ func f
 
 PLT[_]-correctness : ∀ {Γ Ψ DS CS}
                    → (f : block Γ DS CS ∈ Ψ)
                    → (H : Data (pltize Ψ))
                    → Set
-PLT[ f ]-correctness H = loadblock H (plt f) ≡ (dempty , plt-stub (got f))
+PLT[ f ]-correctness H
+    = loadblock H (plt f) ≡ (dempty , plt-stub (got f))
 \end{code}
 
 \ignore{
@@ -291,8 +294,9 @@ proof {Γ} {Ψ} {DS} {CS} f = block-eq-assuming lemma2
     lemma2 : (S : State $ pltize-state ST)
            → (GOT[ f ]-correctness $ State.memory S)
            × (PLT[ f ]-correctness $ State.memory S)
-           → ExBlockEq (block (proj₂ $ loadblock (State.memory S) (plt f)) S)
-                       (block (proj₂ $ loadblock (State.memory S) (func f)) S)
+           → ExBlockEq
+             (construct-exblock (plt f) S)
+             (construct-exblock (func f) S)
     lemma2 S (got-correctness , plt-correctness)
       rewrite plt-correctness = lemma f S got-correctness
 \end{code}

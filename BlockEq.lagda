@@ -138,6 +138,9 @@ executable blocks.
                → exec-block S₁ b₁ ≡ (S₂ , d₂ , b₂)
                → exec-exblock (block b₁ S₁) ≡ block b₂ S₂
   exec-block-≡ _ _ _ _ refl = refl
+
+  construct-exblock : ∀ {ST} → IPST ST → State ST → ExecutableBlock ST
+  construct-exblock B S = block (proj₂ $ loadblock (State.memory S) B) S
 \end{code}
 }
 
@@ -266,8 +269,9 @@ PLT-блока в предположении корректно заполнен
     constructor block-eq-assuming
     field
       eq : (S : State ST) → assumption S
-         → ExBlockEq (block (proj₂ $ loadblock (State.memory S) A) S)
-                     (block (proj₂ $ loadblock (State.memory S) B) S)
+         → ExBlockEq
+            (construct-exblock A S)
+            (construct-exblock B S)
 \end{code}
 
 \ignore{
