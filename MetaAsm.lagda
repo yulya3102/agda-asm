@@ -1,49 +1,4 @@
-# Обзор используемой формализации TAL
-
-Оригинальный TAL использует System F в качестве системы типов, что является
-безусловным оверкиллом для нашей задачи. Система типов в используемой
-формализации куда проще: тут описание типов. Для того, чтобы статически
-анализировать поведение блоков кода, в их тип засунули описание того, что
-этот блок делает с состоянием исполнителя, проще говоря, дифф над типом
-состояния исполнителя. Инструкции, кстати, тоже имеют в своем типе эту
-фигню. Стек для простоты распилили на две части: стек вызовов и стек
-данных. Пожалуй, больше ничем существенным формализация от TAL не
-отличается.
-
-**TODO: Надо в формализацию моего типизированного ассемблера добавить
-что-нибудь из MTAL**
-
-Никаких кусков кода пока тут нет, потому что пока не очень понятно, что
-здесь должно быть.
-
-Еще где-то здесь надо сказать, что я не сталкиваюсь с проблемами аллокации
-памяти, потому что с точки зрения линкера память выглядит статической.
-
 \ignore{
-## Typed assembly language definition
-
-As stated earlier, we need a formalisation of typed assembly language that
-looks just like real assembly language. The problem is that it's too
-hard to write it for every supported instruction set, so it would be
-reasonable to extract some common parts and make it reusable. We will refer
-to this reusable set of definitions as "meta assembly language".
-
-What differs one assembly language from another is instruction set and its
-execution semantics. Other concepts, like memory, registers and stack, are
-common and can be defined once for some supported set of assembly languages.
-
-Our meta assembly language formalises common concepts as Agda modules
-parametrised with instruction set. As a result, particular assembly
-language can be formalised with implementing its instruction set and
-importing Agda module with proper arguments.
-
-Formalised meta assembly language includes:
-
-*   basic blocks;
-*   registers and "small" values that can be stored in registers;
-*   memory and values that can be stored in it;
-*   execution semantics for given basic block.
-
 \begin{code}
 module MetaAsm where
 
@@ -55,29 +10,20 @@ open import Data.Product
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym)
 open import Function
 \end{code}
+}
 
-### The core of assembly language
+# Обзор используемой формализации TAL
 
-The core of meta assembly language is considered common for any assembly
-language. It includes machine state and supported data types, which
-naturally fall into two categories:
-
-*   register-sized types;
-
+\ignore{
 \begin{code}
 data RegType : Set
 \end{code}
 
-*   arbitrary-sized types.
-
 \begin{code}
 data Type : Set
 \end{code}
-
-Values with types from the first category can be stored in registers, and
-values with types from the second category can be stored in memory. The
-first category is a subset of the second category.
-
+}
+\ignore{
 There are three common parts of machine state used in assembly languages:
 registers, memory and stack. Although stack is usually appears to be part
 of memory, it has one important aspect that makes stack a separate concept.
@@ -149,8 +95,40 @@ type and data stack type:
 \begin{code}
 CallStackType = List (RegTypes × DataStackType)
 \end{code}
+}
 
-Machine state type is simply record of types of its parts.
+Оригинальный TAL позволял использовать переменные типов и кортежи в памяти,
+что является оверкиллом для нашей задачи. Система типов в используемой
+формализации куда проще: типы размером с регистр включают в себя указатели
+и целые числа, а единственным типом произвольного размера являются блоки
+кода. Тип блока кода включает в себя типы ожидаемых этим блоком регистров и
+стека.
+
+\ignore{
+The only arbitrary-sized type that is not also register type is "block
+type", which contains all parts of machine state type except for static
+memory.
+}
+
+Значения типов из первой категории могут находиться в регистрах, а значения
+типов второй категории можно сохранять в память. При этом первая категория
+является подмножеством второй.
+
+\ignore{
+Values with types from the first category can be stored in registers, and
+values with types from the second category can be stored in memory. The
+first category is a subset of the second category.
+}
+
+Для простоты реализации стек был распилен на две части, одна из которых
+называется стеком данных и позволяет сохранять в себе данные размером с
+регистр, а вторая, стек вызовов, сохраняет адреса возврата. Так,
+управляющим инструкциям, завершающим блок, дозволено обращаться только к
+стеку вызовов, в то время как не-управляющие инструкции могут работать
+только со стеком данных.
+
+Таким образом, тип состояния исполнителя включает в себя не только типы
+регистров и памяти, но и типы обоих стеков.
 
 \begin{code}
 record StateType : Set where
@@ -162,24 +140,19 @@ record StateType : Set where
     callstack : CallStackType
 \end{code}
 
-Supported register-sized types are pointers and integers.
-
 \begin{code}
 data RegType where
   _*  : Type → RegType
   int : RegType
-\end{code}
 
-The only arbitrary-sized type that is not also register type is "block
-type", which contains all parts of machine state type except for static
-memory.
-
-\begin{code}
 data Type where
   atom : RegType → Type
-  block : RegTypes → DataStackType → CallStackType → Type
+  block : RegTypes
+        → DataStackType → CallStackType
+        → Type
 \end{code}
 
+\ignore{
 \ignore{
 \begin{code}
 data Maybe (A : Set) : Set where
