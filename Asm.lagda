@@ -1,6 +1,4 @@
 \ignore{
-## x86-64-like assembly language
-
 \begin{code}
 module Asm where
 
@@ -32,20 +30,20 @@ data Instr (S : StateType) : SmallChg S → Set
 open Blocks ControlInstr Instr public
 open Values Block public
 \end{code}
+}
 
-Как было сказано ранее, определяемые инструкции могут не совпадать с
-имеющимися в реальном ассемблере. Такой инструкцией является, например,
-инструкция `call`. Дополнительным параметром она принимает указатель на
-блок, который будет добавлен на стек вызовов. В реальный ассемблер эта
-инструкция может быть транслироваться двумя инструкциями: `call` нужного
-блока, за которым следует `jmp` на второй указанный блок.
-
-Многие реализованные инструкции не требуются для реализации блока PLT и
-приведены здесь, чтобы показать возможность корректного определения
-подобных инструкций.
+Используемая в динамической линковке инструкция `indirect jump` принимает
+аргументом адрес ячейки памяти, в которой лежит указатель на тот блок кода,
+управление на который хочется передать. `nothing` в типе результируюшего
+ControlInstr указывает на то, что эта инструкция никак не меняет стек
+вызовов.
 
 \begin{code}
 data ControlInstr (S : StateType) where
+\end{code}
+
+\ignore{
+\begin{code}
   call : ∀ {Γ DS}
        → (f : block
          (StateType.registers S)
@@ -55,6 +53,10 @@ data ControlInstr (S : StateType) where
        → (cont : block Γ DS (StateType.callstack S)
                ∈ StateType.memory S)
        → ControlInstr S (just $ StackDiff.push (Γ , DS))
+\end{code}
+}
+
+\begin{code}
   jmp[_] : (ptr : atom
          (block
          (StateType.registers S)
@@ -62,6 +64,10 @@ data ControlInstr (S : StateType) where
          (StateType.callstack S) *)
          ∈ StateType.memory S)
        → ControlInstr S nothing
+\end{code}
+
+\ignore{
+\begin{code}
   jmp : (f : block
         (StateType.registers S)
         (StateType.datastack S)
@@ -73,7 +79,9 @@ data ControlInstr (S : StateType) where
        ≡ (StateType.registers S , StateType.datastack S) ∷ CS)
        → ControlInstr S (just (StackDiff.pop p))
 \end{code}
+}
 
+\ignore{
 Определенные инструкции являются примером того, как можно реализовать
 работу с регистрами и стеком данных.
 

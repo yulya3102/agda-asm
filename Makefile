@@ -5,8 +5,8 @@ AGDA_INCLUDE = -i . -i ./agda-stdlib/src
 SOURCES = \
 	Intro.latex \
 	MetaAsm.latex \
-	BlockEq.latex \
 	Asm.latex \
+	BlockEq.latex \
 	Programs.latex \
 	Linkers.latex
 
