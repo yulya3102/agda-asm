@@ -295,26 +295,26 @@ exec-plt f S p rewrite sym p = exec-ijmp S (got f)
 функции элемент GOT, и самой функции:
 
 \begin{code}
-lemma : ∀ {Γ Ψ DS CS}
-      → (f : block Γ DS CS ∈ Ψ)
-      → (S : State (statetype Γ (pltize Ψ) DS CS))
-      → GOT[ f ]-correctness (State.memory S)
-      → ExBlockEq
-        (block (plt-stub (got f)) S)
-        (block (proj₂ $ loadblock (State.memory S) (func f)) S)
-lemma f S p = left (exec-block-≡ (plt-stub (got f)) _ S S (exec-plt f S p)) equal
+exblock-eq-proof : ∀ {Γ Ψ DS CS}
+                 → (f : block Γ DS CS ∈ Ψ)
+                 → (S : State (statetype Γ (pltize Ψ) DS CS))
+                 → GOT[ f ]-correctness (State.memory S)
+                 → ExBlockEq
+                   (block (plt-stub (got f)) S)
+                   (block (proj₂ $ loadblock (State.memory S) (func f)) S)
+exblock-eq-proof f S p = left (exec-block-≡ (plt-stub (got f)) _ S S (exec-plt f S p)) equal
 \end{code}
 }
 
 \begin{code}
-proof : ∀ {Γ Ψ DS CS}
-      → (f : block Γ DS CS ∈ Ψ)
-      → BlockEqAssuming
-        (λ S → (GOT[ f ]-correctness $ State.memory S)
-             × (PLT[ f ]-correctness $ State.memory S))
-        (plt f)
-        (func f)
-proof {Γ} {Ψ} {DS} {CS} f = block-eq-assuming lemma2
+block-eq-proof : ∀ {Γ Ψ DS CS}
+               → (f : block Γ DS CS ∈ Ψ)
+               → BlockEqAssuming
+                 (λ S → (GOT[ f ]-correctness $ State.memory S)
+                      × (PLT[ f ]-correctness $ State.memory S))
+                 (plt f)
+                 (func f)
+block-eq-proof {Γ} {Ψ} {DS} {CS} f = block-eq-assuming lemma2
   where
     ST = statetype Γ Ψ DS CS
     lemma2 : (S : State $ pltize-state ST)
@@ -324,7 +324,7 @@ proof {Γ} {Ψ} {DS} {CS} f = block-eq-assuming lemma2
              (construct-exblock (plt f) S)
              (construct-exblock (func f) S)
     lemma2 S (got-correctness , plt-correctness)
-      rewrite plt-correctness = lemma f S got-correctness
+      rewrite plt-correctness = exblock-eq-proof f S got-correctness
 \end{code}
 
 Хотелось бы еще сюда засунуть формализованное определение и доказательство
