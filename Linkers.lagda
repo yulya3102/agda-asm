@@ -307,16 +307,16 @@ block-eq-proof : ∀ {Γ Ψ DS CS}
                       × (PLT[ f ]-correctness $ State.memory S))
                  (plt f)
                  (func f)
-block-eq-proof {Γ} {Ψ} {DS} {CS} f = block-eq-assuming lemma2
+block-eq-proof {Γ} {Ψ} {DS} {CS} f = block-eq-assuming lemma
   where
     ST = statetype Γ Ψ DS CS
-    lemma2 : (S : State $ pltize-state ST)
-           → (GOT[ f ]-correctness $ State.memory S)
-           × (PLT[ f ]-correctness $ State.memory S)
-           → ExBlockEq
-             (construct-exblock (plt f) S)
-             (construct-exblock (func f) S)
-    lemma2 S (got-correctness , plt-correctness)
+    lemma : (S : State $ pltize-state ST)
+          → (GOT[ f ]-correctness $ State.memory S)
+          × (PLT[ f ]-correctness $ State.memory S)
+          → ExBlockEq
+            (construct-exblock (plt f) S)
+            (construct-exblock (func f) S)
+    lemma S (got-correctness , plt-correctness)
       rewrite plt-correctness = exblock-eq-proof f S got-correctness
 \end{code}
 
