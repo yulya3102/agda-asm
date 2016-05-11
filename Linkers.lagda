@@ -141,14 +141,21 @@ pltize-diff (diff rdiff dsdiff csdiff) = diff rdiff dsdiff csdiff
 postulate
   pltize-block : ∀ {ST d} → Block ST d → Block (pltize-state ST) (pltize-diff d)
 \end{code}
+}
 
-Блок PLT выглядит так же, как и в первой реализации.
+Блок PLT:
 
 \begin{code}
 plt-stub : ∀ {Γ Ψ DS CS} → atom (block Γ DS CS *) ∈ Ψ
          → Block (statetype Γ Ψ DS CS) dempty
 plt-stub got = ↝ jmp[ got ]
+\end{code}
 
+Еще было бы классно здесь описать преобразование объектных файлов, но это
+требует реализации MTAL
+
+\ignore{
+\begin{code}
 _++[_]++_ : ∀ {α} → {A : Set α} → (σs : List A) → (τ : A) → (τs : List A)
           → σs ++ τ ∷ τs ≡ (σs ++ [ τ ]) ++ τs
 [] ++[ τ ]++ τs = refl
@@ -197,10 +204,9 @@ dynamic (program memory start)
   -- TODO: replace every `call f` with `call (plt f)`
   = program (pltize-data memory) (func start)
 \end{code}
+}
 
-Опишем важное свойство: элемент GOT корректно заполнен, если в нём
-действительно находится указатель на соответствующую этому элементу
-функцию.
+Разные интересные свойства про заполненность памяти в рантайме:
 
 \begin{code}
 GOT[_]-correctness : ∀ {Γ Ψ DS CS}
@@ -216,6 +222,7 @@ PLT[_]-correctness : ∀ {Γ Ψ DS CS}
 PLT[ f ]-correctness H = loadblock H (plt f) ≡ (dempty , plt-stub (got f))
 \end{code}
 
+\ignore{
 ## Доказательства
 
 Для доказательства эквивалентности вызовов функции и соответствующего ей
