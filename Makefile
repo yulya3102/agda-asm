@@ -8,7 +8,8 @@ SOURCES = \
 	Asm.latex \
 	BlockEq.latex \
 	Programs.latex \
-	Linkers.latex
+	Linkers.latex \
+	LazyLinkers.latex
 
 %.tex: %.lagda
 	agda $(AGDA_INCLUDE) --latex --latex-dir . --allow-unsolved-metas $<
