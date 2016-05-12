@@ -128,7 +128,7 @@ exec-ijmp : ∀ {ST} → (S : State ST)
           , loadblock
             (State.memory S)
             (loadptr (State.memory S) p))
-exec-ijmp S p = refl
+exec-ijmp (state Γ Ψ DS CS) p = refl
 \end{code}
 
 *   состояние исполнителя в момент непосредственного вызова функции
@@ -188,10 +188,6 @@ linker-diff ST = dsChg (StackDiff.pop refl)
 
 LinkerS = pltize-state ∘ LinkerBlockS
 
-dapply-mem : ∀ {ST} → (d : Diff ST) → Data (StateType.memory ST)
-           → Data (StateType.memory $ dapply ST d)
-dapply-mem d M = ?
-
 exec-pushc-i : ∀ {Ψ StateΓ StateDS StateCS}
              → {τ : RegType} (value : RegValue Ψ τ)
              → (R : Registers Ψ StateΓ)
@@ -207,7 +203,7 @@ exec-jmp : {ST : StateType}
          → (func : IPST ST)
          → exec-block S (↝ (jmp func))
          ≡ (S , (loadblock (State.memory S) func))
-exec-jmp S func = refl
+exec-jmp (state Γ Ψ DS CS) func = refl
 
 SRegisters : StateType → Set
 SRegisters (statetype Γ Ψ DS CS) = Registers Ψ Γ
@@ -267,9 +263,9 @@ record LinkerBase {ST : StateType} : Set where
                           → (d : Diff (LinkerS ST))
                           → (f : IPST ST)
                           → Data $ StateType.memory (dapply (LinkerS ST) d)
-      memory-after-linker M d f =
-        dapply-mem d
-          (store (got f) M (Value.atom $ ptr $ func f))
+      memory-after-linker M d f
+        rewrite sym $ DiffLemmas.mem-diff _ d
+        = (store (got f) M (Value.atom $ ptr $ func f))
 
       datastack-after-linker : SDataStack (LinkerS ST)
                              → {d : Diff (LinkerS ST)}
@@ -299,8 +295,7 @@ record Linker {ST : StateType} (L : LinkerBase {ST}) : Set where
                 → exec-block S
                   (proj₂ $ loadblock (State.memory S) linker)
                 ≡ (state-after-linker S
-                , ?)
-                --, (loadblock (State.memory S) (func $ function (unint $ peek (State.datastack S)))))
+                , {!loadblock (State.memory S) (func $ function (unint $ peek (State.datastack S)))!})
 
   {-
   То, что исполняется после вызова линкера для функции, эквивалентно
@@ -316,8 +311,7 @@ record Linker {ST : StateType} (L : LinkerBase {ST}) : Set where
                        → ExBlockEq
                          (construct-exblock
                            (func $ function $ proj₁ id)
-                           ?
-                           --(state-after-linker (state R M DS CS))
+                           {!state-after-linker (state R M DS CS)!}
                            )
                          (construct-exblock
                            (func f)
@@ -325,7 +319,7 @@ record Linker {ST : StateType} (L : LinkerBase {ST}) : Set where
                              (store (got f) M
                                        (Value.atom $ ptr $ func f))
                              (dspop DS) CS))
-  func-after-linker-eq f (id , p) R M (int .id ∷ DS) CS refl = ?
+  func-after-linker-eq f (id , p) R M (int .id ∷ DS) CS refl = {!!}
   {-
     with proj₁ $ loadblock M linker | linker-diff-eq M
   ... | ._ | refl rewrite p = equal

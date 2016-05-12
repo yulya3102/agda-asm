@@ -155,9 +155,7 @@ data Type where
 \ignore{
 \ignore{
 \begin{code}
-data Maybe (A : Set) : Set where
-  just    : A → Maybe A
-  nothing : Maybe A
+open import Data.Maybe
 \end{code}
 }
 
@@ -326,14 +324,29 @@ TODO: memory, registers and stacks definition
 описывающая изменения регистров и двух стеков.
 
 \begin{code}
-  record Diff (S : StateType) : Set where
-    constructor diff
-    field
-      rdiff  : RegDiff.Diff (StateType.registers S)
-      dsdiff : StackDiff.Diff RegType (StateType.datastack S)
-      csdiff : StackDiff.Diff (RegTypes × DataStackType)
-               (StateType.callstack S)
-  open Diff public
+  module StateDiff where
+    data Chg (S : StateType) : Set where
+      rchg  : RegDiff.Chg (StateType.registers S) → Chg S
+      dschg : StackDiff.Chg RegType (StateType.datastack S) → Chg S
+      cschg : StackDiff.Chg (RegTypes × DataStackType)
+               (StateType.callstack S) → Chg S
+
+    chgapply : (S : StateType) → Chg S → StateType
+    chgapply S (rchg x)
+      = record S {
+        registers = RegDiff.chgapply (StateType.registers S) x
+      }
+    chgapply S (dschg x)
+      = record S {
+        datastack = StackDiff.chgapply _ (StateType.datastack S) x
+      }
+    chgapply S (cschg x)
+      = record S {
+        callstack = StackDiff.chgapply _ (StateType.callstack S) x
+      }
+
+    open DiffDefinition chgapply public
+  open StateDiff public
 \end{code}
 
 Определим вспомогательные функции и типы для конструирования и применения
@@ -342,34 +355,16 @@ TODO: memory, registers and stacks definition
 *   конструирование пустого набора изменений;
 
 \begin{code}
-  dempty : ∀ {S} → Diff S
-  dempty = diff
-    RegDiff.dempty
-    StackDiff.dempty
-    StackDiff.dempty
 \end{code}
 
 *   применение набора изменений к состоянию исполнителя;
 
 \begin{code}
-  dapply : (S : StateType) → Diff S → StateType
-  dapply (statetype r m d c) (diff rd dd cd) =
-      statetype
-      (RegDiff.dapply r rd)
-      m
-      (StackDiff.dapply RegType d dd)
-      (StackDiff.dapply (RegTypes × DataStackType) c cd)
 \end{code}
 
 *   объединение двух наборов изменений;
 
 \begin{code}
-  dappend : ∀ {S} → (d : Diff S) → Diff (dapply S d) → Diff S
-  dappend (diff rd dd cd) (diff rd' dd' cd') =
-      diff
-      (RegDiff.dappend rd rd')
-      (StackDiff.dappend RegType dd dd')
-      (StackDiff.dappend (RegTypes × DataStackType) cd cd')
 \end{code}
 
 *   изменение стека данных;
@@ -413,11 +408,7 @@ TODO: memory, registers and stacks definition
 
 \begin{code}
   regChg : ∀ {S} → RegChg S → Diff S
-  regChg c =
-      diff
-      (RegDiff.dchg c RegDiff.dempty)
-      StackDiff.dempty
-      StackDiff.dempty
+  regChg S = dchg (rchg S) dempty
 \end{code}
 
 *   конструирование набора изменений состояния исполнителя по одному
@@ -425,11 +416,7 @@ TODO: memory, registers and stacks definition
 
 \begin{code}
   dsChg : ∀ {S} → DataStackChg S → Diff S
-  dsChg c =
-    diff
-    RegDiff.dempty
-    (StackDiff.dchg c StackDiff.dempty)
-    StackDiff.dempty
+  dsChg S = dchg (dschg S) dempty
 \end{code}
 
 *   конструирование набора изменений состояния исполнителя по одному
@@ -439,11 +426,7 @@ TODO: memory, registers and stacks definition
   sChg : ∀ {S} → SmallChg S → Diff S
   sChg (onlyreg r) = regChg r
   sChg (onlystack d) = dsChg d
-  sChg (regstack r d) =
-    diff
-    (RegDiff.dchg r RegDiff.dempty)
-    (StackDiff.dchg d StackDiff.dempty)
-    StackDiff.dempty
+  sChg (regstack r d) = dchg (rchg r) $ dchg (dschg d) dempty
 \end{code}
 
 *   конструирование набора изменений состояния исполнителя по одному
@@ -451,12 +434,8 @@ TODO: memory, registers and stacks definition
 
 \begin{code}
   csChg : ∀ S → Maybe (CallStackChg S) → Diff S
+  csChg S (just x) = dchg (cschg x) dempty
   csChg S nothing = dempty
-  csChg S (just c) =
-      diff
-      RegDiff.dempty
-      StackDiff.dempty
-      (StackDiff.dchg c StackDiff.dempty)
 \end{code}
 
 ## Метаассемблер
@@ -786,20 +765,12 @@ module Meta where
     стека вызовов, то набор изменений регистров пуст;
 
 \begin{code}
-      reg-const : ∀ S → (c : Maybe (CallStackChg S))
-                → rdiff (csChg S c) ≡ RegDiff.dempty
-      reg-const S (just c) = refl
-      reg-const S nothing = refl
 \end{code}
 
 *   если набор изменений состояния исполнителя построен как набор изменений
     стека вызовов, то набор изменений стека данных пуст;
 
 \begin{code}
-      ds-const : ∀ S → (c : Maybe (CallStackChg S))
-               → dsdiff (csChg S c) ≡ StackDiff.dempty
-      ds-const S (just x) = refl
-      ds-const S nothing = refl
 \end{code}
 
 *   если набор изменений состояния исполнителя построен как набор
@@ -807,11 +778,6 @@ module Meta where
     пуст;
 
 \begin{code}
-      cs-lemma : ∀ S → (c : SmallChg S)
-               → csdiff (sChg c) ≡ StackDiff.dempty
-      cs-lemma S (onlyreg x) = refl
-      cs-lemma S (onlystack x) = refl
-      cs-lemma S (regstack x x₁) = refl
 \end{code}
 
 *   применение набора изменений, построенных как набор изменений стека
@@ -821,14 +787,43 @@ module Meta where
 \begin{code}
       dapply-csChg : ∀ S → (c : Maybe (CallStackChg S))
                    → dapply S (csChg S c)
-                   ≡ statetype
-                    (StateType.registers S)
-                    (StateType.memory S)
-                    (StateType.datastack S)
-                    (StackDiff.dapply (RegTypes × DataStackType)
-                      (StateType.callstack S) (csdiff (csChg S c)))
+                   ≡ record S {
+                     callstack = maybe′
+                       (StackDiff.chgapply _ (StateType.callstack S))
+                       (StateType.callstack S)
+                       c
+                   }
       dapply-csChg S (just x) = refl
       dapply-csChg S nothing = refl
+
+      sChg-csdiff : ∀ S → (c : SmallChg S)
+                  → StateType.callstack S
+                  ≡ StateType.callstack (dapply S (sChg c))
+      sChg-csdiff S (onlyreg x) = refl
+      sChg-csdiff S (onlystack x) = refl
+      sChg-csdiff S (regstack x x₁) = refl
+
+      mem-chg : ∀ S → (c : StateDiff.Chg S)
+              → StateType.memory S
+              ≡ StateType.memory (StateDiff.chgapply S c)
+      mem-chg S (rchg x) = refl
+      mem-chg S (dschg x) = refl
+      mem-chg S (cschg x) = refl
+
+      mem-diff : ∀ S → (d : Diff S)
+               → StateType.memory S
+               ≡ StateType.memory (dapply S d)
+      mem-diff S DiffDefinition.dempty = refl
+      mem-diff S (DiffDefinition.dchg c d)
+        rewrite mem-chg S c = mem-diff _ d
+
+      dapply-dappend-sChg : ∀ {S} → (c : SmallChg S)
+                          → (d : Diff (dapply S (sChg c)))
+                          → dapply S (dappend (sChg c) d)
+                          ≡ dapply (dapply S (sChg c)) d
+      dapply-dappend-sChg (onlyreg x) d = refl
+      dapply-dappend-sChg (onlystack x) d = refl
+      dapply-dappend-sChg (regstack c x) d = refl
 \end{code}
 
 \ignore{
@@ -852,39 +847,16 @@ module Meta where
                → State (dapply ST d)
                × Σ (Diff (dapply ST d)) (Block (dapply ST d))
     exec-block {S} (state Γ Ψ DS CS) (Blocks.↝ {c} ci)
-      rewrite reg-const S c | ds-const S c
-      = (state Γ Ψ DS CS') , next-block
-      where
-      ecr = exec-control (state Γ Ψ DS CS) ci
-      CS' = proj₁ ecr
-      next-block : Σ
-        (Diff
-         (statetype (StateType.registers S) (StateType.memory S)
-          (StateType.datastack S)
-          (StackDiff.dapply (RegTypes × DataStackType)
-           (StateType.callstack S) (csdiff (csChg S c)))))
-        (Block
-         (statetype (StateType.registers S) (StateType.memory S)
-          (StateType.datastack S)
-          (StackDiff.dapply (RegTypes × DataStackType)
-           (StateType.callstack S) (csdiff (csChg S c)))))
-      next-block rewrite sym (dapply-csChg S c) = proj₂ ecr
+      with exec-control (state Γ Ψ DS CS) ci
+    ... | CS' , next-block
+      rewrite dapply-csChg S c
+      = state Γ Ψ DS CS' , next-block
     exec-block {S} (state Γ Ψ DS CS) (Blocks._∙_ {c} {d} i b)
-      rewrite cs-lemma S c
-            | RegDiff.dappend-dapply-lemma
-              (StateType.registers S)
-              (rdiff (sChg c))
-              (rdiff d)
-            | StackDiff.dappend-dapply-lemma RegType
-              (StateType.datastack S)
-              (dsdiff (sChg c))
-              (dsdiff d)
-            = exec-block (state Γ' Ψ' DS' CS) b
-      where
-      eir = exec-instr (state Γ Ψ DS CS) i
-      Γ'  = proj₁ eir
-      Ψ'  = proj₁ (proj₂ eir)
-      DS' = proj₂ (proj₂ eir)
+      with exec-instr (state Γ Ψ DS CS) i
+    ... | Γ' , Ψ' , DS'
+      rewrite sChg-csdiff S c | mem-diff S (sChg c)
+            | dapply-dappend-sChg c d
+      = exec-block (state Γ' Ψ' DS' CS) b
 \end{code}
 }
 }

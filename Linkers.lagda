@@ -153,10 +153,8 @@ pltize-atom (int x) = int x
 pltize-state : StateType → StateType
 pltize-state ST = record ST { memory = pltize $ StateType.memory ST }
 
-pltize-diff : ∀ {ST} → Diff ST → Diff (pltize-state ST)
-pltize-diff (diff rdiff dsdiff csdiff) = diff rdiff dsdiff csdiff
-
 postulate
+  pltize-diff : ∀ {ST} → Diff ST → Diff (pltize-state ST)
   pltize-block : ∀ {ST d} → Block ST d → Block (pltize-state ST) (pltize-diff d)
 \end{code}
 }
@@ -266,7 +264,7 @@ exec-ijmp : ∀ {ST} → (S : State ST)
           , loadblock
             (State.memory S)
             (loadptr (State.memory S) p))
-exec-ijmp S p = refl
+exec-ijmp (state Γ Ψ DS CS) p = refl
 \end{code}
 
 *   состояние исполнителя в момент непосредственного вызова функции

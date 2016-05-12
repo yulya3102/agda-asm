@@ -2,6 +2,7 @@
 \begin{code}
 module Asm where
 
+open import Data.Maybe
 open import Data.Product
 open import Data.List
 open import Data.List.Any
@@ -52,7 +53,7 @@ data ControlInstr (S : StateType) where
          ∈ StateType.memory S)
        → (cont : block Γ DS (StateType.callstack S)
                ∈ StateType.memory S)
-       → ControlInstr S (just $ StackDiff.push (Γ , DS))
+       → ControlInstr S (Maybe.just $ StackDiff.push (Γ , DS))
 \end{code}
 }
 
