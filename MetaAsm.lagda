@@ -490,6 +490,7 @@ module Meta where
                   → Set)
     (Instr : (S : StateType) → SmallChg S → Set)
     where
+    infixr 10 _∙_
 \end{code}
 
 Определение блока аналогично приведенному ранее.
@@ -536,6 +537,9 @@ module Meta where
             → Σ (Diff (statetype Γ Ψ DS CS))
                 (Block (statetype Γ Ψ DS CS))
     unblock (block b) = _ , b
+
+    unint : ∀ {Ψ} → RegValue Ψ int → ℕ
+    unint (int x) = x
 \end{code}
 
 *   получение указателя на `τ` из значения типа `τ *`.
@@ -543,6 +547,10 @@ module Meta where
 \begin{code}
     unptr : ∀ {Ψ τ} → Value Ψ (atom (τ *)) → τ ∈ Ψ
     unptr (atom (ptr x)) = x
+
+    atom-ptr-unptr : ∀ {Ψ τ} → (v : Value Ψ (atom (τ *)))
+                   → atom (ptr (unptr v)) ≡ v
+    atom-ptr-unptr (atom (ptr x)) = refl
 \end{code}
 
 Определение набора регистров аналогично приведенному ранее.
@@ -588,13 +596,21 @@ module Meta where
     Data : DataType → Set
     Data Ψ = IData Ψ Ψ
 
-    load : ∀ {Ψ τ} → Data Ψ → τ ∈ Ψ → Value Ψ τ
-    load {Ψ} {τ} = iload
-      where
-      iload : ∀ {Γ} → IData Ψ Γ → τ ∈ Γ → Value Ψ τ
+    private
+      istore : ∀ {Ψ Γ τ} → τ ∈ Γ → IData Ψ Γ → Value Ψ τ → IData Ψ Γ
+      istore (here refl) (x ∷ M) v = v ∷ M
+      istore (there p) (x ∷ M) v = x ∷ istore p M v
+
+      iload : ∀ {Ψ Γ τ} → IData Ψ Γ → τ ∈ Γ → Value Ψ τ
       iload [] ()
       iload (x ∷ H) (here refl) = x
       iload (x ∷ H) (there p) = iload H p
+
+    load : ∀ {Ψ τ} → Data Ψ → τ ∈ Ψ → Value Ψ τ
+    load {Ψ} {τ} = iload
+
+    store : ∀ {Ψ τ} → τ ∈ Ψ → Data Ψ → Value Ψ τ → Data Ψ
+    store {Ψ} {τ} = istore
 \end{code}
 
 Определим вспомогательные функции для работы с памятью:
@@ -613,6 +629,23 @@ module Meta where
 \begin{code}
     loadptr : ∀ {Ψ τ} → Data Ψ → atom (τ *) ∈ Ψ → τ ∈ Ψ
     loadptr Ψ p = unptr $ load Ψ p
+
+    store-loaded : ∀ {Ψ τ} → (v : τ ∈ Ψ) → (M : Data Ψ)
+                 → store v M (load M v) ≡ M
+    store-loaded = istore-iloaded
+      where
+      istore-iloaded : ∀ {Ψ Γ τ} → (v : τ ∈ Γ) → (M : IData Ψ Γ)
+                     → istore v M (iload M v) ≡ M
+      istore-iloaded (here refl) (x ∷ M) = refl
+      istore-iloaded (there v) (x ∷ M) rewrite istore-iloaded v M = refl
+
+    store-loaded-ptr : ∀ {Ψ τ} → (M : Data Ψ)
+                     → (p : atom (τ *) ∈ Ψ)
+                     → {x : τ ∈ Ψ} → loadptr M p ≡ x
+                     → store p M (atom (ptr x)) ≡ M
+    store-loaded-ptr M p px
+      rewrite sym px | atom-ptr-unptr (load M p)
+      = store-loaded p M
 \end{code}
 
 Стек данных — список значений размера регистра, в типе которого указано,
@@ -625,6 +658,12 @@ module Meta where
       _∷_  : ∀ {τ DS} → RegValue Ψ τ
            → DataStack Ψ DS
            → DataStack Ψ (τ ∷ DS)
+
+    peek : ∀ {M τ DS} → DataStack M (τ ∷ DS) → RegValue M τ
+    peek (x ∷ ds) = x
+
+    dspop : ∀ {M τ DS} → DataStack M (τ ∷ DS) → DataStack M DS
+    dspop (x ∷ ds) = ds
 \end{code}
 
 Типизированный instruction pointer — указатель на блок кода в памяти.
