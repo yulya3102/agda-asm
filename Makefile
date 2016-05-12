@@ -12,7 +12,7 @@ SOURCES = \
 	LazyLinkers.latex
 
 %.tex: %.lagda
-	rm *.agdai && \
+	rm -f *.agdai && \
 	agda $(AGDA_INCLUDE) --latex --latex-dir . --allow-unsolved-metas $<
 
 .PHONY: checkall
