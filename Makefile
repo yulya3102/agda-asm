@@ -1,37 +1,44 @@
-all: main.pdf
+BUILD=build
+
+all: $(BUILD)/main.pdf
 
 AGDA_INCLUDE = -i . -i ./agda-stdlib/src
 
 SOURCES = \
-	Intro.latex \
-	MetaAsm.latex \
-	Asm.latex \
-	BlockEq.latex \
-	Programs.latex \
-	Linkers.latex \
-	LazyLinkers.latex
+	$(BUILD)/Intro.latex \
+	$(BUILD)/MetaAsm.latex \
+	$(BUILD)/Asm.latex \
+	$(BUILD)/BlockEq.latex \
+	$(BUILD)/Programs.latex \
+	$(BUILD)/Linkers.latex \
+	$(BUILD)/LazyLinkers.latex
 
-%.tex: %.lagda
+$(BUILD)/%.tex: %.lagda
 	rm -f *.agdai && \
-	agda $(AGDA_INCLUDE) --latex --latex-dir . --allow-unsolved-metas $<
+	agda $(AGDA_INCLUDE) --latex --latex-dir $(BUILD) --allow-unsolved-metas $<
 
 .PHONY: checkall
 
 checkall:
 	agda $(AGDA_INCLUDE) --allow-unsolved-metas Linkers.lagda
 
-%.pdf: %.latex
-	xelatex $<
+$(BUILD)/%.pdf: $(BUILD)/%.latex
+	xelatex \
+		-output-directory=$(BUILD) \
+		$<
 
-%.md: %.tex
+$(BUILD)/%.md: %.md
 	cp $< $@
 
-%.latex: %.md
+$(BUILD)/%.md: $(BUILD)/%.tex
+	cp $< $@
+
+$(BUILD)/%.latex: $(BUILD)/%.md
 	pandoc \
 		--listings \
 		$^ -o $@
 
-main.latex: $(SOURCES) sigplanconf-template.tex
+$(BUILD)/main.latex: $(SOURCES) sigplanconf-template.tex
 	pandoc \
 		-R \
 		--template=sigplanconf-template.tex \
