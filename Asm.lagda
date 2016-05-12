@@ -87,17 +87,20 @@ data ControlInstr (S : StateType) where
 
 \begin{code}
 data Instr (S : StateType) where
-  mov  : ∀ {σ τ}
-       → (r : σ ∈ StateType.registers S)
-       → RegValue (StateType.memory S) τ
-       → Instr S (onlyreg (RegDiff.chg r τ))
-  push : ∀ {τ}
-       → τ ∈ StateType.registers S
-       → Instr S (onlystack (StackDiff.push τ))
-  pop  : ∀ {σ τ DS}
-       → (r : σ ∈ StateType.registers S)
-       → (p : StateType.datastack S ≡ τ ∷ DS)
-       → Instr S (regstack (RegDiff.chg r τ) (StackDiff.pop p))
+  mov   : ∀ {σ τ}
+        → (r : σ ∈ StateType.registers S)
+        → RegValue (StateType.memory S) τ
+        → Instr S (onlyreg (RegDiff.chg r τ))
+  push  : ∀ {τ}
+        → τ ∈ StateType.registers S
+        → Instr S (onlystack (StackDiff.push τ))
+  pushc : ∀ {τ} → RegValue (StateType.memory S) τ
+        → Instr S (onlystack (StackDiff.push τ))
+        -- TODO: still possible to push values from registers using pushc
+  pop   : ∀ {σ τ DS}
+        → (r : σ ∈ StateType.registers S)
+        → (p : StateType.datastack S ≡ τ ∷ DS)
+        → Instr S (regstack (RegDiff.chg r τ) (StackDiff.pop p))
 \end{code}
 
 Функции, определяющие результаты исполнения заданных инструкций, определяются
@@ -135,6 +138,8 @@ exec-instr (state Γ Ψ DS CS) (mov r x)
   = toreg Γ r x , Ψ , DS
 exec-instr (state Γ Ψ DS CS) (push r)
   = Γ , Ψ , fromreg Γ r ∷ DS
+exec-instr (state Γ Ψ DS CS) (pushc i)
+  = Γ , Ψ , i ∷ DS
 exec-instr (state Γ Ψ (v ∷ DS) CS) (pop r refl)
   = toreg Γ r v , Ψ , DS
 
