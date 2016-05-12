@@ -10,8 +10,7 @@ SOURCES = \
 	$(BUILD)/Asm.latex \
 	$(BUILD)/BlockEq.latex \
 	$(BUILD)/Programs.latex \
-	$(BUILD)/Linkers.latex \
-	$(BUILD)/LazyLinkers.latex
+	$(BUILD)/Linkers.latex
 
 $(BUILD)/%.tex: %.lagda
 	rm -f *.agdai && \
