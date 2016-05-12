@@ -28,9 +28,10 @@ pltize [] = []
 pltize (atom x ∷ Ψ) = atom x ∷ pltize Ψ
 pltize (block Γ DS CS ∷ Ψ)
   = block Γ DS CS
+  ∷ (block Γ DS CS
   ∷ (atom (block Γ DS CS *)
   ∷ (block Γ DS CS
-  ∷ pltize Ψ))
+  ∷ pltize Ψ)))
 \end{code}
 
 \begin{code}
@@ -39,25 +40,25 @@ plt : ∀ {Γ Ψ DS CS} → block Γ DS CS ∈ Ψ
 plt (here refl) = here refl
 plt {Ψ = atom x ∷ Ψ} (there f) = there $ plt f
 plt {Ψ = block Γ DS CS ∷ Ψ} (there f)
-  = there (there (there (plt f)))
+  = there $ there (there (there (plt f)))
 \end{code}
 
 \begin{code}
 got : ∀ {Γ Ψ DS CS} → block Γ DS CS ∈ Ψ
     → atom (block Γ DS CS *) ∈ pltize Ψ
-got (here refl) = there (here refl)
+got (here refl) = there $ there (here refl)
 got {Ψ = atom x ∷ Ψ} (there f) = there $ got f
 got {Ψ = block Γ DS CS ∷ Ψ} (there f)
-  = there (there (there (got f)))
+  = there $ there (there (there (got f)))
 \end{code}
 
 \begin{code}
 func : ∀ {Γ Ψ DS CS} → block Γ DS CS ∈ Ψ
     → block Γ DS CS ∈ pltize Ψ
-func (here refl) = there (there (here refl))
+func (here refl) = there $ there (there (here refl))
 func {Ψ = atom x ∷ Ψ} (there f) = there $ func f
 func {Ψ = block Γ DS CS ∷ Ψ} (there f)
-  = there (there (there (func f)))
+  = there $ there (there (there (func f)))
 \end{code}
 
 \begin{code}
