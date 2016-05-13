@@ -1,5 +1,11 @@
 # Introduction
 
+TODO, from e-mail:
+
+> So, I think you've identified an original problem and your bachelor
+> thesis work is probably the first to look at those linking mechanisms
+> from a semantic viewpoint.
+
 Верифицировать иногда надо. Тулчейны-то уж точно стоит, потому что баги в
 них, как правило, труднонаходимы, но могут причинить много боли.
 
