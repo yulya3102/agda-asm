@@ -249,9 +249,11 @@ PLT[ f ]-correctness H
     = loadblock H (plt f) ≡ (dempty , plt-stub (got f))
 \end{code}
 
-TODO
+Дальше, используя определенную семантику инструкции `indirect jump`, можно
+доказать, что в результате исполнения блока с этой инструкцией
+состояние исполнителя не изменится, а исполнение передастся на блок, адрес
+которого записан в ячейке памяти, переданной аргументом в `indirect jump`.
 
-\ignore{
 \begin{code}
 exec-ijmp : ∀ {ST} → (S : State ST)
           → (p : atom (block
@@ -267,9 +269,9 @@ exec-ijmp : ∀ {ST} → (S : State ST)
 exec-ijmp (state Γ Ψ DS CS) p = refl
 \end{code}
 
-*   состояние исполнителя в момент непосредственного вызова функции
-    эквивалентно состоянию исполнителя после исполнения соответствующего
-    этой функции элемента PLT при условии корректно заполненного GOT;
+Используя предположение о корректности GOT и предыдущую лемму,
+доказываем, что исполнение блока PLT некоторой функции `f` приводит к
+исполнению функции `f` в том же состоянии исполнителя.
 
 \begin{code}
 exec-plt : ∀ {Γ Ψ DS CS}
@@ -281,9 +283,8 @@ exec-plt : ∀ {Γ Ψ DS CS}
 exec-plt f S p rewrite sym p = exec-ijmp S (got f)
 \end{code}
 
-Используя эти леммы, можно доказать, что если GOT заполнен корректно,
-то верна внешняя эквивалентность блока PLT, использующего соответствующий
-функции элемент GOT, и самой функции:
+Дальше легким движением руки это все заворачивается в эквивалентность
+исполняемых блоков `(plt f, S)` и `(func f, S)`.
 
 \begin{code}
 exblock-eq-proof : ∀ {Γ Ψ DS CS}
@@ -292,10 +293,18 @@ exblock-eq-proof : ∀ {Γ Ψ DS CS}
                  → GOT[ f ]-correctness (State.memory S)
                  → ExBlockEq
                    (block (plt-stub (got f)) S)
-                   (block (proj₂ $ loadblock (State.memory S) (func f)) S)
-exblock-eq-proof f S p = left (exec-block-≡ (plt-stub (got f)) _ S S (exec-plt f S p)) equal
+                   (block
+                     (proj₂ $ loadblock (State.memory S) (func f))
+                     S)
+exblock-eq-proof f S p
+  = left (exec-block-≡ (plt-stub (got f)) _ S S
+                       (exec-plt f S p))
+         equal
 \end{code}
-}
+
+Ну и дальше заворачиваем это все в желаемую эквивалентность блоков,
+используя дополнительное предположение о том, что блок PLT корректно
+размещен в памяти.
 
 \begin{code}
 block-eq-proof : ∀ {Γ Ψ DS CS}
@@ -305,7 +314,8 @@ block-eq-proof : ∀ {Γ Ψ DS CS}
                       × (PLT[ f ]-correctness $ State.memory S))
                  (plt f)
                  (func f)
-block-eq-proof {Γ} {Ψ} {DS} {CS} f = block-eq-assuming lemma
+block-eq-proof {Γ} {Ψ} {DS} {CS} f
+  = block-eq-assuming lemma
   where
     ST = statetype Γ Ψ DS CS
     lemma : (S : State $ pltize-state ST)
@@ -315,12 +325,6 @@ block-eq-proof {Γ} {Ψ} {DS} {CS} f = block-eq-assuming lemma
             (construct-exblock (plt f) S)
             (construct-exblock (func f) S)
     lemma S (got-correctness , plt-correctness)
-      rewrite plt-correctness = exblock-eq-proof f S got-correctness
-\end{code}
-
-Хотелось бы еще сюда засунуть формализованное определение и доказательство
-эквивалентности программ, а то пока я умею только махать руками на эту тему
-
-\begin{code}
--- TODO: program equivalence
+      rewrite plt-correctness
+      = exblock-eq-proof f S got-correctness
 \end{code}
