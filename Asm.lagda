@@ -103,9 +103,12 @@ data Instr (S : StateType) where
         → (p : StateType.datastack S ≡ τ ∷ DS)
         → Instr S (regstack (RegDiff.chg r τ) (StackDiff.pop p))
 \end{code}
+}
 
-Функции, определяющие результаты исполнения заданных инструкций, определяются
-тривиально.
+Семантика управляющих инструкций в этой формализации определяется так:
+результатом исполнения управляющей инструкции в определенном стейте
+является пара из обновленного стека вызовов и блока, на который передастся
+управление после исполнения инструкции.
 
 \begin{code}
 exec-control : ∀ {S c}
@@ -116,10 +119,21 @@ exec-control : ∀ {S c}
                (StateType.callstack (dapply S (csChg S c)))
              × Σ (Diff (dapply S (csChg S c)))
                  (Block (dapply S (csChg S c)))
-exec-control (state Γ Ψ DS CS) (call f cont)
-  = cont ∷ CS , loadblock Ψ f
+\end{code}
+
+Семантика исполнения интересной нам инструкции `indirect jump` такова:
+стек вызовов остается прежним, а управление передается на блок, адрес
+которого записан в ячейке, указанной аргументом инструкции.
+
+\begin{code}
 exec-control (state Γ Ψ DS CS) (jmp[ p ])
   = CS , loadblock Ψ (loadptr Ψ p)
+\end{code}
+
+\ignore{
+\begin{code}
+exec-control (state Γ Ψ DS CS) (call f cont)
+  = cont ∷ CS , loadblock Ψ f
 exec-control (state Γ Ψ DS CS) (jmp f)
   = CS , loadblock Ψ f
 exec-control (state Γ Ψ DS (f ∷ CS)) (ret refl)
