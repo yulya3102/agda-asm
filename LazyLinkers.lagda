@@ -288,6 +288,13 @@ record LinkerBase {ST : StateType} : Set where
         (callstack-after-linker CS $ linker-diff-eq M)
   open Exec public
 
+  block-after-linker : (S : State $ LinkerS ST)
+                     → IPST (dapply _
+                            (proj₁ $ loadblock (State.memory S) linker))
+  block-after-linker (state R M DS CS)
+    rewrite linker-diff-eq M
+    = func (function (unint $ peek DS))
+
 record Linker {ST : StateType} (L : LinkerBase {ST}) : Set where
   open LinkerBase L public
   field
@@ -295,7 +302,8 @@ record Linker {ST : StateType} (L : LinkerBase {ST}) : Set where
                 → exec-block S
                   (proj₂ $ loadblock (State.memory S) linker)
                 ≡ (state-after-linker S
-                , {!loadblock (State.memory S) (func $ function (unint $ peek (State.datastack S)))!})
+                , loadblock (State.memory (state-after-linker S))
+                            (block-after-linker S))
 
   {-
   То, что исполняется после вызова линкера для функции, эквивалентно
