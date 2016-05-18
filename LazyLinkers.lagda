@@ -295,6 +295,14 @@ record LinkerBase {ST : StateType} : Set where
     rewrite linker-diff-eq M
     = func (function (unint $ peek DS))
 
+  same-state-after-linker : (S : State $ LinkerS ST)
+                          → State (pltize-state ST)
+  same-state-after-linker (state R M DS CS)
+    with state-after-linker (state R M DS CS)
+  ... | S'
+    rewrite linker-diff-eq M
+    = S'
+
 record Linker {ST : StateType} (L : LinkerBase {ST}) : Set where
   open LinkerBase L public
   field
@@ -319,7 +327,7 @@ record Linker {ST : StateType} (L : LinkerBase {ST}) : Set where
                        → ExBlockEq
                          (construct-exblock
                            (func $ function $ proj₁ id)
-                           {!state-after-linker (state R M DS CS)!}
+                           (same-state-after-linker (state R M DS CS))
                            )
                          (construct-exblock
                            (func f)
@@ -327,11 +335,9 @@ record Linker {ST : StateType} (L : LinkerBase {ST}) : Set where
                              (store (got f) M
                                        (Value.atom $ ptr $ func f))
                              (dspop DS) CS))
-  func-after-linker-eq f (id , p) R M (int .id ∷ DS) CS refl = {!!}
-  {-
+  func-after-linker-eq f (id , p) R M (int .id ∷ DS) CS refl
     with proj₁ $ loadblock M linker | linker-diff-eq M
   ... | ._ | refl rewrite p = equal
-  -}
 
   {-
   Линкер для функции в стейте S эквивалентен самой функции
@@ -348,9 +354,11 @@ record Linker {ST : StateType} (L : LinkerBase {ST}) : Set where
                    (construct-exblock linker
                      (state R M (int (proj₁ id) ∷ DS) CS))
                    (construct-exblock (func f)
-                    (state R (store {!M!} {!got f!} (Value.atom $ ptr $ func f)) DS CS))
+                    (state R (store (got f) M (Value.atom $ ptr $ func f)) DS CS))
   func-linker-eq f id R M DS CS 
-    = left {!exec-linker (state R M ((int $ proj₁ id) ∷ DS) CS)!}
+    = left (exec-block-≡ (proj₂ $ loadblock M linker) _
+                         (state R M (int (proj₁ id) ∷ DS) CS) _
+                         (exec-linker (state R M (int (proj₁ id) ∷ DS) CS)))
            {!func-after-linker-eq f id R M (int (proj₁ id) ∷ DS) CS refl!}
 
   exec-plt-cont :
