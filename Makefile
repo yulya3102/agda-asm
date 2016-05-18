@@ -22,7 +22,7 @@ $(BUILD)/%.tex: %.lagda
 checkall:
 	agda $(AGDA_INCLUDE) --allow-unsolved-metas Linkers.lagda
 
-$(BUILD)/%.pdf: $(BUILD)/%.latex
+$(BUILD)/%.pdf: $(BUILD)/%.latex bib.bib
 	xelatex \
 		-output-directory=$(BUILD) \
 		$<
