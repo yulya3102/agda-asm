@@ -26,6 +26,13 @@ $(BUILD)/%.pdf: $(BUILD)/%.latex
 	xelatex \
 		-output-directory=$(BUILD) \
 		$<
+	bibtex $(<:.latex=.aux)
+	xelatex \
+		-output-directory=$(BUILD) \
+		$<
+	xelatex \
+		-output-directory=$(BUILD) \
+		$<
 
 $(BUILD)/%.md: %.md
 	cp $< $@
@@ -36,6 +43,7 @@ $(BUILD)/%.md: $(BUILD)/%.tex
 $(BUILD)/%.latex: $(BUILD)/%.md
 	pandoc \
 		--listings \
+		--natbib \
 		$^ -o $@
 
 $(BUILD)/main.latex: $(SOURCES) sigplanconf-template.tex
