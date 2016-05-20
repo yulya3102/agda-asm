@@ -46,7 +46,7 @@ $(BUILD)/%.latex: $(BUILD)/%.md
 		--natbib \
 		$^ -o $@
 
-$(BUILD)/main.latex: $(SOURCES) sigplanconf-template.tex
+$(BUILD)/main.latex: $(SOURCES) sigplanconf-template.tex $(BUILD)/Abstract.latex
 	pandoc \
 		-R \
 		--template=sigplanconf-template.tex \
