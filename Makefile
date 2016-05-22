@@ -51,7 +51,7 @@ $(BUILD)/%.latex: $(BUILD)/%.md
 		--natbib \
 		$^ -o $@
 
-$(BUILD)/main.latex: $(SOURCES) sigplanconf-template.tex $(BUILD)/Abstract.latex
+$(BUILD)/main.latex: Makefile $(SOURCES) sigplanconf-template.tex $(BUILD)/Abstract.latex
 	pandoc \
 		-R \
 		--template=sigplanconf-template.tex \
