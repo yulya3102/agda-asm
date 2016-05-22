@@ -19,7 +19,7 @@ $(BUILD)/agda.sty: agda.sty
 $(BUILD)/%.tex: %.lagda
 	rm -f *.agdai && \
 	agda $(AGDA_INCLUDE) --latex --latex-dir $(BUILD) --allow-unsolved-metas $<
-	rm $(BUILD)/agda.sty
+	rm -f $(BUILD)/agda.sty
 
 .PHONY: checkall
 
