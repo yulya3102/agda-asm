@@ -16,16 +16,17 @@ SOURCES = \
 $(BUILD)/agda.sty: agda.sty
 	cp $< $@
 
-$(BUILD)/%.tex: %.lagda $(BUILD)/agda.sty
+$(BUILD)/%.tex: %.lagda
 	rm -f *.agdai && \
 	agda $(AGDA_INCLUDE) --latex --latex-dir $(BUILD) --allow-unsolved-metas $<
+	rm $(BUILD)/agda.sty
 
 .PHONY: checkall
 
 checkall:
 	agda $(AGDA_INCLUDE) --allow-unsolved-metas Linkers.lagda
 
-$(BUILD)/%.pdf: $(BUILD)/%.latex bib.bib
+$(BUILD)/%.pdf: $(BUILD)/%.latex bib.bib $(BUILD)/agda.sty
 	xelatex \
 		-output-directory=$(BUILD) \
 		$<
