@@ -6,7 +6,7 @@ AGDA_INCLUDE = -i . -i ./agda-stdlib/src
 
 SOURCES = \
 	$(BUILD)/Intro.latex \
-	$(BUILD)/TAL.latex \
+	$(BUILD)/TALTypes.latex \
 	$(BUILD)/MetaAsm.latex \
 	$(BUILD)/Asm.latex \
 	$(BUILD)/BlockEq.latex \
