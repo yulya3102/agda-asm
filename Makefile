@@ -13,7 +13,10 @@ SOURCES = \
 	$(BUILD)/Linkers.latex \
 	$(BUILD)/Conclusion.latex
 
-$(BUILD)/%.tex: %.lagda
+$(BUILD)/agda.sty: agda.sty
+	cp $< $@
+
+$(BUILD)/%.tex: %.lagda $(BUILD)/agda.sty
 	rm -f *.agdai && \
 	agda $(AGDA_INCLUDE) --latex --latex-dir $(BUILD) --allow-unsolved-metas $<
 
