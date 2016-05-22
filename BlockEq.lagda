@@ -59,9 +59,9 @@ this block, and machine state type includes memory type. For different
 programs memory type will probably be different, therefore, blocks in
 different programs will have different types and can't be equivalent. So,
 technically, it will make sense to formalise blocks equivalence only inside
-one program. However, we can think of two different programs `A` and `B` as
-one big program `C` with blocks from `A` program and `B` program, and speak
-of block equivalence inside program `C`.
+one program. However, we can think of two different programs $A$ and $B$ as
+one big program $C$ with blocks from $A$ program and $B$ program, and speak
+of block equivalence inside program $C$.
 
 \begin{code}
 open import Data.Product
@@ -87,8 +87,8 @@ module BlockEq
   open Values Block
 \end{code}
 
-Auxiliary defintion: "executable block of type `T`" is a pair of block of
-type `T` and machine state of the same type `T`. Execution of this block
+Auxiliary defintion: "executable block of type $T$" is a pair of block of
+type $T$ and machine state of the same type $T$. Execution of this block
 has exactly one result, even if there are conditional execution in blocks.
 Uniqueness of the block execution result allows us to reason about
 executable blocks.
@@ -145,9 +145,9 @@ executable blocks.
 Тут текст на тему того, почему определение ExBlockEq выглядит именно так.
 
 \ignore{
-Two executable blocks `A` and `B` are equivalent, if there exists two
-execution sequences starting from `A` and `B`, leading to same executable
-block `C`. For example, two following blocks can be equivalent for some
+Two executable blocks $A$ and $B$ are equivalent, if there exists two
+execution sequences starting from $A$ and $B$, leading to same executable
+block $C$. For example, two following blocks can be equivalent for some
 initial machine states.
 
 ```asm
@@ -271,14 +271,14 @@ g:
 
 В самом первом примере блоки `main` были эквивалентными для любых начальных
 состояний исполнителя. Определим эквивалентность блоков, используя
-эквивалентность исполняемых блоков: два блока `f` и `g` эквивалентны, если
-для любых начальных состояний `S` исполняемые блоки `(f, S)` и `(g, S)`
+эквивалентность исполняемых блоков: два блока $f$ и $g$ эквивалентны, если
+для любых начальных состояний $S$ исполняемые блоки $(f, S)$ и $(g, S)$
 экививалентны.
 
 В действительности используется определение, использующее некоторое
-предположение о состоянии исполнителя: два блока `f` и `g` эквивалентны,
-если для любых начальных состояний `S`, в которых исполняется указанное
-предположение, исполняемые блоки `(f, S)` и `(g, S)` экививалентны.
+предположение о состоянии исполнителя: два блока $f$ и $g$ эквивалентны,
+если для любых начальных состояний $S$, в которых исполняется указанное
+предположение, исполняемые блоки $(f, S)$ и $(g, S)$ экививалентны.
 
 \labeledfigure{fig:BlockEqAssuming}{Определение эквивалентности блоков}{
 \begin{code}
