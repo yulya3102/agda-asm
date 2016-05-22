@@ -25,7 +25,7 @@ open import Programs
 }
 
 \begin{code}
-pltize : DataType → DataType
+pltize : HeapTypes → HeapTypes
 pltize [] = []
 pltize (atom x ∷ Ψ) = atom x ∷ pltize Ψ
 pltize (block Γ DS CS ∷ Ψ)

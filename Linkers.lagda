@@ -103,7 +103,7 @@ PLT добавляется по одному элементу: в GOT добав
 
 \labeledfigure{fig:changeABI}{Изменения в ABI объектного файла, производимые линкером}{
 \begin{code}
-pltize : DataType → DataType
+pltize : HeapTypes → HeapTypes
 pltize [] = []
 pltize (atom x ∷ Ψ) = atom x ∷ pltize Ψ
 pltize (block Γ DS CS ∷ Ψ)

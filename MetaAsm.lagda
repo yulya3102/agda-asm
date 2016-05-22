@@ -59,8 +59,8 @@ CallStackType : Set
 Registers, memory and data stack are typed with list of types of its elements.
 
 \begin{code}
-RegTypes = List RegType
-DataType = List Type
+RegFileTypes = List RegType
+HeapTypes = List Type
 DataStackType = List RegType
 \end{code}
 
@@ -93,7 +93,7 @@ type that should be stored in type of call stack element are its registers
 type and data stack type:
 
 \begin{code}
-CallStackType = List (RegTypes × DataStackType)
+CallStackType = List (RegFileTypes × DataStackType)
 \end{code}
 }
 
@@ -135,8 +135,8 @@ first category is a subset of the second category.
 record StateType : Set where
   constructor statetype
   field
-    registers : RegTypes
-    memory    : DataType
+    registers : RegFileTypes
+    memory    : HeapTypes
     datastack : DataStackType
     callstack : CallStackType
 \end{code}
@@ -150,7 +150,7 @@ data RegType where
 
 data Type where
   atom : RegType → Type
-  block : RegTypes
+  block : RegFileTypes
         → DataStackType → CallStackType
         → Type
 \end{code}
@@ -332,7 +332,7 @@ TODO: memory, registers and stacks definition
     data Chg (S : StateType) : Set where
       rchg  : RegDiff.Chg (StateType.registers S) → Chg S
       dschg : StackDiff.Chg RegType (StateType.datastack S) → Chg S
-      cschg : StackDiff.Chg (RegTypes × DataStackType)
+      cschg : StackDiff.Chg (RegFileTypes × DataStackType)
                (StateType.callstack S) → Chg S
 
     chgapply : (S : StateType) → Chg S → StateType
@@ -385,7 +385,7 @@ TODO: memory, registers and stacks definition
   CallStackChg : StateType → Set
   CallStackChg S
     = StackDiff.Chg
-      (RegTypes × DataStackType)
+      (RegFileTypes × DataStackType)
       (StateType.callstack S)
 \end{code}
 
@@ -500,11 +500,11 @@ module Meta where
 произвольного размера.
 
 \begin{code}
-    data RegValue (Ψ : DataType) : RegType → Set where
+    data RegValue (Ψ : HeapTypes) : RegType → Set where
       ptr : ∀ {τ} → τ ∈ Ψ → RegValue Ψ (τ *)
       int : ℕ → RegValue Ψ int
 
-    data Value (Ψ : DataType) : Type → Set where
+    data Value (Ψ : HeapTypes) : Type → Set where
       atom : ∀ {τ} → RegValue Ψ τ → Value Ψ (atom τ)
       block : ∀ {Γ DS CS d}
             → Block (statetype Γ Ψ DS CS) d
@@ -539,7 +539,7 @@ module Meta where
 Определение набора регистров аналогично приведенному ранее.
 
 \begin{code}
-    data Registers (Ψ : DataType) : RegTypes → Set where
+    data Registers (Ψ : HeapTypes) : RegFileTypes → Set where
       []  : Registers Ψ []
       _∷_ : ∀ {τ τs}
           → RegValue Ψ τ
@@ -572,11 +572,11 @@ module Meta where
 Состояние памяти определяется аналогично приведенному ранее.
 
 \begin{code}
-    data IData (Ψ : DataType) : DataType → Set where
+    data IData (Ψ : HeapTypes) : HeapTypes → Set where
       []  : IData Ψ []
       _∷_ : ∀ {τ τs} → Value Ψ τ → IData Ψ τs → IData Ψ (τ ∷ τs)
 
-    Data : DataType → Set
+    Data : HeapTypes → Set
     Data Ψ = IData Ψ Ψ
 
     private
@@ -635,7 +635,7 @@ module Meta where
 значения каких типов в нем находятся.
 
 \begin{code}
-    data DataStack (Ψ : DataType) : List RegType → Set
+    data DataStack (Ψ : HeapTypes) : List RegType → Set
       where
       []   : DataStack Ψ []
       _∷_  : ∀ {τ DS} → RegValue Ψ τ
@@ -652,8 +652,8 @@ module Meta where
 Типизированный instruction pointer — указатель на блок кода в памяти.
 
 \begin{code}
-    IPRT : DataType
-         → RegTypes
+    IPRT : HeapTypes
+         → RegFileTypes
          → DataStackType
          → CallStackType
          → Set
@@ -668,7 +668,7 @@ module Meta where
 состояние стека вызовов.
 
 \begin{code}
-    data CallStack (Ψ : DataType) : CallStackType → Set where
+    data CallStack (Ψ : HeapTypes) : CallStackType → Set where
       []  : CallStack Ψ []
       _∷_ : ∀ {Γ DS CS} → IPRT Ψ Γ DS CS → CallStack Ψ CS
           → CallStack Ψ ((Γ , DS) ∷ CS)
