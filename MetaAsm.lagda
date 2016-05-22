@@ -99,13 +99,11 @@ CallStackType = List (RegFileTypes × DataStackType)
 The only arbitrary-sized type that is not also register type is "block
 type", which contains all parts of machine state type except for static
 memory.
-}
 
 Значения типов из первой категории могут находиться в регистрах, а значения
 типов второй категории можно сохранять в память. При этом первая категория
 является подмножеством второй.
 
-\ignore{
 Values with types from the first category can be stored in registers, and
 values with types from the second category can be stored in memory. The
 first category is a subset of the second category.
