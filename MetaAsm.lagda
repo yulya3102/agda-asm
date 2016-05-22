@@ -130,6 +130,7 @@ first category is a subset of the second category.
 Таким образом, тип состояния исполнителя включает в себя не только типы
 регистров и памяти, но и типы обоих стеков.
 
+\labeledfigure{fig:statetype}{Тип состояния исполнителя}{
 \begin{code}
 record StateType : Set where
   constructor statetype
@@ -139,7 +140,9 @@ record StateType : Set where
     datastack : DataStackType
     callstack : CallStackType
 \end{code}
+}
 
+\labeledfigure{fig:types}{Поддерживаемые типы данных}{
 \begin{code}
 data RegType where
   _*  : Type → RegType
@@ -151,6 +154,7 @@ data Type where
         → DataStackType → CallStackType
         → Type
 \end{code}
+}
 
 \ignore{
 \ignore{

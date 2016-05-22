@@ -35,6 +35,15 @@
 
 \usepackage{agda}
 \newcommand{\ignore}[1]{}
+\newcommand{\labeledfigure}[3]{%
+\begin{figure}%
+\begin{center}%
+{#3}
+\label{#1}
+\caption{{#2}}
+\end{center}%
+\end{figure}%
+}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                               %

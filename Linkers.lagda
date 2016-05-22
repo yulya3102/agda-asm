@@ -101,6 +101,7 @@ PLT добавляется по одному элементу: в GOT добав
 по каким адресам будут расположены в слинкованной программе соответствующие
 этому блоку кода элементы PLT, GOT и сам блок кода соответственно.
 
+\labeledfigure{fig:changeABI}{Изменения в ABI объектного файла, производимые линкером}{
 \begin{code}
 pltize : DataType → DataType
 pltize [] = []
@@ -110,27 +111,21 @@ pltize (block Γ DS CS ∷ Ψ)
   ∷ (atom (block Γ DS CS *)
   ∷ (block Γ DS CS
   ∷ pltize Ψ))
-\end{code}
 
-\begin{code}
 plt : ∀ {Γ Ψ DS CS} → block Γ DS CS ∈ Ψ
     → block Γ DS CS ∈ pltize Ψ
 plt (here refl) = here refl
 plt {Ψ = atom x ∷ Ψ} (there f) = there $ plt f
 plt {Ψ = block Γ DS CS ∷ Ψ} (there f)
   = there (there (there (plt f)))
-\end{code}
 
-\begin{code}
 got : ∀ {Γ Ψ DS CS} → block Γ DS CS ∈ Ψ
     → atom (block Γ DS CS *) ∈ pltize Ψ
 got (here refl) = there (here refl)
 got {Ψ = atom x ∷ Ψ} (there f) = there $ got f
 got {Ψ = block Γ DS CS ∷ Ψ} (there f)
   = there (there (there (got f)))
-\end{code}
 
-\begin{code}
 func : ∀ {Γ Ψ DS CS} → block Γ DS CS ∈ Ψ
     → block Γ DS CS ∈ pltize Ψ
 func (here refl) = there (there (here refl))
@@ -138,6 +133,7 @@ func {Ψ = atom x ∷ Ψ} (there f) = there $ func f
 func {Ψ = block Γ DS CS ∷ Ψ} (there f)
   = there (there (there (func f)))
 \end{code}
+}
 
 \ignore{
 \begin{code}
@@ -169,12 +165,14 @@ postulate
 параметре типа блока указывает на то, что этот блок никак не изменяет
 состояние исполнителя.
 
+\labeledfigure{fig:plt-stub}{Определение блока PLT}{
 \begin{code}
 plt-stub : ∀ {Γ Ψ DS CS}
          → atom (block Γ DS CS *) ∈ Ψ
          → Block (statetype Γ Ψ DS CS) dempty
 plt-stub got = ↝ jmp[ got ]
 \end{code}
+}
 
 \ignore{
 \begin{code}
@@ -235,6 +233,7 @@ dynamic (program memory start)
 предположение `PLT[ f ]-correctness` утверждает, что по адресу,
 соответствующему нужному блоку PLT, действительно находится блок PLT.
 
+\labeledfigure{fig:correctness}{Свойства динамического загрузчика}{
 \begin{code}
 GOT[_]-correctness : ∀ {Γ Ψ DS CS}
                    → (f : block Γ DS CS ∈ Ψ)
@@ -250,12 +249,25 @@ PLT[_]-correctness : ∀ {Γ Ψ DS CS}
 PLT[ f ]-correctness H
     = loadblock H (plt f) ≡ (dempty , plt-stub (got f))
 \end{code}
+}
 
 Дальше, используя определенную семантику инструкции `indirect jump`, можно
 доказать, что в результате исполнения блока с этой инструкцией
 состояние исполнителя не изменится, а исполнение передастся на блок, адрес
 которого записан в ячейке памяти, переданной аргументом в `indirect jump`.
 
+Используя предположение о корректности GOT и предыдущую лемму,
+доказываем, что исполнение блока PLT некоторой функции `f` приводит к
+исполнению функции `f` в том же состоянии исполнителя.
+
+Дальше легким движением руки это все заворачивается в эквивалентность
+исполняемых блоков `(plt f, S)` и `(func f, S)`.
+
+Ну и дальше заворачиваем это все в желаемую эквивалентность блоков,
+используя дополнительное предположение о том, что блок PLT корректно
+размещен в памяти.
+
+\labeledfigure{fig:lemmas}{Доказательства сохранения семантики}{
 \begin{code}
 exec-ijmp : ∀ {ST} → (S : State ST)
           → (p : atom (block
@@ -269,13 +281,7 @@ exec-ijmp : ∀ {ST} → (S : State ST)
             (State.memory S)
             (loadptr (State.memory S) p))
 exec-ijmp (state Γ Ψ DS CS) p = refl
-\end{code}
 
-Используя предположение о корректности GOT и предыдущую лемму,
-доказываем, что исполнение блока PLT некоторой функции `f` приводит к
-исполнению функции `f` в том же состоянии исполнителя.
-
-\begin{code}
 exec-plt : ∀ {Γ Ψ DS CS}
          → (f : block Γ DS CS ∈ Ψ)
          → (S : State (statetype Γ (pltize Ψ) DS CS))
@@ -284,10 +290,9 @@ exec-plt : ∀ {Γ Ψ DS CS}
          ≡ (S , loadblock (State.memory S) (func f))
 exec-plt f S p rewrite sym p = exec-ijmp S (got f)
 \end{code}
+}
 
-Дальше легким движением руки это все заворачивается в эквивалентность
-исполняемых блоков `(plt f, S)` и `(func f, S)`.
-
+\labeledfigure{fig:proofs}{Доказательства сохранения семантики}{
 \begin{code}
 exblock-eq-proof : ∀ {Γ Ψ DS CS}
                  → (f : block Γ DS CS ∈ Ψ)
@@ -302,13 +307,7 @@ exblock-eq-proof f S p
   = left (exec-block-≡ (plt-stub (got f)) _ S S
                        (exec-plt f S p))
          equal
-\end{code}
 
-Ну и дальше заворачиваем это все в желаемую эквивалентность блоков,
-используя дополнительное предположение о том, что блок PLT корректно
-размещен в памяти.
-
-\begin{code}
 block-eq-proof : ∀ {Γ Ψ DS CS}
                → (f : block Γ DS CS ∈ Ψ)
                → BlockEqAssuming
@@ -330,3 +329,4 @@ block-eq-proof {Γ} {Ψ} {DS} {CS} f
       rewrite plt-correctness
       = exblock-eq-proof f S got-correctness
 \end{code}
+}

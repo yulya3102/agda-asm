@@ -100,6 +100,7 @@ executable blocks.
 результат, даже если сам блок содержит условные переходы. Единственность
 результата позволяет как-то рассуждать об исполнении блоков.
 
+\labeledfigure{fig:ExecutableBlock}{Определение исполняемого блока}{
 \begin{code}
   record ExecutableBlock (ST : StateType) : Set where
     constructor block
@@ -108,6 +109,7 @@ executable blocks.
       exblock  : Block ST exdiff
       exstate  : State ST
 \end{code}
+}
 
 Результатом исполнения исполняемого блока является следующий исполняемый
 блок.
@@ -167,6 +169,7 @@ machine states there exist execution sequences leading to the same
 executable block:
 }
 
+\labeledfigure{fig:ExBlockEq}{Определение эквивалентности исполняемых блоков}{
 \begin{code}
   data ExBlockEq
     : {ST₁ ST₂ : StateType}
@@ -216,6 +219,7 @@ executable block:
           → ExBlockEq B A₂
           → ExBlockEq B A₁
 \end{code}
+}
 
 Еще есть доказательство того, что это определение действительно является
 отношением эквивалентности, но по факту оно нигде дальше не используется,
@@ -276,6 +280,7 @@ g:
 если для любых начальных состояний `S`, в которых исполняется указанное
 предположение, исполняемые блоки `(f, S)` и `(g, S)` экививалентны.
 
+\labeledfigure{fig:BlockEqAssuming}{Определение эквивалентности блоков}{
 \begin{code}
   record BlockEqAssuming
     {ST : StateType}
@@ -291,6 +296,7 @@ g:
             (construct-exblock A S)
             (construct-exblock B S)
 \end{code}
+}
 
 \ignore{
 \begin{code}

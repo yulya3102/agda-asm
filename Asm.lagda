@@ -39,6 +39,7 @@ open Values Block public
 ControlInstr указывает на то, что эта инструкция никак не меняет стек
 вызовов.
 
+\labeledfigure{fig:ControlInstr}{Конструктор инструкции indirect jump}{
 \begin{code}
 data ControlInstr (S : StateType) where
 \end{code}
@@ -66,6 +67,7 @@ data ControlInstr (S : StateType) where
          ∈ StateType.memory S)
        → ControlInstr S nothing
 \end{code}
+}
 
 \ignore{
 \begin{code}
@@ -110,6 +112,11 @@ data Instr (S : StateType) where
 является пара из обновленного стека вызовов и блока, на который передастся
 управление после исполнения инструкции.
 
+Семантика исполнения интересной нам инструкции `indirect jump` такова:
+стек вызовов остается прежним, а управление передается на блок, адрес
+которого записан в ячейке, указанной аргументом инструкции.
+
+\labeledfigure{fig:exec-control}{Семантика инструкции indirect jump}{
 \begin{code}
 exec-control : ∀ {S c}
              → State S
@@ -119,16 +126,10 @@ exec-control : ∀ {S c}
                (StateType.callstack (dapply S (csChg S c)))
              × Σ (Diff (dapply S (csChg S c)))
                  (Block (dapply S (csChg S c)))
-\end{code}
-
-Семантика исполнения интересной нам инструкции `indirect jump` такова:
-стек вызовов остается прежним, а управление передается на блок, адрес
-которого записан в ячейке, указанной аргументом инструкции.
-
-\begin{code}
 exec-control (state Γ Ψ DS CS) (jmp[ p ])
   = CS , loadblock Ψ (loadptr Ψ p)
 \end{code}
+}
 
 \ignore{
 \begin{code}
