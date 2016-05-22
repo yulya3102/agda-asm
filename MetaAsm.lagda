@@ -12,8 +12,6 @@ open import Function
 \end{code}
 }
 
-# Обзор используемой формализации TAL
-
 \ignore{
 \begin{code}
 data RegType : Set
@@ -97,13 +95,6 @@ CallStackType = List (RegFileTypes × DataStackType)
 \end{code}
 }
 
-Оригинальный TAL позволял использовать переменные типов и кортежи в памяти,
-что является оверкиллом для нашей задачи. Система типов в используемой
-формализации куда проще: типы размером с регистр включают в себя указатели
-и целые числа, а единственным типом произвольного размера являются блоки
-кода. Тип блока кода включает в себя типы ожидаемых этим блоком регистров и
-стека.
-
 \ignore{
 The only arbitrary-sized type that is not also register type is "block
 type", which contains all parts of machine state type except for static
@@ -119,16 +110,6 @@ Values with types from the first category can be stored in registers, and
 values with types from the second category can be stored in memory. The
 first category is a subset of the second category.
 }
-
-Для простоты реализации стек был распилен на две части, одна из которых
-называется стеком данных и позволяет сохранять в себе данные размером с
-регистр, а вторая, стек вызовов, сохраняет адреса возврата. Так,
-управляющим инструкциям, завершающим блок, дозволено обращаться только к
-стеку вызовов, в то время как не-управляющие инструкции могут работать
-только со стеком данных.
-
-Таким образом, тип состояния исполнителя включает в себя не только типы
-регистров и памяти, но и типы обоих стеков.
 
 \labeledfigure{fig:statetype}{Тип состояния исполнителя}{
 \begin{code}
