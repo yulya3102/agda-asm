@@ -33,13 +33,9 @@ open Values Block public
 \end{code}
 }
 
-\labeledfigure{fig:ControlInstr}{Конструктор инструкции indirect jump}{
-\begin{code}
-data ControlInstr (S : StateType) where
-\end{code}
-
 \ignore{
 \begin{code}
+data ControlInstr (S : StateType) where
   call : ∀ {Γ DS}
        → (f : code
          (StateType.registers S)
@@ -49,10 +45,6 @@ data ControlInstr (S : StateType) where
        → (cont : code Γ DS (StateType.callstack S)
                ∈ StateType.memory S)
        → ControlInstr S (Maybe.just $ StackDiff.push (Γ , DS))
-\end{code}
-}
-
-\begin{code}
   jmp[_] : (ptr : atom
          (code
          (StateType.registers S)
@@ -60,11 +52,6 @@ data ControlInstr (S : StateType) where
          (StateType.callstack S) *)
          ∈ StateType.memory S)
        → ControlInstr S nothing
-\end{code}
-}
-
-\ignore{
-\begin{code}
   jmp : (f : code
         (StateType.registers S)
         (StateType.datastack S)
@@ -99,9 +86,7 @@ data Instr (S : StateType) where
         → (p : StateType.datastack S ≡ τ ∷ DS)
         → Instr S (regstack (RegDiff.chg r τ) (StackDiff.pop p))
 \end{code}
-}
 
-\labeledfigure{fig:exec-control}{Семантика инструкции indirect jump}{
 \begin{code}
 control-instr-semantics : ∀ {S c}
              → State S
@@ -111,6 +96,11 @@ control-instr-semantics : ∀ {S c}
                (StateType.callstack (dapply S (csChg S c)))
              × Σ (Diff (dapply S (csChg S c)))
                  (Block (dapply S (csChg S c)))
+\end{code}
+}
+
+\labeledfigure{fig:ijmp-semantics}{Семантика инструкции indirect jump}{
+\begin{code}
 control-instr-semantics (state Γ Ψ DS CS) (jmp[ p ])
   = CS , loadblock Ψ (loadptr Ψ p)
 \end{code}
