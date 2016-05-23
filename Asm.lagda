@@ -103,7 +103,7 @@ data Instr (S : StateType) where
 
 \labeledfigure{fig:exec-control}{Семантика инструкции indirect jump}{
 \begin{code}
-exec-control : ∀ {S c}
+control-instr-semantics : ∀ {S c}
              → State S
              → ControlInstr S c
              → CallStack
@@ -111,18 +111,18 @@ exec-control : ∀ {S c}
                (StateType.callstack (dapply S (csChg S c)))
              × Σ (Diff (dapply S (csChg S c)))
                  (Block (dapply S (csChg S c)))
-exec-control (state Γ Ψ DS CS) (jmp[ p ])
+control-instr-semantics (state Γ Ψ DS CS) (jmp[ p ])
   = CS , loadblock Ψ (loadptr Ψ p)
 \end{code}
 }
 
 \ignore{
 \begin{code}
-exec-control (state Γ Ψ DS CS) (call f cont)
+control-instr-semantics (state Γ Ψ DS CS) (call f cont)
   = cont ∷ CS , loadblock Ψ f
-exec-control (state Γ Ψ DS CS) (jmp f)
+control-instr-semantics (state Γ Ψ DS CS) (jmp f)
   = CS , loadblock Ψ f
-exec-control (state Γ Ψ DS (f ∷ CS)) (ret refl)
+control-instr-semantics (state Γ Ψ DS (f ∷ CS)) (ret refl)
   = CS , loadblock Ψ f
 
 exec-instr : ∀ {S c}
@@ -144,7 +144,7 @@ exec-instr (state Γ Ψ DS CS) (pushc i)
 exec-instr (state Γ Ψ (v ∷ DS) CS) (pop r refl)
   = toreg Γ r v , Ψ , DS
 
-open ExecBlk Instr ControlInstr exec-instr exec-control public
+open ExecBlk Instr ControlInstr exec-instr control-instr-semantics public
 open import BlockEq Block exec-block public
 \end{code}
 }
