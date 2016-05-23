@@ -41,12 +41,12 @@ data ControlInstr (S : StateType) where
 \ignore{
 \begin{code}
   call : ∀ {Γ DS}
-       → (f : block
+       → (f : code
          (StateType.registers S)
          (StateType.datastack S)
          ((Γ , DS) ∷ StateType.callstack S)
          ∈ StateType.memory S)
-       → (cont : block Γ DS (StateType.callstack S)
+       → (cont : code Γ DS (StateType.callstack S)
                ∈ StateType.memory S)
        → ControlInstr S (Maybe.just $ StackDiff.push (Γ , DS))
 \end{code}
@@ -54,7 +54,7 @@ data ControlInstr (S : StateType) where
 
 \begin{code}
   jmp[_] : (ptr : atom
-         (block
+         (code
          (StateType.registers S)
          (StateType.datastack S)
          (StateType.callstack S) *)
@@ -65,7 +65,7 @@ data ControlInstr (S : StateType) where
 
 \ignore{
 \begin{code}
-  jmp : (f : block
+  jmp : (f : code
         (StateType.registers S)
         (StateType.datastack S)
         (StateType.callstack S)

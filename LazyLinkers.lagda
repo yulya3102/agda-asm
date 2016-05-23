@@ -28,51 +28,51 @@ open import Programs
 pltize : HeapTypes → HeapTypes
 pltize [] = []
 pltize (atom x ∷ Ψ) = atom x ∷ pltize Ψ
-pltize (block Γ DS CS ∷ Ψ)
-  = block Γ DS CS
-  ∷ (block Γ DS CS
-  ∷ (atom (block Γ DS CS *)
-  ∷ (block Γ DS CS
+pltize (code Γ DS CS ∷ Ψ)
+  = code Γ DS CS
+  ∷ (code Γ DS CS
+  ∷ (atom (code Γ DS CS *)
+  ∷ (code Γ DS CS
   ∷ pltize Ψ)))
 \end{code}
 
 \begin{code}
-plt : ∀ {Γ Ψ DS CS} → block Γ DS CS ∈ Ψ
-    → block Γ DS CS ∈ pltize Ψ
+plt : ∀ {Γ Ψ DS CS} → code Γ DS CS ∈ Ψ
+    → code Γ DS CS ∈ pltize Ψ
 plt (here refl) = here refl
 plt {Ψ = atom x ∷ Ψ} (there f) = there $ plt f
-plt {Ψ = block Γ DS CS ∷ Ψ} (there f)
+plt {Ψ = code Γ DS CS ∷ Ψ} (there f)
   = there $ there (there (there (plt f)))
 
-plt-cont : ∀ {Γ Ψ DS CS} → block Γ DS CS ∈ Ψ
-         → block Γ DS CS ∈ pltize Ψ
+plt-cont : ∀ {Γ Ψ DS CS} → code Γ DS CS ∈ Ψ
+         → code Γ DS CS ∈ pltize Ψ
 plt-cont (here refl) = there $ here refl
 plt-cont {Ψ = atom x ∷ Ψ} (there f) = there $ plt-cont f
-plt-cont {Ψ = block Γ DS CS ∷ Ψ} (there f)
+plt-cont {Ψ = code Γ DS CS ∷ Ψ} (there f)
   = there (there (there (there (plt-cont f))))
 \end{code}
 
 \begin{code}
-got : ∀ {Γ Ψ DS CS} → block Γ DS CS ∈ Ψ
-    → atom (block Γ DS CS *) ∈ pltize Ψ
+got : ∀ {Γ Ψ DS CS} → code Γ DS CS ∈ Ψ
+    → atom (code Γ DS CS *) ∈ pltize Ψ
 got (here refl) = there $ there (here refl)
 got {Ψ = atom x ∷ Ψ} (there f) = there $ got f
-got {Ψ = block Γ DS CS ∷ Ψ} (there f)
+got {Ψ = code Γ DS CS ∷ Ψ} (there f)
   = there $ there (there (there (got f)))
 \end{code}
 
 \begin{code}
-func : ∀ {Γ Ψ DS CS} → block Γ DS CS ∈ Ψ
-    → block Γ DS CS ∈ pltize Ψ
+func : ∀ {Γ Ψ DS CS} → code Γ DS CS ∈ Ψ
+    → code Γ DS CS ∈ pltize Ψ
 func (here refl) = there $ there (there (here refl))
 func {Ψ = atom x ∷ Ψ} (there f) = there $ func f
-func {Ψ = block Γ DS CS ∷ Ψ} (there f)
+func {Ψ = code Γ DS CS ∷ Ψ} (there f)
   = there $ there (there (there (func f)))
 \end{code}
 
 \begin{code}
 plt-stub : ∀ {Γ Ψ DS CS}
-         → atom (block Γ DS CS *) ∈ Ψ
+         → atom (code Γ DS CS *) ∈ Ψ
          → Block (statetype Γ Ψ DS CS) dempty
 plt-stub got = ↝ jmp[ got ]
 
@@ -90,14 +90,14 @@ plt-stub-cont id linker =
 
 \begin{code}
 GOT[_]-correctness : ∀ {Γ Ψ DS CS}
-                   → (f : block Γ DS CS ∈ Ψ)
+                   → (f : code Γ DS CS ∈ Ψ)
                    → (H : Data (pltize Ψ))
                    → Set
 GOT[ f ]-correctness H
     = loadptr H (got f) ≡ func f
 
 PLT[_]-correctness : ∀ {Γ Ψ DS CS}
-                   → (f : block Γ DS CS ∈ Ψ)
+                   → (f : code Γ DS CS ∈ Ψ)
                    → (H : Data (pltize Ψ))
                    → Set
 PLT[ f ]-correctness H
@@ -118,7 +118,7 @@ TODO
 \ignore{
 \begin{code}
 exec-ijmp : ∀ {ST} → (S : State ST)
-          → (p : atom (block
+          → (p : atom (code
                (StateType.registers ST)
                (StateType.datastack ST)
                (StateType.callstack ST)
@@ -137,7 +137,7 @@ exec-ijmp (state Γ Ψ DS CS) p = refl
 
 \begin{code}
 exec-plt : ∀ {Γ Ψ DS CS}
-         → (f : block Γ DS CS ∈ Ψ)
+         → (f : code Γ DS CS ∈ Ψ)
          → (S : State (statetype Γ (pltize Ψ) DS CS))
          → GOT[ f ]-correctness (State.memory S)
          → exec-block S (plt-stub (got f))
@@ -151,7 +151,7 @@ exec-plt f S p rewrite sym p = exec-ijmp S (got f)
 
 \begin{code}
 exblock-eq-proof : ∀ {Γ Ψ DS CS}
-                 → (f : block Γ DS CS ∈ Ψ)
+                 → (f : code Γ DS CS ∈ Ψ)
                  → (S : State (statetype Γ (pltize Ψ) DS CS))
                  → GOT[ f ]-correctness (State.memory S)
                  → ExBlockEq
@@ -163,7 +163,7 @@ exblock-eq-proof f S p = left (exec-block-≡ (plt-stub (got f)) _ S S (exec-plt
 
 \begin{code}
 block-eq-proof : ∀ {Γ Ψ DS CS}
-               → (f : block Γ DS CS ∈ Ψ)
+               → (f : code Γ DS CS ∈ Ψ)
                → BlockEqAssuming
                  (λ S → (GOT[ f ]-correctness $ State.memory S)
                       × (PLT[ f ]-correctness $ State.memory S))

@@ -106,31 +106,31 @@ PLT добавляется по одному элементу: в GOT добав
 pltize : HeapTypes → HeapTypes
 pltize [] = []
 pltize (atom x ∷ Ψ) = atom x ∷ pltize Ψ
-pltize (block Γ DS CS ∷ Ψ)
-  = block Γ DS CS
-  ∷ (atom (block Γ DS CS *)
-  ∷ (block Γ DS CS
+pltize (code Γ DS CS ∷ Ψ)
+  = code Γ DS CS
+  ∷ (atom (code Γ DS CS *)
+  ∷ (code Γ DS CS
   ∷ pltize Ψ))
 
-plt : ∀ {Γ Ψ DS CS} → block Γ DS CS ∈ Ψ
-    → block Γ DS CS ∈ pltize Ψ
+plt : ∀ {Γ Ψ DS CS} → code Γ DS CS ∈ Ψ
+    → code Γ DS CS ∈ pltize Ψ
 plt (here refl) = here refl
 plt {Ψ = atom x ∷ Ψ} (there f) = there $ plt f
-plt {Ψ = block Γ DS CS ∷ Ψ} (there f)
+plt {Ψ = code Γ DS CS ∷ Ψ} (there f)
   = there (there (there (plt f)))
 
-got : ∀ {Γ Ψ DS CS} → block Γ DS CS ∈ Ψ
-    → atom (block Γ DS CS *) ∈ pltize Ψ
+got : ∀ {Γ Ψ DS CS} → code Γ DS CS ∈ Ψ
+    → atom (code Γ DS CS *) ∈ pltize Ψ
 got (here refl) = there (here refl)
 got {Ψ = atom x ∷ Ψ} (there f) = there $ got f
-got {Ψ = block Γ DS CS ∷ Ψ} (there f)
+got {Ψ = code Γ DS CS ∷ Ψ} (there f)
   = there (there (there (got f)))
 
-func : ∀ {Γ Ψ DS CS} → block Γ DS CS ∈ Ψ
-    → block Γ DS CS ∈ pltize Ψ
+func : ∀ {Γ Ψ DS CS} → code Γ DS CS ∈ Ψ
+    → code Γ DS CS ∈ pltize Ψ
 func (here refl) = there (there (here refl))
 func {Ψ = atom x ∷ Ψ} (there f) = there $ func f
-func {Ψ = block Γ DS CS ∷ Ψ} (there f)
+func {Ψ = code Γ DS CS ∷ Ψ} (there f)
   = there (there (there (func f)))
 \end{code}
 }
@@ -140,9 +140,9 @@ func {Ψ = block Γ DS CS ∷ Ψ} (there f)
 pltize-ptr : ∀ {Ψ τ} → τ ∈ Ψ → τ ∈ pltize Ψ
 pltize-ptr {[]} ()
 pltize-ptr {_ ∷ Ψ} {atom _}      (here refl) = here refl
-pltize-ptr {_ ∷ Ψ} {block _ _ _} (here refl) = here refl
+pltize-ptr {_ ∷ Ψ} {code _ _ _} (here refl) = here refl
 pltize-ptr {atom _ ∷ Ψ}          (there px)  = there (pltize-ptr px)
-pltize-ptr {block _ _ _ ∷ Ψ}     (there px)  = there (there (there (pltize-ptr px)))
+pltize-ptr {code _ _ _ ∷ Ψ}     (there px)  = there (there (there (pltize-ptr px)))
 
 pltize-atom : ∀ {Ψ τ} → RegValue Ψ τ → RegValue (pltize Ψ) τ
 pltize-atom (ptr x) = ptr (pltize-ptr x)
@@ -168,7 +168,7 @@ postulate
 \labeledfigure{fig:plt-stub}{Определение блока PLT}{
 \begin{code}
 plt-stub : ∀ {Γ Ψ DS CS}
-         → atom (block Γ DS CS *) ∈ Ψ
+         → atom (code Γ DS CS *) ∈ Ψ
          → Block (statetype Γ Ψ DS CS) dempty
 plt-stub got = ↝ jmp[ got ]
 \end{code}
@@ -184,7 +184,7 @@ _++[_]++_ : ∀ {α} → {A : Set α} → (σs : List A) → (τ : A) → (τs :
 pltize-++ : ∀ Γ Δ → pltize (Γ ++ Δ) ≡ pltize Γ ++ pltize Δ
 pltize-++ [] Δ = refl
 pltize-++ (atom τ ∷ Ψ) Δ rewrite pltize-++ Ψ Δ = refl
-pltize-++ (block Γ DS CS ∷ Ψ) Δ rewrite pltize-++ Ψ Δ = refl
+pltize-++ (code Γ DS CS ∷ Ψ) Δ rewrite pltize-++ Ψ Δ = refl
 
 pltize-idata : ∀ Γ {Ψ} → IData (Γ ++ Ψ) Ψ → IData (pltize $ Γ ++ Ψ) (pltize Ψ)
 pltize-idata Γ [] = []
@@ -197,24 +197,24 @@ pltize-idata Γ (_∷_ {atom τ} {τs} (atom x) Ψ)
     Ψ' rewrite sym lemma = Ψ
     Ψ-tail : IData (pltize $ Γ ++ atom τ ∷ τs) (pltize τs)
     Ψ-tail rewrite lemma = pltize-idata (Γ ++ [ atom τ ]) Ψ'
-pltize-idata Δ (_∷_ {block Γ DS CS} {τs} (block x) Ψ)
+pltize-idata Δ (_∷_ {code Γ DS CS} {τs} (block x) Ψ)
   = Values.block (plt-stub this-got)
   ∷ (Values.atom (Values.ptr this-func)
   ∷ (Values.block (pltize-block x)
   ∷ Ψ-tail))
   where
-    lemma : Δ ++ block Γ DS CS ∷ τs ≡ (Δ ++ [ block Γ DS CS ]) ++ τs
-    lemma = Δ ++[ block Γ DS CS ]++ τs
-    Ψ' : IData ((Δ ++ [ block Γ DS CS ]) ++ τs) τs
+    lemma : Δ ++ code Γ DS CS ∷ τs ≡ (Δ ++ [ code Γ DS CS ]) ++ τs
+    lemma = Δ ++[ code Γ DS CS ]++ τs
+    Ψ' : IData ((Δ ++ [ code Γ DS CS ]) ++ τs) τs
     Ψ' rewrite sym lemma = Ψ
-    Ψ-tail : IData (pltize $ Δ ++ block Γ DS CS ∷ τs) (pltize τs)
-    Ψ-tail rewrite lemma = pltize-idata (Δ ++ [ block Γ DS CS ]) Ψ'
-    this-got : atom (block Γ DS CS *) ∈ (pltize $ Δ ++ block Γ DS CS ∷ τs)
-    this-got rewrite pltize-++ Δ (block Γ DS CS ∷ τs)
-      = ++ʳ (pltize Δ) {pltize $ block Γ DS CS ∷ τs} (there (here refl))
-    this-func : block Γ DS CS ∈ (pltize $ Δ ++ block Γ DS CS ∷ τs)
-    this-func rewrite pltize-++ Δ (block Γ DS CS ∷ τs)
-      = ++ʳ (pltize Δ) {pltize $ block Γ DS CS ∷ τs} (here refl)
+    Ψ-tail : IData (pltize $ Δ ++ code Γ DS CS ∷ τs) (pltize τs)
+    Ψ-tail rewrite lemma = pltize-idata (Δ ++ [ code Γ DS CS ]) Ψ'
+    this-got : atom (code Γ DS CS *) ∈ (pltize $ Δ ++ code Γ DS CS ∷ τs)
+    this-got rewrite pltize-++ Δ (code Γ DS CS ∷ τs)
+      = ++ʳ (pltize Δ) {pltize $ code Γ DS CS ∷ τs} (there (here refl))
+    this-func : code Γ DS CS ∈ (pltize $ Δ ++ code Γ DS CS ∷ τs)
+    this-func rewrite pltize-++ Δ (code Γ DS CS ∷ τs)
+      = ++ʳ (pltize Δ) {pltize $ code Γ DS CS ∷ τs} (here refl)
 
 pltize-data : ∀ {Ψ} → Data Ψ → Data (pltize Ψ)
 pltize-data = pltize-idata []
@@ -236,14 +236,14 @@ dynamic (program memory start)
 \labeledfigure{fig:correctness}{Свойства динамического загрузчика}{
 \begin{code}
 GOT[_]-correctness : ∀ {Γ Ψ DS CS}
-                   → (f : block Γ DS CS ∈ Ψ)
+                   → (f : code Γ DS CS ∈ Ψ)
                    → (H : Data (pltize Ψ))
                    → Set
 GOT[ f ]-correctness H
     = loadptr H (got f) ≡ func f
 
 PLT[_]-correctness : ∀ {Γ Ψ DS CS}
-                   → (f : block Γ DS CS ∈ Ψ)
+                   → (f : code Γ DS CS ∈ Ψ)
                    → (H : Data (pltize Ψ))
                    → Set
 PLT[ f ]-correctness H
@@ -270,7 +270,7 @@ PLT[ f ]-correctness H
 \labeledfigure{fig:lemmas}{Доказательства сохранения семантики}{
 \begin{code}
 exec-ijmp : ∀ {ST} → (S : State ST)
-          → (p : atom (block
+          → (p : atom (code
                (StateType.registers ST)
                (StateType.datastack ST)
                (StateType.callstack ST)
@@ -283,7 +283,7 @@ exec-ijmp : ∀ {ST} → (S : State ST)
 exec-ijmp (state Γ Ψ DS CS) p = refl
 
 exec-plt : ∀ {Γ Ψ DS CS}
-         → (f : block Γ DS CS ∈ Ψ)
+         → (f : code Γ DS CS ∈ Ψ)
          → (S : State (statetype Γ (pltize Ψ) DS CS))
          → GOT[ f ]-correctness (State.memory S)
          → exec-block S (plt-stub (got f))
@@ -295,7 +295,7 @@ exec-plt f S p rewrite sym p = exec-ijmp S (got f)
 \labeledfigure{fig:proofs}{Доказательства сохранения семантики}{
 \begin{code}
 exblock-eq-proof : ∀ {Γ Ψ DS CS}
-                 → (f : block Γ DS CS ∈ Ψ)
+                 → (f : code Γ DS CS ∈ Ψ)
                  → (S : State (statetype Γ (pltize Ψ) DS CS))
                  → GOT[ f ]-correctness (State.memory S)
                  → ExBlockEq
@@ -309,7 +309,7 @@ exblock-eq-proof f S p
          equal
 
 block-eq-proof : ∀ {Γ Ψ DS CS}
-               → (f : block Γ DS CS ∈ Ψ)
+               → (f : code Γ DS CS ∈ Ψ)
                → BlockEqAssuming
                  (λ S → (GOT[ f ]-correctness $ State.memory S)
                       × (PLT[ f ]-correctness $ State.memory S))

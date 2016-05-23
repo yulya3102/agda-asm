@@ -129,9 +129,9 @@ data RegType where
 
 data Type where
   atom : RegType → Type
-  block : RegFileTypes
-        → DataStackType → CallStackType
-        → Type
+  code : RegFileTypes
+       → DataStackType → CallStackType
+       → Type
 \end{code}
 }
 
@@ -487,7 +487,7 @@ module Meta where
       atom : ∀ {τ} → RegValue Ψ τ → Value Ψ (atom τ)
       block : ∀ {Γ DS CS d}
             → Block (statetype Γ Ψ DS CS) d
-            → Value Ψ (block Γ DS CS)
+            → Value Ψ (code Γ DS CS)
 \end{code}
 
 Определим вспомогательные функции для работы со значениями:
@@ -495,7 +495,7 @@ module Meta where
 *   получение блока из значения типа `block`;
 
 \begin{code}
-    unblock : ∀ {Ψ Γ DS CS} → Value Ψ (block Γ DS CS)
+    unblock : ∀ {Ψ Γ DS CS} → Value Ψ (code Γ DS CS)
             → Σ (Diff (statetype Γ Ψ DS CS))
                 (Block (statetype Γ Ψ DS CS))
     unblock (block b) = _ , b
@@ -580,7 +580,7 @@ module Meta where
 *   загрузка блока кода из памяти по указателю на блок;
 
 \begin{code}
-    loadblock : ∀ {Ψ Γ CS DS} → Data Ψ → block Γ DS CS ∈ Ψ
+    loadblock : ∀ {Ψ Γ CS DS} → Data Ψ → code Γ DS CS ∈ Ψ
              → Σ (Diff (statetype Γ Ψ DS CS))
                  (Block (statetype Γ Ψ DS CS))
     loadblock Ψ f = unblock $ load Ψ f
@@ -636,7 +636,7 @@ module Meta where
          → DataStackType
          → CallStackType
          → Set
-    IPRT Ψ Γ DS CS = block Γ DS CS ∈ Ψ
+    IPRT Ψ Γ DS CS = code Γ DS CS ∈ Ψ
 
     IPST : StateType → Set
     IPST (statetype Γ Ψ DS CS) = IPRT Ψ Γ DS CS
