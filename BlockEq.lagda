@@ -167,6 +167,12 @@ equivalent initial machine states. This gives us the definition of blocks
 equivalence: two blocks are equivalent, if for any equivalent initial
 machine states there exist execution sequences leading to the same
 executable block:
+*   execution sequence can be empty if executable blocks are already same;
+*   execution sequence include execution of the first block if second block
+    and result of execution of the first block are equivalent;
+*   and vice versa, execution sequence include execution of the second
+    block if first block and result of execution of the second block are
+    equivalent.
 }
 
 \labeledfigure{fig:ExBlockEq}{Определение эквивалентности исполняемых блоков}{
@@ -177,24 +183,9 @@ executable block:
     → ExecutableBlock ST₂
     → Set
     where
-\end{code}
-
-\ignore{
-*   execution sequence can be empty if executable blocks are already same;
-}
-
-\begin{code}
     equal : ∀ {ST}
           → {A : ExecutableBlock ST}
           → ExBlockEq A A
-\end{code}
-
-\ignore{
-*   execution sequence include execution of the first block if second block
-    and result of execution of the first block are equivalent;
-}
-
-\begin{code}
     left  : ∀ {ST₁ ST}
           → {A₁ : ExecutableBlock ST₁}
           → {A₂ : ExecutableBlock (dapply ST₁ (exdiff A₁))}
@@ -202,15 +193,6 @@ executable block:
           → exec-exblock A₁ ≡ A₂
           → ExBlockEq A₂ B
           → ExBlockEq A₁ B
-\end{code}
-
-\ignore{
-*   and vice versa, execution sequence include execution of the second
-    block if first block and result of execution of the second block are
-    equivalent.
-}
-
-\begin{code}
     right : ∀ {ST₁ ST}
           → {A₁ : ExecutableBlock ST₁}
           → {A₂ : ExecutableBlock (dapply ST₁ (exdiff A₁))}
