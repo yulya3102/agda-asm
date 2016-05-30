@@ -10,9 +10,9 @@ SOURCES = \
 	$(BUILD)/MetaAsm.latex \
 	$(BUILD)/TAL.latex \
 	$(BUILD)/Asm.latex \
-	$(BUILD)/BlockEq.latex \
 	$(BUILD)/Programs.latex \
 	$(BUILD)/Linkers.latex \
+	$(BUILD)/BlockEq.latex \
 	$(BUILD)/Conclusion.latex
 
 $(BUILD)/agda.sty: agda.sty
