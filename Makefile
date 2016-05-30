@@ -12,6 +12,7 @@ SOURCES = \
 	$(BUILD)/Asm.latex \
 	$(BUILD)/Programs.latex \
 	$(BUILD)/Linkers.latex \
+	$(BUILD)/RuntimeEq.latex \
 	$(BUILD)/BlockEq.latex \
 	$(BUILD)/Conclusion.latex
 
