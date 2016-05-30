@@ -12,8 +12,8 @@ SOURCES = \
 	$(BUILD)/Asm.latex \
 	$(BUILD)/Programs.latex \
 	$(BUILD)/Linkers.latex \
-	$(BUILD)/RuntimeEq.latex \
 	$(BUILD)/BlockEq.latex \
+	$(BUILD)/RuntimeEq.latex \
 	$(BUILD)/Conclusion.latex
 
 $(BUILD)/agda.sty: agda.sty
