@@ -14,7 +14,8 @@ SOURCES = \
 	$(BUILD)/Linkers.latex \
 	$(BUILD)/BlockEq.latex \
 	$(BUILD)/RuntimeEq.latex \
-	$(BUILD)/Conclusion.latex
+	$(BUILD)/Conclusion.latex \
+	$(BUILD)/Appendix.latex
 
 $(BUILD)/agda.sty: agda.sty
 	cp $< $@
@@ -53,7 +54,7 @@ $(BUILD)/%.latex: $(BUILD)/%.md
 		--natbib \
 		$^ -o $@
 
-$(BUILD)/main.latex: Makefile $(SOURCES) sigplanconf-template.tex $(BUILD)/Abstract.latex $(BUILD)/Appendix.latex
+$(BUILD)/main.latex: Makefile $(SOURCES) sigplanconf-template.tex $(BUILD)/Abstract.latex
 	pandoc \
 		-R \
 		--template=sigplanconf-template.tex \
