@@ -12,10 +12,10 @@ SOURCES = \
 	$(BUILD)/Asm.latex \
 	$(BUILD)/Programs.latex \
 	$(BUILD)/Linkers.latex \
-	$(BUILD)/BlockEq.latex \
-	$(BUILD)/RuntimeEq.latex \
 	$(BUILD)/Conclusion.latex \
-	$(BUILD)/Appendix.latex
+	$(BUILD)/Appendix.latex \
+	$(BUILD)/BlockEq.latex \
+	$(BUILD)/RuntimeEq.latex
 
 $(BUILD)/agda.sty: agda.sty
 	cp $< $@
