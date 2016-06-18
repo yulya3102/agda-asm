@@ -57,7 +57,7 @@ PLT[ f ]-correctness H
 используя дополнительное предположение о том, что блок PLT корректно
 размещен в памяти.
 
-\labeledfigure{fig:lemmas}{Доказательства сохранения семантики}{
+\labeledfigure{fig:lemmas}{Доказательство сохранения семантики}{
 \begin{code}
 exec-ijmp : ∀ {ST} → (S : State ST)
           → (p : atom (code
@@ -82,7 +82,7 @@ exec-plt f S p rewrite sym p = exec-ijmp S (got f)
 \end{code}
 }
 
-\labeledfigure{fig:proofs}{Доказательства сохранения семантики}{
+\labeledfigure{fig:proofs}{Доказательство сохранения семантики}{
 \begin{code}
 exblock-eq-proof : ∀ {Γ Ψ DS CS}
                  → (f : code Γ DS CS ∈ Ψ)
