@@ -16,6 +16,7 @@ SOURCES = \
 	$(BUILD)/DynStEq.latex \
 	$(BUILD)/Conclusion.latex \
 	$(BUILD)/Appendix.latex \
+	$(BUILD)/BlockEqIsEq.latex \
 	$(BUILD)/RuntimeEq.latex
 
 $(BUILD)/agda.sty: agda.sty
