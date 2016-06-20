@@ -37,98 +37,15 @@ open import Function
 \ignore{
 \begin{code}
 data RegType : Set
-\end{code}
-
-\begin{code}
 data Type : Set
-\end{code}
-}
-\ignore{
-There are three common parts of machine state used in assembly languages:
-registers, memory and stack. Although stack is usually appears to be part
-of memory, it has one important aspect that makes stack a separate concept.
-
-In our model memory doesn't support dynamic allocation and statically
-allocated for every object that needs it. But memory on stack is actually
-dynamically allocated, and stack objects lifetime may differ from program
-lifetime. Therefore, address pointing to some place in stack can point to
-different objects of different types during the program lifetime. However,
-memory allocation on stack is done with very simple algorithm: just
-increment or decrement stack pointer until you reach stack limit. Its
-simplicity allows us to forget hard memory allocation problems and
-implement stack as another part of machine state with two operations:
-allocating some memory of given type on top of it and freeing the memory on
-top of it. We could also assume that stack can grow indefinitely and memory
-is not limited, but that's not necessary since we only care for small part
-of program lifetime that allocates finite amount of stack memory needed to
-run allocator at most ??? times.
-
-There is another difficulty in stack definition. Stack actually serves for
-two purposes: tracking return addresses and saving stack frames with local
-variables. These two purposes are similar, but for type system they are
-quite different. For local variables it only should only check ???, but for
-return address it should make sure that `ret` is executed only in suitable
-machine state. So, in our model there will be two different stacks: call
-stack and data stack, with different typing rules.
-
-\begin{code}
 DataStackType : Set
 CallStackType : Set
-\end{code}
 
-Registers, memory and data stack are typed with list of types of its elements.
-
-\begin{code}
 RegFileTypes = List RegType
 HeapTypes = List Type
 DataStackType = List RegType
-\end{code}
-
-TODO: how instruction pointers should be typed
-
-Call stack should be typed with list ot its elements, too. But elements of
-call stack are instruction pointers, which types include types of call
-stack itself: type of instruction pointer is a type of underlying basic
-block, type of basic block is a type of machine state required to correctly
-execute this block, and type of machine state includes type of call stack.
-Therefore, list of types of instruction pointers can't be used as call
-stack type.
-
-However, we have some knowledge about operations on call stack elements:
-an element of type `IP` from call stack can be used only when this element
-was taken from top of the stack with type `IP ∷ CS`. Typically this happens
-when `ret` instruction is executed, and execution continues with block from
-extracted instuction pointer with type `IP`. Execution can be continued
-only with block typed with current machine state type, and current machine
-state has callstack with type `CS`. Therefore, `IP` can't have callstack
-type other than `CS`.
-
-Now, we have a restriction on type of instruction pointer that allows us to
-infer its call stack type from call stack that contains it. Therefore, type
-of call stack element doesn't have to have information about its call stack
-type, and we can think that it's defined implicitly. Type of call stack
-element doesn't have to have type of memory either, because it's static and
-does not change during program lifetime. The only parts of machine state
-type that should be stored in type of call stack element are its registers
-type and data stack type:
-
-\begin{code}
 CallStackType = List (RegFileTypes × DataStackType)
 \end{code}
-}
-
-\ignore{
-The only arbitrary-sized type that is not also register type is "block
-type", which contains all parts of machine state type except for static
-memory.
-
-Значения типов из первой категории могут находиться в регистрах, а значения
-типов второй категории можно сохранять в память. При этом первая категория
-является подмножеством второй.
-
-Values with types from the first category can be stored in registers, and
-values with types from the second category can be stored in memory. The
-first category is a subset of the second category.
 }
 
 \labeledfigure{fig:statetype}{Тип состояния исполнителя}{
@@ -181,49 +98,11 @@ data Type where
 используемой формализации от оригинального TAL.
 
 \ignore{
-\ignore{
 \begin{code}
 open import Data.Maybe
-\end{code}
-}
 
-### Meta assembly language
-
-The key idea of meta definitions is to define everything in terms of basic
-blocks. The defintion of basic block should have instruction set as a
-parameter, but once this parameter applied, basic block definition can be
-used in other definitions without direct dependency on particular
-instrution set.
-
-### Diffs
-
-\ignore{
-\begin{code}
 module Diffs where
 \end{code}
-}
-
-The type of basic block should contain information about machine state type
-required to execute this block correctly. But to statically analyze
-sequence of blocks execution we need to keep track of machine state type
-changes. Consider following example:
-
-    f:
-        mov rax, 42
-        jmp g
-
-    g:
-        store ptr, rax
-        ret
-
-Knowing types of block `f` and block `g`, we need to statically check that
-after executing block `f` machine state type will be exact the same as the
-type of block `g`. To achieve this, we will save in block type information
-about set of changes of machine type applied by the block. We will refer to
-this set of changes as "diff".
-
-Diff on some context consists of sequence of atomic changes. Atomic change
-type defines type of context that can be changed by this change.
 
 \begin{code}
   module DiffDefinition
@@ -234,45 +113,22 @@ type defines type of context that can be changed by this change.
     data Diff (Γ : Ctx) : Set where
       dempty  : Diff Γ
       dchg    : (c : Chg Γ) → Diff (chgapply Γ c) → Diff Γ
-\end{code}
 
-\ignore{
-Набор изменений является общим для изменений различных видов. То, к чему
-применяется изменение, будем называть _контекстом_.
-Для набора изменений определены несколько функций:
-
-*   применение набора к контексту — это последовательное применение всех
-    изменений из набора;
-
-\begin{code}
     dapply : (Γ : Ctx) → Diff Γ → Ctx
     dapply Γ dempty = Γ
     dapply Γ (dchg c d) = dapply (chgapply Γ c) d
-\end{code}
 
-*   объединение двух наборов изменений;
-
-\begin{code}
     dappend : ∀ {Γ} → (d : Diff Γ)
             → Diff (dapply Γ d) → Diff Γ
     dappend dempty b = b
     dappend (dchg c a) b = dchg c (dappend a b)
-\end{code}
 
-*   лемма, доказывающая, что объединение с пустым набором не меняет набор;
-
-\begin{code}
     dappend-dempty-lemma : ∀ {Γ} → (d : Diff Γ)
                          → dappend d dempty ≡ d
     dappend-dempty-lemma dempty = refl
     dappend-dempty-lemma (dchg c d)
       rewrite dappend-dempty-lemma d = refl
-\end{code}
 
-*   лемма, доказывающая, что применение объединения наборов эквивалентно
-    последовательному применению этих наборов.
-
-\begin{code}
     dappend-dapply-lemma : ∀ S → (d₁ : Diff S)
                          → (d₂ : Diff (dapply S d₁))
                          → dapply S (dappend d₁ d₂)
@@ -282,36 +138,15 @@ type defines type of context that can be changed by this change.
       = dappend-dapply-lemma (chgapply S c) d₁ d₂
 \end{code}
 
-Определим тип, описывающий одно изменение списка фиксированной длины:
-в таком списке можно только менять элементы, что и требуется от регистров.
-Так как не любое изменение можно применить к произвольному списку, его
-тип должен ограничивать, к какому списку его можно применять.
-
 \begin{code}
   module ListChg (A : Set) where
     data Chg (Γ : List A) : Set where
-\end{code}
-
-Для того, чтобы описать изменение элемента в списке, необходимо указать,
-какая позиция меняется и на что.
-
-\begin{code}
       chg : ∀ {τ} → τ ∈ Γ → A → Chg Γ
-\end{code}
 
-Сами по себе изменения не несут особого смысла: необходимо указать, как
-они применяются к спискам.
-
-\begin{code}
     chgapply : (Γ : List A) → Chg Γ → List A
     chgapply (_ ∷ Γ) (chg (here refl) σ) = σ ∷ Γ
     chgapply (τ ∷ Γ) (chg (there p)   σ) = τ ∷ chgapply Γ (chg p σ)
 \end{code}
-
-Блок кода последовательно применяет изменения к списку регистров,
-значит, в его типе должен быть описан набор изменений.
-
-Определение изменений для регистров используется из предыдущих реализаций.
 
 \begin{code}
   module RegDiff where
@@ -319,14 +154,6 @@ type defines type of context that can be changed by this change.
     open ListChg RegType public
     open DiffDefinition chgapply public
 \end{code}
-
-В отличие от предыдущих реализаций, в тип инструкций должны входить и стек
-вызовов, и стек данных. Это означает, что для них необходимо определить
-наборы изменений.
-}
-
-Atomic changes are defined for each machine state part. For example, atomic
-stack change includes `push` and `pop` operations.
 
 \begin{code}
   module StackDiff (A : Set) where
@@ -337,19 +164,9 @@ stack change includes `push` and `pop` operations.
     chgapply : (S : List A) → Chg S → List A
     chgapply cs (push x) = x ∷ cs
     chgapply (._ ∷ S') (pop refl) = S'
-\end{code}
 
-TODO: block definition
-
-TODO: memory, registers and stacks definition
-
-\ignore{
-\begin{code}
     open DiffDefinition chgapply public
 \end{code}
-
-Общим набором изменений состояния исполнителя будет являться структура,
-описывающая изменения регистров и двух стеков.
 
 \begin{code}
   module StateDiff where
@@ -377,118 +194,45 @@ TODO: memory, registers and stacks definition
   open StateDiff public
 \end{code}
 
-Определим вспомогательные функции и типы для конструирования и применения
-изменений состояния исполнителя:
-
-*   конструирование пустого набора изменений;
-
-\begin{code}
-\end{code}
-
-*   применение набора изменений к состоянию исполнителя;
-
-\begin{code}
-\end{code}
-
-*   объединение двух наборов изменений;
-
-\begin{code}
-\end{code}
-
-*   изменение стека данных;
-
 \begin{code}
   DataStackChg : StateType → Set
   DataStackChg S
     = StackDiff.Chg RegType (StateType.datastack S)
-\end{code}
 
-*   изменение стека вызовов;
-
-\begin{code}
   CallStackChg : StateType → Set
   CallStackChg S
     = StackDiff.Chg
       (RegFileTypes × DataStackType)
       (StateType.callstack S)
-\end{code}
 
-*   изменение набора регистров;
-
-\begin{code}
   RegChg : StateType → Set
   RegChg S = RegDiff.Chg (StateType.registers S)
-\end{code}
 
-*   изменение, производимое инструкцией: одна инструкция может изменить
-    либо регистры, либо стек, либо и то, и другое (например, при `pop`
-    значения со стека в регистр);
-
-\begin{code}
   data SmallChg (S : StateType) : Set where
     onlyreg   : RegChg S → SmallChg S
     onlystack : DataStackChg S → SmallChg S
     regstack  : RegChg S → DataStackChg S → SmallChg S
-\end{code}
 
-*   конструирование набора изменений состояния исполнителя по одному
-    изменению регистров;
-
-\begin{code}
   regChg : ∀ {S} → RegChg S → Diff S
   regChg S = dchg (rchg S) dempty
-\end{code}
 
-*   конструирование набора изменений состояния исполнителя по одному
-    изменению стека данных;
-
-\begin{code}
   dsChg : ∀ {S} → DataStackChg S → Diff S
   dsChg S = dchg (dschg S) dempty
-\end{code}
 
-*   конструирование набора изменений состояния исполнителя по одному
-    изменению, производимому инструкцией;
-
-\begin{code}
   sChg : ∀ {S} → SmallChg S → Diff S
   sChg (onlyreg r) = regChg r
   sChg (onlystack d) = dsChg d
   sChg (regstack r d) = dchg (rchg r) $ dchg (dschg d) dempty
-\end{code}
 
-*   конструирование набора изменений состояния исполнителя по одному
-    возможному изменению стека вызовов.
-
-\begin{code}
   csChg : ∀ S → Maybe (CallStackChg S) → Diff S
   csChg S (just x) = dchg (cschg x) dempty
   csChg S nothing = dempty
 \end{code}
 
-## Метаассемблер
-
-Аналогично приведенному в предыдущей главе, метаассемблер состоит из
-четырех модулей.
-
-\ignore{
 \begin{code}
 module Meta where
   open Diffs
 \end{code}
-}
-
-### Модуль Blocks
-
-Ранее управляющие инструкции описывали только состояние исполнителя,
-требуемое для выполнения инструкции. С добавлением в состояние исполнителя
-стека вызовов становится возможным описание изменений, производимых
-управляющей инструкцией. По типу управляющей инструкции видно, что в
-результате исполнения может измениться только, возможно, стек
-вызовов. <!--- и это очень няшно -->
-
-Тип инструкции тоже задает, какие части состояния исполнителя он может
-изменить: это либо регистры, либо стек данных, либо и то, и то.
 
 \begin{code}
   module Blocks
@@ -499,9 +243,6 @@ module Meta where
     where
     infixr 10 _∙_
 \end{code}
-
-Определение блока аналогично приведенному ранее.
-}
 }
 
 Кроме того, для обеспечения корректности вызова функции $g$ в конце
@@ -537,9 +278,6 @@ module Meta where
 }
 
 \ignore{
-\ignore{
-### Модуль Values
-
 \begin{code}
   module Values
     (Block : (S : StateType) → Diff S → Set)
@@ -913,5 +651,4 @@ module Meta where
             | dapply-dappend-sChg c d
       = exec-block (state Γ' Ψ' DS' CS) b
 \end{code}
-}
 }
