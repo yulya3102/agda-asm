@@ -1,18 +1,15 @@
 # Эквивалентность блоков кода
 
-Семантика программы - это?
-
-Эквивалентными семантиками будем считать...
+Одна из целей настоящей работы - показать эквивалентность семантик вызова
+статически слинкованной функции и динамически слинкованной функции. Но
+какие блоки кода должны считаться эквивалентными? Рассмотрим следующий
+пример:
 
 \ignore{
-## Basic block equivalence and program equivalence
-
 The main goal of this paper is formalisation of some program equivalence.
 But which programs should be considered equivalent? Consider following
 example:
 }
-
-Мотивирующий пример, программа, кладущая число `1` в регистр `rax`:
 
 ```asm
     main:
@@ -20,7 +17,8 @@ example:
         ret
 ```
 
-Слегка изменим эту программу:
+Эта программa кладет число $1$ в регистр \texttt{rax}. Слегка изменим эту
+программу:
 
 \ignore{
 This program puts `1` integer value to the `rax` register. Let's change it
@@ -42,7 +40,7 @@ a bit:
 одинаковые начальные состояния исполнителя они преобразуют в одинаковые
 конечные состояния исполнителя. Чтобы определить эквивалентность программ
 таким образом, сначала определим эквивалентность блоков. В указанных
-программах блоки `main` будут эквивалентны в том же смысле: они дают
+программах блоки \texttt{main} будут эквивалентны в том же смысле: они дают
 одинаковые результаты из одинаковых начальных состояний.
 
 \ignore{
@@ -52,15 +50,6 @@ machine states. To define program equivalence this way, let us define
 block equivalence first. In given two programs, `main` blocks will be
 equivalent in the same way: they produce same results from same initial
 states.
-
-Note that block type is machine state type required to correcly execute
-this block, and machine state type includes memory type. For different
-programs memory type will probably be different, therefore, blocks in
-different programs will have different types and can't be equivalent. So,
-technically, it will make sense to formalise blocks equivalence only inside
-one program. However, we can think of two different programs $A$ and $B$ as
-one big program $C$ with blocks from $A$ program and $B$ program, and speak
-of block equivalence inside program $C$.
 
 \begin{code}
 open import Data.Product
@@ -93,11 +82,12 @@ Uniqueness of the block execution result allows us to reason about
 executable blocks.
 }
 
-Вспомогательное определение: "исполняемый блок" --- это пара из блока и
-состояния исполнителя соответствующего типа. Прикол тут в том, что
+Введем вспомогательное определение: *исполняемый блок* - это пара из
+блока и состояния исполнителя соответствующего типа. Смысл этого
+определения в том, что
 блок, исполняемый в заданном состоянии исполнителя, будет давать ровно один
 результат, даже если сам блок содержит условные переходы. Единственность
-результата позволяет как-то рассуждать об исполнении блоков.
+результата позволяет рассуждать об исполнении блоков.
 
 \labeledfigure{fig:ExecutableBlock}{Определение исполняемого блока}{
 \begin{code}
@@ -110,15 +100,9 @@ executable blocks.
 \end{code}
 }
 
-Результатом исполнения исполняемого блока является следующий исполняемый
-блок.
-
-\begin{code}
-    exec-exblock : ExecutableBlock (dapply ST exdiff)
-\end{code}
-
 \ignore{
 \begin{code}
+    exec-exblock : ExecutableBlock (dapply ST exdiff)
     exec-exblock = record { exblock = next-block ; exstate = next-state }
       where
       r : State (dapply ST exdiff) ×
@@ -141,12 +125,18 @@ executable blocks.
 \end{code}
 }
 
-Тут текст на тему того, почему определение ExBlockEq выглядит именно так.
+Два исполняемых блока $A$ и $B$ эквивалентны, если существует две
+последовательности исполнения $AC$ и $BC$, начинающиеся из $A$ и $B$
+соответственно, приводящие к одному и тому же блоку $C$.
 
 \ignore{
 Two executable blocks $A$ and $B$ are equivalent, if there exists two
 execution sequences starting from $A$ and $B$, leading to same executable
-block $C$. For example, two following blocks can be equivalent for some
+block $C$.
+}
+
+\ignore{
+For example, two following blocks can be equivalent for some
 initial machine states.
 
 ```asm
@@ -173,6 +163,17 @@ executable block:
     block if first block and result of execution of the second block are
     equivalent.
 }
+
+В листинге \ref{fig:ExBlockEq} приведено определение *эквивалентности
+исполняемых блоков*. Оно имеет три конструктора, позволяющих показать
+эквивалентность двух исполняемых блоков, если:
+
+*   \C{equal} - исполняемый блок $A$ эквивалентнен сам себе;
+*   \C{left} - результатом исполнения исполняемого блока $A_1$ является
+    блок $A_2$, и блок $A_2$ эквивалентнен блоку $B$, тогда блок $A_1$
+    эквивалентнен блоку $B$;
+*   \C{right} - симметрично предыдущему случаю, шаг исполнения для блока,
+    стоящего с правой стороны равенства.
 
 \labeledfigure{fig:ExBlockEq}{Определение эквивалентности исполняемых блоков}{
 \begin{code}
@@ -203,13 +204,12 @@ executable block:
 }
 
 Приведенное отношение действительно является отношением эквивалентности.
-Доказательство этого приведено в листинге \ref{fig:IsEquivalence} в
-приложении.
+Доказательство этого приведено в приложении **TODO reference appendix A**.
 
-Экивалентность исполняемых блоков — это еще не все.  Например, если
-правильно подобрать начальные состояния для блоков, то эквивалентными
-окажутся самые разные блоки, например, блоки `f` и `g` из следующего
-примера:
+Но приведенное отношение не является желаемым отношением эквивалентности.
+Например, если правильно подобрать начальные состояния для блоков, то
+эквивалентными окажутся самые разные блоки. Такими, например, являются
+блоки `f` и `g` из следующего примера:
 
 ```
 f:
@@ -225,12 +225,12 @@ g:
 состояний исполнителя. Определим эквивалентность блоков, используя
 эквивалентность исполняемых блоков: два блока $f$ и $g$ эквивалентны, если
 для любых начальных состояний $S$ исполняемые блоки $(f, S)$ и $(g, S)$
-экививалентны.
-
-В действительности используется определение, использующее некоторое
-предположение о состоянии исполнителя: два блока $f$ и $g$ эквивалентны,
-если для любых начальных состояний $S$, в которых исполняется указанное
-предположение, исполняемые блоки $(f, S)$ и $(g, S)$ экививалентны.
+экививалентны. Определение такой эквивалентности приведено в листинге
+\ref{fig:BlockEqAssuming}. Кроме того, приведенное определение позволяет
+указать, в каком предположении эквивалентность блоков будет выполняться.
+Это важно, поскольку доказательство эквивалентности вызова статически и
+динамически слинкованных программ опирается на предположение о корректности
+результата работы динамического загрузчика.
 
 \labeledfigure{fig:BlockEqAssuming}{Определение эквивалентности блоков}{
 \begin{code}
