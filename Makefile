@@ -11,7 +11,7 @@ SOURCES = \
 	$(BUILD)/Programs.latex \
 	$(BUILD)/Linkers.latex \
 	$(BUILD)/BlockEq.latex \
-	$(BUILD)/DynStEq.latex \
+	$(BUILD)/Loader.latex \
 	$(BUILD)/Conclusion.latex \
 	$(BUILD)/Appendix.latex \
 	$(BUILD)/BlockEqIsEq.latex \
