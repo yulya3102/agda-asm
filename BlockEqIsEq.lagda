@@ -23,8 +23,6 @@ open import BlockEq Block exec-block
 
 # Доказательство того, что приведенная эквивалентность - эквивалентность
 
-\labeledfigure{fig:IsEquivalence}{Доказательство того, что ExBlockEq
-является отношением эквивалентности}{
 \begin{code}
 isEquivalence : ∀ {ST} → IsEquivalence (ExBlockEq {ST})
 isEquivalence = record
@@ -55,4 +53,3 @@ isEquivalence = record
   exblock-eq-trans (right refl ab) (left refl bc)
     = exblock-eq-trans ab bc
 \end{code}
-}
