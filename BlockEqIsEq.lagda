@@ -21,7 +21,9 @@ open import BlockEq Block exec-block
 \end{code}
 }
 
-# Доказательство того, что приведенная эквивалентность - эквивалентность
+# Доказательство свойств эквивалентности для эквивалентности исполняемых блоков
+
+\label{sec:is-equivalence}
 
 \begin{code}
 isEquivalence : ∀ {ST} → IsEquivalence (ExBlockEq {ST})
