@@ -193,7 +193,7 @@ postulate
 \begin{code}
 plt-stub : ∀ {Γ Ψ DS CS}
          → atom (code Γ DS CS *) ∈ Ψ
-         → Block (statetype Γ Ψ DS CS) dempty
+         → Block (sttype Γ Ψ DS CS) dempty
 plt-stub got = ↝ jmp[ got ]
 \end{code}
 }

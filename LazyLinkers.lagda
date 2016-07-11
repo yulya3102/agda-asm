@@ -73,11 +73,11 @@ func {Ψ = code Γ DS CS ∷ Ψ} (there f)
 \begin{code}
 plt-stub : ∀ {Γ Ψ DS CS}
          → atom (code Γ DS CS *) ∈ Ψ
-         → Block (statetype Γ Ψ DS CS) dempty
+         → Block (sttype Γ Ψ DS CS) dempty
 plt-stub got = ↝ jmp[ got ]
 
 LinkerBlockS : StateType → StateType
-LinkerBlockS (statetype Γ Ψ DS CS) = statetype Γ Ψ (int ∷ DS) CS
+LinkerBlockS (sttype Γ Ψ DS CS) = sttype Γ Ψ (int ∷ DS) CS
 
 plt-stub-cont : ∀ {ST}
               → (id : ℕ)
@@ -138,7 +138,7 @@ exec-ijmp (state Γ Ψ DS CS) p = refl
 \begin{code}
 exec-plt : ∀ {Γ Ψ DS CS}
          → (f : code Γ DS CS ∈ Ψ)
-         → (S : State (statetype Γ (pltize Ψ) DS CS))
+         → (S : State (sttype Γ (pltize Ψ) DS CS))
          → GOT[ f ]-correctness (State.memory S)
          → exec-block S (plt-stub (got f))
          ≡ (S , loadblock (State.memory S) (func f))
@@ -152,7 +152,7 @@ exec-plt f S p rewrite sym p = exec-ijmp S (got f)
 \begin{code}
 exblock-eq-proof : ∀ {Γ Ψ DS CS}
                  → (f : code Γ DS CS ∈ Ψ)
-                 → (S : State (statetype Γ (pltize Ψ) DS CS))
+                 → (S : State (sttype Γ (pltize Ψ) DS CS))
                  → GOT[ f ]-correctness (State.memory S)
                  → ExBlockEq
                    (block (plt-stub (got f)) S)
@@ -171,7 +171,7 @@ block-eq-proof : ∀ {Γ Ψ DS CS}
                  (func f)
 block-eq-proof {Γ} {Ψ} {DS} {CS} f = block-eq-assuming lemma
   where
-    ST = statetype Γ Ψ DS CS
+    ST = sttype Γ Ψ DS CS
     lemma : (S : State $ pltize-state ST)
           → (GOT[ f ]-correctness $ State.memory S)
           × (PLT[ f ]-correctness $ State.memory S)
@@ -206,13 +206,13 @@ exec-jmp : {ST : StateType}
 exec-jmp (state Γ Ψ DS CS) func = refl
 
 SRegisters : StateType → Set
-SRegisters (statetype Γ Ψ DS CS) = Registers Ψ Γ
+SRegisters (sttype Γ Ψ DS CS) = Registers Ψ Γ
 
 SDataStack : StateType → Set
-SDataStack (statetype Γ Ψ DS CS) = DataStack Ψ DS
+SDataStack (sttype Γ Ψ DS CS) = DataStack Ψ DS
 
 SCallStack : StateType → Set
-SCallStack (statetype Γ Ψ DS CS) = CallStack Ψ CS
+SCallStack (sttype Γ Ψ DS CS) = CallStack Ψ CS
 
 record LinkerBase {ST : StateType} : Set where
   field

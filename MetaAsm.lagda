@@ -52,8 +52,9 @@ CallStackType = List (RegFileTypes × DataStackType)
 
 \labeledfigure{fig:statetype}{Тип состояния исполнителя}{
 \begin{code}
-record StateType : Set where
-  constructor statetype
+record StateType : Set
+  where
+  constructor sttype
   field
     registers : RegFileTypes
     memory    : HeapTypes
@@ -64,11 +65,13 @@ record StateType : Set where
 
 \labeledfigure{fig:types}{Поддерживаемые типы данных}{
 \begin{code}
-data RegType where
+data RegType
+  where
   _*  : Type → RegType
   int : RegType
 
-data Type where
+data Type
+  where
   atom : RegType → Type
   code : RegFileTypes
        → DataStackType → CallStackType
@@ -269,7 +272,8 @@ module Meta where
 
 \labeledfigure{fig:block}{Индуктивное определение блока}{
 \begin{code}
-    data Block (S : StateType) : Diff S → Set where
+    data Block (S : StateType) : Diff S → Set
+      where
       ↝ : ∀ {c} → ControlInstr S c
         → Block S (csChg S c)
       _∙_ : ∀ {c d}
@@ -298,7 +302,7 @@ module Meta where
     data Value (Ψ : HeapTypes) : Type → Set where
       atom : ∀ {τ} → RegValue Ψ τ → Value Ψ (atom τ)
       block : ∀ {Γ DS CS d}
-            → Block (statetype Γ Ψ DS CS) d
+            → Block (sttype Γ Ψ DS CS) d
             → Value Ψ (code Γ DS CS)
 \end{code}
 
@@ -308,8 +312,8 @@ module Meta where
 
 \begin{code}
     unblock : ∀ {Ψ Γ DS CS} → Value Ψ (code Γ DS CS)
-            → Σ (Diff (statetype Γ Ψ DS CS))
-                (Block (statetype Γ Ψ DS CS))
+            → Σ (Diff (sttype Γ Ψ DS CS))
+                (Block (sttype Γ Ψ DS CS))
     unblock (block b) = _ , b
 
     unint : ∀ {Ψ} → RegValue Ψ int → ℕ
@@ -393,8 +397,8 @@ module Meta where
 
 \begin{code}
     loadblock : ∀ {Ψ Γ CS DS} → Data Ψ → code Γ DS CS ∈ Ψ
-             → Σ (Diff (statetype Γ Ψ DS CS))
-                 (Block (statetype Γ Ψ DS CS))
+             → Σ (Diff (sttype Γ Ψ DS CS))
+                 (Block (sttype Γ Ψ DS CS))
     loadblock Ψ f = unblock $ load Ψ f
 \end{code}
 
@@ -451,7 +455,7 @@ module Meta where
     IPRT Ψ Γ DS CS = code Γ DS CS ∈ Ψ
 
     IPST : StateType → Set
-    IPST (statetype Γ Ψ DS CS) = IPRT Ψ Γ DS CS
+    IPST (sttype Γ Ψ DS CS) = IPRT Ψ Γ DS CS
 \end{code}
 
 Стек вызовов — список типизированных instruction pointer-ов.  Ранее было

@@ -53,6 +53,8 @@ states.
 
 \begin{code}
 open import Data.Product
+open import Data.List.Any
+open Membership-≡
 open import Data.Unit
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans)
 open import Relation.Binary
@@ -91,7 +93,8 @@ executable blocks.
 
 \labeledfigure{fig:ExecutableBlock}{Определение исполняемого блока}{
 \begin{code}
-  record ExecutableBlock (ST : StateType) : Set where
+  record ExecutableBlock (ST : StateType) : Set
+    where
     constructor block
     field
       {exdiff} : Diff ST
@@ -188,14 +191,16 @@ executable block:
           → ExBlockEq A A
     left  : ∀ {ST₁ ST}
           → {A₁ : ExecutableBlock ST₁}
-          → {A₂ : ExecutableBlock (dapply ST₁ (exdiff A₁))}
+          → {A₂ : ExecutableBlock
+                    (dapply ST₁ (exdiff A₁))}
           → {B : ExecutableBlock ST}
           → exec-exblock A₁ ≡ A₂
           → ExBlockEq A₂ B
           → ExBlockEq A₁ B
     right : ∀ {ST₁ ST}
           → {A₁ : ExecutableBlock ST₁}
-          → {A₂ : ExecutableBlock (dapply ST₁ (exdiff A₁))}
+          → {A₂ : ExecutableBlock
+                    (dapply ST₁ (exdiff A₁))}
           → {B : ExecutableBlock ST}
           → exec-exblock A₁ ≡ A₂
           → ExBlockEq B A₂
@@ -235,15 +240,20 @@ g:
 \labeledfigure{fig:BlockEqAssuming}{Определение эквивалентности блоков}{
 \begin{code}
   record BlockEqAssuming
-    {ST : StateType}
-    (assumption : State ST → Set)
-    (A : IPST ST)
-    (B : IPST ST)
+    {Γ : RegFileTypes}
+    {Ψ : HeapTypes}
+    {DS : DataStackType}
+    {CS : CallStackType}
+    (assumption
+        : State (sttype Γ Ψ DS CS) → Set)
+    (A : code Γ DS CS ∈ Ψ)
+    (B : code Γ DS CS ∈ Ψ)
     : Set₁
     where
     constructor block-eq-assuming
     field
-      eq : (S : State ST) → assumption S
+      eq : (S : State (sttype Γ Ψ DS CS))
+         → assumption S
          → ExBlockEq
             (construct-exblock A S)
             (construct-exblock B S)

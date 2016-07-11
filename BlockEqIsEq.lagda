@@ -26,32 +26,34 @@ open import BlockEq Block exec-block
 \label{sec:is-equivalence}
 
 \begin{code}
-isEquivalence : ∀ {ST} → IsEquivalence (ExBlockEq {ST})
+isEquivalence : ∀ {ST}
+  → IsEquivalence (ExBlockEq {ST})
 isEquivalence = record
   { refl = equal
-  ; sym = exblock-eq-sym
-  ; trans = exblock-eq-trans
+  ; sym = is-sym
+  ; trans = is-trans
   }
   where
-  exblock-eq-sym : ∀ {ST₁ ST₂}
-                 → {A : ExecutableBlock ST₁}
-                 → {B : ExecutableBlock ST₂}
-                 → ExBlockEq A B → ExBlockEq B A
-  exblock-eq-sym equal = equal
-  exblock-eq-sym (left p eq) = right p (exblock-eq-sym eq)
-  exblock-eq-sym (right p eq) = left p (exblock-eq-sym eq)
+  is-sym : ∀ {ST₁ ST₂}
+         → {A : ExecutableBlock ST₁}
+         → {B : ExecutableBlock ST₂}
+         → ExBlockEq A B → ExBlockEq B A
+  is-sym equal = equal
+  is-sym (left p eq) = right p (is-sym eq)
+  is-sym (right p eq) = left p (is-sym eq)
 
-  exblock-eq-trans : ∀ {ST₁ ST₂ ST₃}
-                   → {A : ExecutableBlock ST₁}
-                   → {B : ExecutableBlock ST₂}
-                   → {C : ExecutableBlock ST₃}
-                   → ExBlockEq A B → ExBlockEq B C → ExBlockEq A C
-  exblock-eq-trans equal bc = bc
-  exblock-eq-trans ab equal = ab
-  exblock-eq-trans ab (right p bc)
-    = right p (exblock-eq-trans ab bc)
-  exblock-eq-trans (left p ab) bc
-    = left p (exblock-eq-trans ab bc)
-  exblock-eq-trans (right refl ab) (left refl bc)
-    = exblock-eq-trans ab bc
+  is-trans : ∀ {ST₁ ST₂ ST₃}
+           → {A : ExecutableBlock ST₁}
+           → {B : ExecutableBlock ST₂}
+           → {C : ExecutableBlock ST₃}
+           → ExBlockEq A B → ExBlockEq B C
+           → ExBlockEq A C
+  is-trans equal bc = bc
+  is-trans ab equal = ab
+  is-trans ab (right p bc)
+    = right p (is-trans ab bc)
+  is-trans (left p ab) bc
+    = left p (is-trans ab bc)
+  is-trans (right refl ab) (left refl bc)
+    = is-trans ab bc
 \end{code}
