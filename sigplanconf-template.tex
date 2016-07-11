@@ -60,8 +60,18 @@
 \newfontfamily{\cyrillicfonttt}{Liberation Mono}
 
 \usepackage{polyglossia}
-\setmainlanguage{russian}
-\setotherlanguage{english}
+\setmainlanguage{russian} \setotherlanguage{english}
+%\setmainlanguage{english} \setotherlanguage{russian}
+
+\usepackage{etoolbox}
+\newtoggle{russian-draft}
+
+\usepackage{iflang}
+\IfLanguageName{russian}{
+\toggletrue{russian-draft}
+}{
+\togglefalse{russian-draft}
+}
 %                               %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
