@@ -96,6 +96,12 @@ control-instr-semantics : ∀ {S c}
                (StateType.callstack (dapply S (csChg S c)))
              × Σ (Diff (dapply S (csChg S c)))
                  (Block (dapply S (csChg S c)))
+control-instr-semantics (state Γ Ψ DS CS) (call f cont)
+  = cont ∷ CS , loadblock Ψ f
+control-instr-semantics (state Γ Ψ DS CS) (jmp f)
+  = CS , loadblock Ψ f
+control-instr-semantics (state Γ Ψ DS (f ∷ CS)) (ret refl)
+  = CS , loadblock Ψ f
 \end{code}
 }
 
@@ -104,27 +110,20 @@ control-instr-semantics : ∀ {S c}
 Для этой инструкции семантика определена следующим образом:
 
 \begin{code}
-control-instr-semantics (state Γ Ψ DS CS) (jmp[ p ])
-  = CS , loadblock Ψ (loadptr Ψ p)
+control-instr-semantics S (jmp[ p ])
+  = State.callstack S
+  , loadblock (State.memory S)
+    (loadptr (State.memory S) p)
 \end{code}
 
-В состоянии исполнителя с состоянием регистров \AgdaBound{\Gamma},
-состоянием памяти \AgdaBound{\Psi}, стеком данных \AgdaBound{DS} и стеком
-вызовов \AgdaBound{CS} исполнение инструкции непрямого перехода по
-указателю \AgdaBound{p} не изменит стек вызовов (он останется тем же, каким
-и был -- \AgdaBound{CS}), а исполнение перейдет на последовательность
-инструкций, загруженную из памяти \AgdaBound{\Psi} по указателю,
-загруженному из ячейки \AgdaBound{p} памяти \AgdaBound{\Psi}.
+В состоянии исполнителя \AgdaBound{S} исполнение инструкции непрямого
+перехода по указателю \AgdaBound{p} оставит стек вызовов прежним,
+\F{State.callstack} \AgdaBound{S}, а исполнение перейдет на
+последовательность инструкций, загруженную из памяти \F{State.memory}
+\AgdaBound{S} по указателю, загруженному из ячейки \AgdaBound{p}.
 
 \ignore{
 \begin{code}
-control-instr-semantics (state Γ Ψ DS CS) (call f cont)
-  = cont ∷ CS , loadblock Ψ f
-control-instr-semantics (state Γ Ψ DS CS) (jmp f)
-  = CS , loadblock Ψ f
-control-instr-semantics (state Γ Ψ DS (f ∷ CS)) (ret refl)
-  = CS , loadblock Ψ f
-
 exec-instr : ∀ {S c}
            → State S
            → Instr S c

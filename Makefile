@@ -17,6 +17,10 @@ SOURCES = \
 	$(BUILD)/BlockEqIsEq.latex \
 	$(BUILD)/RuntimeEq.latex
 
+INCLUDE_EXAMPLES = \
+	eq-blocks-example.asm \
+	eq-exblocks-example.asm
+
 $(BUILD)/agda.sty: agda.sty
 	cp $< $@
 
@@ -54,7 +58,7 @@ $(BUILD)/%.latex: $(BUILD)/%.md
 		--natbib \
 		$^ -o $@
 
-$(BUILD)/main.latex: Makefile $(SOURCES) sigplanconf-template.tex $(BUILD)/Abstract.latex
+$(BUILD)/main.latex: Makefile $(SOURCES) sigplanconf-template.tex $(BUILD)/Abstract.latex $(INCLUDE_EXAMPLES)
 	pandoc \
 		-R \
 		--template=sigplanconf-template.tex \

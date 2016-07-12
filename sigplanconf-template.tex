@@ -36,6 +36,12 @@
 \usepackage{caption}
 \captionsetup[figure]{name=Listing}
 
+\usepackage{listings}
+\lstdefinestyle{asm}{
+  language=[x86masm]Assembler,
+  basicstyle=\ttfamily,
+}
+
 \usepackage[bw]{agda}
 \newcommand{\ignore}[1]{}
 \newcommand{\C}{\AgdaInductiveConstructor}
