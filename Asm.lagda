@@ -14,27 +14,13 @@ open import MetaAsm public
 
 open Meta public
 open Diffs public
-\end{code}
 
-Using framework described above, we can define subset of assembly language
-large enough to formalise dynamic linking ABI. This assembly language looks
-almost like x86-84 assembly language that makes it suitable for reasoning
-about linkers. This language differs from actual x86-64 assembly language
-in instructions that involve control flow and concept of basic blocks.
-
-TODO
-
-\begin{code}
 data ControlInstr (S : StateType) : Maybe (CallStackChg S) → Set
 data Instr (S : StateType) : SmallChg S → Set
 
 open Blocks ControlInstr Instr public
 open Values Block public
-\end{code}
-}
 
-\ignore{
-\begin{code}
 data ControlInstr (S : StateType) where
   call : ∀ {Γ DS}
        → (f : code
@@ -62,14 +48,7 @@ data ControlInstr (S : StateType) where
        → (p : StateType.callstack S
        ≡ (StateType.registers S , StateType.datastack S) ∷ CS)
        → ControlInstr S (just (StackDiff.pop p))
-\end{code}
-}
 
-\ignore{
-Определенные инструкции являются примером того, как можно реализовать
-работу с регистрами и стеком данных.
-
-\begin{code}
 data Instr (S : StateType) where
   mov   : ∀ {σ τ}
         → (r : σ ∈ StateType.registers S)
@@ -85,9 +64,7 @@ data Instr (S : StateType) where
         → (r : σ ∈ StateType.registers S)
         → (p : StateType.datastack S ≡ τ ∷ DS)
         → Instr S (regstack (RegDiff.chg r τ) (StackDiff.pop p))
-\end{code}
 
-\begin{code}
 control-instr-semantics : ∀ {S c}
              → State S
              → ControlInstr S c

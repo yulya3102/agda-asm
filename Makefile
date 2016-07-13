@@ -8,7 +8,6 @@ SOURCES = \
 	$(BUILD)/Intro.latex \
 	$(BUILD)/MetaAsm.latex \
 	$(BUILD)/Asm.latex \
-	$(BUILD)/Programs.latex \
 	$(BUILD)/Linkers.latex \
 	$(BUILD)/BlockEq.latex \
 	$(BUILD)/Loader.latex \

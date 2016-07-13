@@ -33,11 +33,7 @@ open Membership-≡
 open import Data.Product
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym)
 open import Function
-\end{code}
-}
 
-\ignore{
-\begin{code}
 data RegType : Set
 data Type : Set
 DataStackType : Set
@@ -108,9 +104,6 @@ TAL, но фиксированной длины и без метки иници�
 open import Data.Maybe
 
 module Diffs where
-\end{code}
-
-\begin{code}
   module DiffDefinition
     {Ctx : Set}
     {Chg : Ctx → Set}
@@ -142,9 +135,7 @@ module Diffs where
     dappend-dapply-lemma S dempty d₂ = refl
     dappend-dapply-lemma S (dchg c d₁) d₂
       = dappend-dapply-lemma (chgapply S c) d₁ d₂
-\end{code}
 
-\begin{code}
   module ListChg (A : Set) where
     data Chg (Γ : List A) : Set where
       chg : ∀ {τ} → τ ∈ Γ → A → Chg Γ
@@ -152,16 +143,12 @@ module Diffs where
     chgapply : (Γ : List A) → Chg Γ → List A
     chgapply (_ ∷ Γ) (chg (here refl) σ) = σ ∷ Γ
     chgapply (τ ∷ Γ) (chg (there p)   σ) = τ ∷ chgapply Γ (chg p σ)
-\end{code}
 
-\begin{code}
   module RegDiff where
 
     open ListChg RegType public
     open DiffDefinition chgapply public
-\end{code}
 
-\begin{code}
   module StackDiff (A : Set) where
     data Chg (S : List A) : Set where
       push : (i : A) → Chg S
@@ -172,9 +159,7 @@ module Diffs where
     chgapply (._ ∷ S') (pop refl) = S'
 
     open DiffDefinition chgapply public
-\end{code}
 
-\begin{code}
   module StateDiff where
     data Chg (S : StateType) : Set where
       rchg  : RegDiff.Chg (StateType.registers S) → Chg S
@@ -198,9 +183,7 @@ module Diffs where
 
     open DiffDefinition chgapply public
   open StateDiff public
-\end{code}
 
-\begin{code}
   DataStackChg : StateType → Set
   DataStackChg S
     = StackDiff.Chg RegType (StateType.datastack S)
@@ -233,14 +216,10 @@ module Diffs where
   csChg : ∀ S → Maybe (CallStackChg S) → Diff S
   csChg S (just x) = dchg (cschg x) dempty
   csChg S nothing = dempty
-\end{code}
 
-\begin{code}
 module Meta where
   open Diffs
-\end{code}
 
-\begin{code}
   module Blocks
     (ControlInstr : (S : StateType)
                   → Maybe (CallStackChg S)
@@ -296,13 +275,7 @@ module Meta where
   module Values
     (Block : (S : StateType) → Diff S → Set)
     where
-\end{code}
 
-Определения значений аналогичны используемым ранее, но поделены на два
-класса, соответствующие значениям размера регистра и значениям
-произвольного размера.
-
-\begin{code}
     data RegValue (Ψ : HeapTypes) : RegType → Set where
       ptr : ∀ {τ} → τ ∈ Ψ → RegValue Ψ (τ *)
       int : ℕ → RegValue Ψ int
@@ -312,13 +285,7 @@ module Meta where
       block : ∀ {Γ DS CS d}
             → Block (sttype Γ Ψ DS CS) d
             → Value Ψ (code Γ DS CS)
-\end{code}
 
-Определим вспомогательные функции для работы со значениями:
-
-*   получение блока из значения типа `block`;
-
-\begin{code}
     unblock : ∀ {Ψ Γ DS CS} → Value Ψ (code Γ DS CS)
             → Σ (Diff (sttype Γ Ψ DS CS))
                 (Block (sttype Γ Ψ DS CS))
@@ -326,43 +293,25 @@ module Meta where
 
     unint : ∀ {Ψ} → RegValue Ψ int → ℕ
     unint (int x) = x
-\end{code}
 
-*   получение указателя на `τ` из значения типа `τ *`.
-
-\begin{code}
     unptr : ∀ {Ψ τ} → Value Ψ (atom (τ *)) → τ ∈ Ψ
     unptr (atom (ptr x)) = x
 
     atom-ptr-unptr : ∀ {Ψ τ} → (v : Value Ψ (atom (τ *)))
                    → atom (ptr (unptr v)) ≡ v
     atom-ptr-unptr (atom (ptr x)) = refl
-\end{code}
 
-Определение набора регистров аналогично приведенному ранее.
-
-\begin{code}
     data Registers (Ψ : HeapTypes) : RegFileTypes → Set where
       []  : Registers Ψ []
       _∷_ : ∀ {τ τs}
           → RegValue Ψ τ
           → Registers Ψ τs
           → Registers Ψ (τ ∷ τs)
-\end{code}
 
-Определим вспомогательные функции для работы с регистрами:
-
-*   загрузка значения из заданного регистра;
-
-\begin{code}
     fromreg : ∀ {Ψ Γ τ} → Registers Ψ Γ → τ ∈ Γ → RegValue Ψ τ
     fromreg (x ∷ Γ) (here refl) = x
     fromreg (x ∷ Γ) (there p) = fromreg Γ p
-\end{code}
 
-*   запись значения в заданный регистр.
-
-\begin{code}
     toreg : ∀ {Ψ Γ σ τ}
           → Registers Ψ Γ
           → (r : σ ∈ Γ)
@@ -370,11 +319,7 @@ module Meta where
           → Registers Ψ (RegDiff.chgapply Γ (RegDiff.chg r τ))
     toreg (x ∷ Γ) (here refl) v = v ∷ Γ
     toreg (x ∷ Γ) (there r) v = x ∷ (toreg Γ r v)
-\end{code}
 
-Состояние памяти определяется аналогично приведенному ранее.
-
-\begin{code}
     data IData (Ψ : HeapTypes) : HeapTypes → Set where
       []  : IData Ψ []
       _∷_ : ∀ {τ τs} → Value Ψ τ → IData Ψ τs → IData Ψ (τ ∷ τs)
@@ -397,22 +342,12 @@ module Meta where
 
     store : ∀ {Ψ τ} → τ ∈ Ψ → Data Ψ → Value Ψ τ → Data Ψ
     store {Ψ} {τ} = istore
-\end{code}
 
-Определим вспомогательные функции для работы с памятью:
-
-*   загрузка блока кода из памяти по указателю на блок;
-
-\begin{code}
     loadblock : ∀ {Ψ Γ CS DS} → Data Ψ → code Γ DS CS ∈ Ψ
              → Σ (Diff (sttype Γ Ψ DS CS))
                  (Block (sttype Γ Ψ DS CS))
     loadblock Ψ f = unblock $ load Ψ f
-\end{code}
 
-*   загрузка указателя на `τ` из памяти по указателю на `τ *`.
-
-\begin{code}
     loadptr : ∀ {Ψ τ} → Data Ψ → atom (τ *) ∈ Ψ → τ ∈ Ψ
     loadptr Ψ p = unptr $ load Ψ p
 
@@ -432,12 +367,7 @@ module Meta where
     store-loaded-ptr M p px
       rewrite sym px | atom-ptr-unptr (load M p)
       = store-loaded p M
-\end{code}
 
-Стек данных — список значений размера регистра, в типе которого указано,
-значения каких типов в нем находятся.
-
-\begin{code}
     data DataStack (Ψ : HeapTypes) : List RegType → Set
       where
       []   : DataStack Ψ []
@@ -450,11 +380,7 @@ module Meta where
 
     dspop : ∀ {M τ DS} → DataStack M (τ ∷ DS) → DataStack M DS
     dspop (x ∷ ds) = ds
-\end{code}
 
-Типизированный instruction pointer — указатель на блок кода в памяти.
-
-\begin{code}
     IPRT : HeapTypes
          → RegFileTypes
          → DataStackType
@@ -464,22 +390,12 @@ module Meta where
 
     IPST : StateType → Set
     IPST (sttype Γ Ψ DS CS) = IPRT Ψ Γ DS CS
-\end{code}
 
-Стек вызовов — список типизированных instruction pointer-ов.  Ранее было
-описано, почему в типе стека вызовов не указывается требуемое блоком
-состояние стека вызовов.
-
-\begin{code}
     data CallStack (Ψ : HeapTypes) : CallStackType → Set where
       []  : CallStack Ψ []
       _∷_ : ∀ {Γ DS CS} → IPRT Ψ Γ DS CS → CallStack Ψ CS
           → CallStack Ψ ((Γ , DS) ∷ CS)
-\end{code}
 
-Состояние исполнителя — совокупность состояний регистров, памяти и стеков.
-
-\begin{code}
     record State (S : StateType) : Set where
       constructor state
       field
@@ -493,27 +409,12 @@ module Meta where
         callstack : CallStack
                     (StateType.memory S)
                     (StateType.callstack S)
-\end{code}
 
-### Модуль ExecBlk
-
-\begin{code}
   module ExecBlk
-\end{code}
-
-Сигнатуры инструкций и управляющих инструкций были описаны ранее.
-
-\begin{code}
     (Instr : (S : StateType) → Diffs.SmallChg S → Set)
     (ControlInstr : (S : StateType)
                   → Maybe (Diffs.CallStackChg S)
                   → Set)
-\end{code}
-
-Результат исполнения инструкции заивисит от состояния исполнителя и
-определяет, как изменятся регистры, память и стек данных.
-
-\begin{code}
     (exec-instr : ∀ {S c}
                 → Values.State
                   (Blocks.Block ControlInstr Instr)
@@ -532,13 +433,6 @@ module Meta where
                  (StateType.memory S)
                  (StateType.datastack
                    (Diffs.dapply S (Diffs.sChg c)))))
-\end{code}
-
-Результат исполнения управляющей инструкции тоже зависит от состояния
-исполнителя и определяет, как изменится стек вызовов и какой блок будет
-исполняться следующим.
-
-\begin{code}
     (exec-control : ∀ {S c}
                  → Values.State
                    (Blocks.Block ControlInstr Instr)
@@ -557,41 +451,8 @@ module Meta where
     open Diffs
     open Blocks ControlInstr Instr
     open Values Block
-\end{code}
 
-Для определения функции `exec-block` потребовалось определить несколько
-лемм:
-
-\ignore{
-\begin{code}
     module DiffLemmas where
-\end{code}
-}
-
-*   если набор изменений состояния исполнителя построен как набор изменений
-    стека вызовов, то набор изменений регистров пуст;
-
-\begin{code}
-\end{code}
-
-*   если набор изменений состояния исполнителя построен как набор изменений
-    стека вызовов, то набор изменений стека данных пуст;
-
-\begin{code}
-\end{code}
-
-*   если набор изменений состояния исполнителя построен как набор
-    изменений, производимых инструкцией, то набор изменений стека вызовов
-    пуст;
-
-\begin{code}
-\end{code}
-
-*   применение набора изменений, построенных как набор изменений стека
-    вызовов, к состоянию исполнителя изменяет только стек вызовов, оставляя
-    остальное неизменным.
-
-\begin{code}
       dapply-csChg : ∀ S → (c : Maybe (CallStackChg S))
                    → dapply S (csChg S c)
                    ≡ record S {
@@ -631,25 +492,9 @@ module Meta where
       dapply-dappend-sChg (onlyreg x) d = refl
       dapply-dappend-sChg (onlystack x) d = refl
       dapply-dappend-sChg (regstack c x) d = refl
-\end{code}
 
-\ignore{
-\begin{code}
     open DiffLemmas
-\end{code}
-}
 
-Проблемой предыдущей реализации было то, что для некоторых блоков важно
-было их расположение в памяти, из-за чего определить, какой блок будет
-исполняться следующим, не всегда представлялось возможным. Если
-потребовать, чтобы все управляющие инструкции задавали явно все требуемые
-значения, не рассчитывая на определенное расположение в памяти, проблема не
-будет возникать. Такие управляющие инструкции могут отличаться от имеющихся
-в реальном ассемблере, но каждая из них должна транслироваться в реальный
-ассемблер с сохранением семантики и возможным добавлением дополнительных
-переходов.
-
-\begin{code}
     exec-block : ∀ {ST d} → State ST → Block ST d
                → State (dapply ST d)
                × Σ (Diff (dapply ST d)) (Block (dapply ST d))

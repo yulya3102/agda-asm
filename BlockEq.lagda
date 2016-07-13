@@ -239,9 +239,7 @@ executable block:
 \ignore{
 \begin{code}
   open BlockEqAssuming public
-\end{code}
 
-\begin{code}
   BlockEq : {ST : StateType}
           → (A : IPST ST)
           → (B : IPST ST)

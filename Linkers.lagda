@@ -18,8 +18,6 @@ GOT (Global Offset Table) и PLT (Procedure Linkage Table). Первая хра�
 адрес в рантайме и передать исполнение ему, не нарушив семантики программы.
 
 \ignore{
-## Linkers
-
 \begin{code}
 module Linkers where
 
@@ -34,53 +32,10 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; cong)
 open import MetaAsm
 open import Asm
 open import Programs
-\end{code}
 
-## Static vs. dynamic linking
-
-Statically linked program is just all binaries merged together without any
-transformations. Dynamically linked program is a bunch of object files with
-PLT and GOT added and calls to functions replaced with calls to
-correspondent PLT elements. But when they are loaded into memory, there's no
-separations between libraries left, so the only difference between
-statically and dynamically linked programs is in GOT, PLT and calls to
-functions. Therefore, we don't even need to define dynamically linked
-program as several object files.
-
-???: dynamically linked program cat have more than one PLT entry
-correspondent to some function
-TODO: what is input
-TODO: how to get dynamically linked program
-
-## Statically linked program
-
-Static linking does not change program code, so any code without undefined
-symbols can be considered statically linked. However, undefined symbols can
-appear only when one binary uses symbols from another binary. Since this
-formalisation doesn't have any notion of binaries and considers programs as
-code loaded into memory, notion of 'undefined symbol' can't possibly make
-sense. Therefore, any program in this typed assembly language can be
-considered statically linked.
-
-\begin{code}
 static : ∀ {ST} → Program ST → Program ST
 static = id
 \end{code}
-
-## Dynamically linked program
-
-Dynamic linking adds some changes to program code:
-
-*   each function gets its own GOT and PLT entries;
-*   every function call is replaced with corresponding PLT entry call.
-
-Program transformed this way can be considered dynamically linked.
-
-TODO: GOT-correctness
-
-TODO: generic code proofs (???)
-
-TODO: equivalence proof
 }
 
 Эта работа не рассматривает объектные файлы и программы как таковые.
