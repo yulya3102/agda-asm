@@ -1,11 +1,12 @@
+\iftoggle{russian-draft}{
 К настоящему моменту уже не приходится сомневаться в возможности
 верификации низкоуровневого и системного программного обеспечения, в
 частности, инструментов разработки. Возможно писать низкоуровневый код и
 автоматически доказывать его свойства с использованием современных
 пруфчекеров, что важно при написании, например, runtime-систем языков.
-Например, существует CompCert, компилятор языка С, нативного для множества
-платформ, предоставляющий доказательства корректности производимых
-оптимизаций.
+К примеру, для языка C, нативного для множества платформ, существует
+компилятор CompCert, предоставляющий доказательства корректности
+производимых оптимизаций.
 
 Имеющиеся системы направлены на верификацию этапа трансляции, но сборка
 программ из исходного кода не ограничивается только этим этапом. Недавние
@@ -24,3 +25,29 @@ optimizations (LTO), который тоже необходимо верифиц
 Эта работа является основой для дальнейших исследований, направленных на
 создание верифицированных динамического загрузчика и динамического
 линковщика, позволяющих делать корректные оптимизации на этапе линковки.
+}{
+By now there is no doubt in possibility of low-level and system software
+verification, in particular, verification of development tools. It is
+possible to write low-level code and prove its properties with modern proof
+assistants. This can be important, for instance, in development of runtime
+systems. For example, for C, native language of plenty of platforms, there
+is CompCert, a compiler that proves correctness of performed optimizations.
+
+Existing compilation verification systems are directed at translation
+phase, but compilation contains few more steps. Recent research shows that
+a lot of errors occur during link-time optimizations phase, which also
+needs verification.
+
+This paper presents formalization of a simple model of a linking process.
+Dynamic linking is performed by two tools: dynamic linker and dynamic
+loader. Formalization of dynamic linker includes description of performed
+program transformations, and formalization of dynamic loader contains
+invariants, provided by dynamic loader in runtime. Moreover, this paper
+shows that if these conditions are met, then semantics of dynamically
+linked function call is the same as semantics of statically linked function
+call.
+
+This paper forms the basis for further research, aimed at creation of
+verified dynamic linker and dynamic loader, allowing to perform correct
+link-time optimizations.
+}
