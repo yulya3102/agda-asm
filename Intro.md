@@ -1,5 +1,6 @@
 # Introduction
 
+\iftoggle{russian-draft}{
 Верификация программного обеспечения может быть трудной задачей, и потому
 ей не всегда уделяют должное внимание. Тем не менее, для некоторого класса
 программного обеспечения трудозатраты на верификацию могут оказаться
@@ -10,10 +11,10 @@
 
 В настоящее время ведутся работы по созданию верифицированных тулчейнов, но
 пока человечество далеко от создания абсолютно надежного комплекса
-инструментов разработки программ. Например, есть VeLLVM [@vellvm],
+инструментов разработки программ. Например, есть VeLLVM \citep{vellvm},
 формализующий язык LLVM и производящий доказанно корректные оптимизации в
 нем. Есть более близкий к реальным тулчейнам проект, компилятор языка C
-CompCert [@compcert], производящий оптимизации, доказанно сохраняющие
+CompCert \citep{compcert}, производящий оптимизации, доказанно сохраняющие
 семантику програмы. Тем не менее, даже CompCert не покрывает сборку
 программы целиком: он использует системный, не верифицированный, линковщик.
 
@@ -22,10 +23,35 @@ CompCert [@compcert], производящий оптимизации, дока�
 производить оптимизации на этапе линковки. Эти оптимизации усложняют логику
 линковщика, и в итоге он перестает быть простой программой. Возможность
 наличия ошибок в коде линковщика подтверждается практикой: недавно
-проводилось исследование [@ltostress], в котором делали стресс-тесты для
+проводилось исследование \citep{ltostress}, в котором делали стресс-тесты для
 линковщиков, и в итоге было найдено огромное количество ошибок на этапе
 оптимизаций во время линковки. Это показывает, что верификацией линковщиков
 не стоит пренебрегать.
+}{
+Software verification can be difficult and therefore neglected. However,
+the complexity of verification may be worth the result for a certain range
+of software. For example, development tools (toolchains) should be
+verified, because errors in toolchains are especially hard to find.
+Moreover, toolchains are commonly used even in those areas where the cost
+of failure is extremely high.
+
+Efforts are being made to develop verified toolchains, but it is still far
+from creation of completely reliable development tools. For example, VeLLVM
+\citep{vellvm} formalizes LLVM intermediate language and performes formally
+correct optimizations. Another project, CompCert \citep{compcert}, is
+closer to realistic toolchains: it's a compiler of the C language that
+performs optimizations which are proven to preserve semantics of the
+compiled program. However, even CompCert does not cover all steps of
+compilation: it uses system linker, which is not verified.
+
+Linker might seem to be quite simple program, and it's hard to make a
+mistake in its code. Probably, it has been that way until link-time
+optimizations appeared. These optimizations make program logic more
+complex, making it possible to introduce a bug in linker's source code.
+Recent research \citep{ltostress} proves it: stress-testing for linkers
+revealed myriad of bugs during link-time optimizations (LTO) phase. It
+shows that linker verification should not be neglected.
+}
 
 Линковщик — достаточно низкоуровневая программа, которая работает с
 скомпилированными в машинный код объектными файлами, а значит, для
