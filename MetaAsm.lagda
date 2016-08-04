@@ -1,7 +1,8 @@
-# Обзор используемой формализации TAL
+# TAL formalization
 
 \label{sec:asm-review}
 
+\iftoggle{russian-draft}{
 Оригинальный Typed Assembly Language достаточно выразителен для
 реализации возможностей высокоуровневых языков, таких как параметрический
 полиморфизм или пользовательские структуры данных. Для нашей задачи эти
@@ -21,6 +22,24 @@ Typed Assembly Language.
 Вторым отличием является отсутствие кортежей в памяти, в которых
 динамический линковщик также не нуждается. Вместе с типом кортежа из языка
 удаляются неинициализированные значения и метки инициализированности.
+}{
+Original Typed Assembly Language is powerful enough to implement high-level
+language featues such as parametric polymorphism or records. These features
+are not necessary for our task, but instead we have to have specific data
+types and instructions which are typically used to implement dynamic
+linking. Therefore, our TAL formalization has some differences from
+original Typed Assembly Language.
+
+The lack of type variables is the first difference. It greatly simplifies
+original TAL language and allows to simplify our formalization. However,
+dynamic linker does not need polymorphism at assembly language level: it
+does not interpret and does not change input code, only appending
+additional elements to it.
+
+The lack of tuples is the second difference. Dynamic linker does not need
+it either. Uninitialized "garbage" values and initialization flags are
+deleted from language along with tuple type.
+}
 
 \ignore{
 \begin{code}
@@ -46,7 +65,7 @@ CallStackType = List (RegFileTypes × DataStackType)
 \end{code}
 }
 
-\labeledfigure{fig:statetype}{Тип состояния исполнителя}{
+\labeledfigure{fig:statetype}{Machine state type}{
 \begin{code}
 record StateType : Set
   where
@@ -59,7 +78,7 @@ record StateType : Set
 \end{code}
 }
 
-\labeledfigure{fig:types}{Поддерживаемые типы данных}{
+\labeledfigure{fig:types}{Supported data types}{
 \begin{code}
 data RegType
   where
@@ -75,6 +94,7 @@ data Type
 \end{code}
 }
 
+\iftoggle{russian-draft}{
 Действительно необходимой для формализации динамической линковки является
 семантика инструкции непрямого перехода, позволяющая динамически менять
 целевую точку передачи исполнения. Аргументом этой инструкции является
@@ -89,7 +109,7 @@ TAL, но фиксированной длины и без метки иници�
 различными библиотеками, исполняемый при вызове внешних функций. Этот код
 не должен никак влиять на семантику программы. Это означает, что мы не
 можем абстрагироваться от стека вызовов, который может быть "испорчен"
-вызовом дополнительных процедур. *Программы* оригинального TAL, помимо исполняемой
+вызовом дополнительных процедур. \emph{Программы} оригинального TAL, помимо исполняемой
 последовательности инструкций, включали в себя состояния регистров и
 памяти. В используемой формализации они дополнительно включают в себя
 состояние стека, который для простоты реализации был разделен на две части:
@@ -98,6 +118,29 @@ TAL, но фиксированной длины и без метки иници�
 \C{code} в листинге \ref{fig:types}), который в оригинальном TAL содержал
 только ожидаемый тип регистров, и это еще одно существенное отличие
 используемой формализации от оригинального TAL.
+}{
+What is really necessary for dynamic linking formalization is indirect jump
+instruction semantics. This instruction allows to dynamically change target
+executable code. The argument of this instruction is a pointer to a memory
+location where the address of target executable code is stored. To
+correctly type indirect jump instruction we need to support the type of
+pointer to typed memory (the type \C{\_*} from listing \ref{fig:types}).
+This is the third difference from the original Typed Assembly Language.
+Essentially, this is the tuple type from the original TAL, but without
+initialization flag and of fixed length.
+
+Dynamic linker adds intermedium code between different libraries. This code
+is called when external function is called. It must not affect program
+semantics. Therefore, we can't hide call stack in abstractions, because it
+can be affected by additional procedure calls. \emph{Programs} of original TAL
+includes \emph{instruction sequence}, \emph{register files} and \emph{heaps}. Our
+formalization additionally includes \emph{stack}, which is split in two parts:
+\emph{data stack} and \emph{call stack}. Instruction sequence type from original TAL
+contained only expected \emph{register file type}, but in our formalization
+it contains also types of expected data stack and call stack, as shown
+in \C{code} constructor of listing \ref{fig:types}. This is another
+difference from original TAL.
+}
 
 \ignore{
 \begin{code}
@@ -230,8 +273,9 @@ module Meta where
 \end{code}
 }
 
+\iftoggle{russian-draft}{
 Часть программы, не содержащая исполняемой последовательности инструкций,
-будем называть *состоянием исполнителя*. Тип состояния исполнителя приведен в
+будем называть \emph{состоянием исполнителя}. Тип состояния исполнителя приведен в
 листинге \ref{fig:statetype}.
 
 Для обеспечения корректности вызова функции $g$ в конце
@@ -240,24 +284,51 @@ module Meta where
 типы регистров и стеков и может ли он к концу своего исполнения получить
 ожидаемый функцией $g$ тип $S_g$. Для этого тип блока, кроме ожидаемых типов
 регистров и стеков, хранит некоторое описание изменений типов различных
-частей *программы*, применяемое этим блоком. Это описание хранится в типе
+частей \emph{программы}, применяемое этим блоком. Это описание хранится в типе
 \F{Diff}, параметром которого является тип состояния исполнителя, к
 которому может применяться это изменение.
-Индуктивное определение *блока кода* приведено в листинге \ref{fig:block}.
+Индуктивное определение \emph{блока кода} приведено в листинге \ref{fig:block}.
 
 Семантика приведенного языка ассемблера определяется двумя функциями,
-описывающими семантику инструкций общего назначения (*instructions* из
+описывающими семантику инструкций общего назначения (\emph{instructions} из
 оригинального TAL) и инструкций перехода (последние инструкции в
-*instruction sequences* оригинального TAL). Каждому виду инструкций
-разрешено менять только часть *программы*, и результатом
+\emph{instruction sequences} оригинального TAL). Каждому виду инструкций
+разрешено менять только часть \emph{программы}, и результатом
 исполнения инструкции является новое состояние этой части
-*программы*. Так, для управляющих инструкций результатом исполнения
+\emph{программы}. Так, для управляющих инструкций результатом исполнения
 является пара из нового состояния стека вызовов и следующего блока, который
 нужно исполнить. Кроме того, семантика блока кода описывается похожим
 образом: результатом исполнения блока является пара из нового состояния
 исполнителя и блока, который нужно исполнить следующим.
+}{
+\emph{Machine state} is the part of the \emph{program} that does not
+contain \emph{instruction sequence}. Its type is shown in listing
+\ref{fig:statetype}.
 
-\labeledfigure{fig:block}{Индуктивное определение блока}{
+To ensurre that function $g$ call in the end of the \emph{block}
+(\emph{instruction sequence}) $f$ is correct, we have to know how block $f$
+of type $S_f$ changes register file types and stack types and whether it
+can transform machine state type $S_f$ to expected by function $g$ machine
+state type $S_g$. To achieve this, type of block should contain not only
+expected types of register file and stack, but some description of how this
+block changes differnet parts of machine state type. This description is
+stored in datatype \F{Diff}, which takes as parameter machine state type
+that can be changed by this \emph{diff}. Recursive definitoin of the
+\emph{code block} is shown in listing \ref{fig:block}.
+
+Semantics of this assembly language is defined by two functions describing
+semantics of regular instructions (\emph{instructions} from original TAL)
+and branch instructions (last instructions in \emph{instruction sequence}
+from original TAL). Each type of instruction is allowed to change only part
+of \emph{program}, and execution result is described by the new state of
+that part of the \emph{program}. So, some branch instruction execution
+result is a pair of new call stack state and next block to execute.
+Moreover, semantics of the block is described in the same manner: block
+execution result is a pair of the new machine state and next block to
+execute.
+}
+
+\labeledfigure{fig:block}{Recursive definition of code block}{
 \begin{code}
     data Block (S : StateType) : Diff S → Set
       where

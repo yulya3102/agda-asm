@@ -82,9 +82,15 @@ control-instr-semantics (state Γ Ψ DS (f ∷ CS)) (ret refl)
 \end{code}
 }
 
+\iftoggle{russian-draft}{
 Важной частью динамической линковки являются инструкции перехода и их
 семантика, в частности, инструкция непрямого перехода \C{jmp[\_]}.
 Для этой инструкции семантика определена следующим образом:
+}{
+The important part of dynamic linking is branch instructions and its
+semantics, in particular, indirect jump instruction \C{jmp[\_]}. Its
+semantics is defined like this:
+}
 
 \begin{code}
 control-instr-semantics S (jmp[ p ])
@@ -93,11 +99,19 @@ control-instr-semantics S (jmp[ p ])
     (loadptr (State.memory S) p)
 \end{code}
 
+\iftoggle{russian-draft}{
 В состоянии исполнителя \AgdaBound{S} исполнение инструкции непрямого
 перехода по указателю \AgdaBound{p} оставит стек вызовов прежним,
 \F{State.callstack} \AgdaBound{S}, а исполнение перейдет на
 последовательность инструкций, загруженную из памяти \F{State.memory}
 \AgdaBound{S} по указателю, загруженному из ячейки \AgdaBound{p}.
+}{
+Execution of indirect jump to the pointer \AgdaBound{p} in machine state
+\AgdaBound{S} does not change call stack \F{State.callstack} \AgdaBound{S},
+and execution will be continued from instruction sequence loaded from
+\F{State.memory} \AgdaBound{S} by pointer loaded from memory by
+\AgdaBound{p}.
+}
 
 \ignore{
 \begin{code}
