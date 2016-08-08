@@ -1,4 +1,8 @@
-# TAL formalization
+\iftoggle{russian-draft}{
+\section{Обзор используемой формализации TAL}
+}{
+\section{TAL formalization}
+}
 
 \label{sec:asm-review}
 

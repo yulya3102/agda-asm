@@ -1,4 +1,8 @@
-# Block equivalence
+\iftoggle{russian-draft}{
+\section{Эквивалентность блоков кода}
+}{
+\section{Block equivalence}
+}
 
 \iftoggle{russian-draft}{
 Одна из целей настоящей работы - показать эквивалентность семантик вызова
