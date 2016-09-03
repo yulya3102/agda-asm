@@ -82,11 +82,14 @@ control-instr-semantics (state Γ Ψ DS (f ∷ CS)) (ret refl)
 \end{code}
 }
 
+Для описания семантики динамической линковки необходима семантика только
+инструкции непрямого перехода \C{jmp[\_]}. Потому описание семантики других
+инструкций мы не рассматриваем.
 \iftoggle{russian-draft}{
-Важной частью динамической линковки являются инструкции перехода и их
-семантика, в частности, инструкция непрямого перехода \C{jmp[\_]}.
 Для этой инструкции семантика определена следующим образом:
 }{
+TODO
+
 The important part of dynamic linking is branch instructions and its
 semantics, in particular, indirect jump instruction \C{jmp[\_]}. Its
 semantics is defined like this:
