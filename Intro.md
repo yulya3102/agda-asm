@@ -136,8 +136,13 @@ loader implies equivalence of statically and dynamically linked functions.
 линковки, из чего впоследствии можно получить верифицированный линковщик,
 использующий внутри себя некоторую математическую модель, позволяющую
 говорить о корректности производимых линковщиком преобразований программы.
+
+Исходный код, описываемый в данной статье, находится по адресу
 }{
 This work can be considered first steps in area of dynamic linking
 formalization. It can eventually result in verified linker that allows to
 reason about correctness of performed program transformations.
+
+The sources used in this paper available at
 }
+\textbf{TODO: URL}.
