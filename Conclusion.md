@@ -117,16 +117,16 @@ to:
     \textbf{\emph{Link-time optimizations}}.
 
 \iftoggle{russian-draft}{
-    Продложение этой работы может существенно повлиять на LTO, не имеющего
-    на данный момент формально описанной семантики (**TODO: proofs?**).
+    Продложение этой работы может существенно повлиять на LTO, для которого
+    формально описанная семантика в литературе не встречается.
     Кроме того, это позволило бы построить тулчейн с CompCert, покрывающий
     гарантиями не только трансляцию кода, но и линковку и связанные с ней
     оптимизации.
 }{
     Further work can have a significant imact on LTO, which is currently
-    doesn't have any formal semantics (TODO: proof). Moreover, it can form
-    toolchain with CompCert, which can cover not only translation phase,
-    but linking and related optimizations.
+    to the best of my knowledge doesn't have any formal semantics.
+    Moreover, it can form toolchain with CompCert, which can cover not only
+    translation phase, but linking and related optimizations.
 }
 \item
     \textbf{\emph{Typed Assembly Language}}.
