@@ -1,0 +1,46 @@
+\iftoggle{russian-draft}{
+\section{Обзор используемой формализации TAL}
+}{
+\section{TAL formalization}
+}
+
+\label{sec:asm-review}
+
+\iftoggle{russian-draft}{
+Оригинальный Typed Assembly Language достаточно выразителен для
+реализации возможностей высокоуровневых языков, таких как параметрический
+полиморфизм или пользовательские структуры данных. Для нашей задачи эти
+возможности не являются существенными, но вместо этого возникает
+необходимость наличия определенных типов данных и инструкций, используемых
+в реализации динамической линковки. В связи с этим используемая
+формализация TAL имеет несколько существенных отличий от оригинального
+Typed Assembly Language, синтаксис которого приведен в \textbf{TODO}.
+
+Первым отличием является отсутствие параметров типов. Это является
+значительным упрощением исходного языка, позволяющим сильно упростить
+используемую формализацию. Тем не менее, динамический линковщик не
+нуждается в полиморфизме на уровне языка ассемблера: он не интерпретирует и
+не меняет данный ему код, всего лишь добавляя к нему дополнительные
+элементы.
+
+Вторым отличием является отсутствие кортежей в памяти, в которых
+динамический линковщик также не нуждается. Вместе с типом кортежа из языка
+удаляются неинициализированные значения и метки инициализированности.
+}{
+Original Typed Assembly Language is powerful enough to implement high-level
+language featues such as parametric polymorphism or records. These features
+are not necessary for our task, but instead we have to have specific data
+types and instructions which are typically used to implement dynamic
+linking. Therefore, our TAL formalization has some differences from
+original Typed Assembly Language. \textbf{TODO}.
+
+The lack of type variables is the first difference. It greatly simplifies
+original TAL language and allows to simplify our formalization. However,
+dynamic linker does not need polymorphism at assembly language level: it
+does not interpret and does not change input code, only appending
+additional elements to it.
+
+The lack of tuples is the second difference. Dynamic linker does not need
+it either. Uninitialized "garbage" values and initialization flags are
+deleted from language along with tuple type.
+}

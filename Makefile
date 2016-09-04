@@ -6,6 +6,9 @@ AGDA_INCLUDE = -i . -i ./agda-stdlib/src
 
 SOURCES = \
 	$(BUILD)/Intro.latex \
+	$(BUILD)/TAL_difference.latex \
+	$(BUILD)/Core.latex \
+	$(BUILD)/TAL_types.latex \
 	$(BUILD)/MetaAsm.latex \
 	$(BUILD)/Asm.latex \
 	$(BUILD)/Primer.latex \
@@ -46,7 +49,7 @@ $(BUILD)/%.pdf: $(BUILD)/%.latex bib.bib $(BUILD)/agda.sty
 		-output-directory=$(BUILD) \
 		$<
 
-$(BUILD)/%.md: %.md
+$(BUILD)/%: %
 	cp $< $@
 
 $(BUILD)/%.md: $(BUILD)/%.tex

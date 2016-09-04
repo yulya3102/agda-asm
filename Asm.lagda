@@ -10,10 +10,11 @@ open Membership-≡
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym)
 open import Function
 
+open import Core public
 open import MetaAsm public
 
 open Meta public
-open Diffs public
+open import Diffs public
 
 data ControlInstr (S : StateType) : Maybe (CallStackChg S) → Set
 data Instr (S : StateType) : SmallChg S → Set
