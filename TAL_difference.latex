@@ -16,7 +16,19 @@
 формализация TAL имеет несколько существенных отличий от оригинального
 Typed Assembly Language, синтаксис которого приведен в \textbf{TODO}.
 
-Первым отличием является отсутствие параметров типов. Это является
+Прежде чем описывать особенности используемой формализации, сделаем
+пару замечаний по используемой терминологии.
+В разных версиях TAL текущее состояние исполняемой программы называлось
+по-разному: в TAL и STAL оно называлось \emph{программой (program)}, в то
+время как в MTAL его называли \emph{состоянием программы (program state)}.
+Мы будем его называть \emph{\textbf{состоянием программы}}.
+Кроме того, слово "тип" может быть использовано для описания сущностей из
+разных слоев абстракции: оно может как ссылаться на сущность в коде на
+Agda, так и на сущность "тип" из TAL. Чтобы избежать путаницы, ссылаться на
+типы из Agda мы будем с помощью фразы \textbf{TODO}.
+
+Первым отличием используемой формализации от оригинального TAL
+является отсутствие параметров типов. Это является
 значительным упрощением исходного языка, позволяющим сильно упростить
 используемую формализацию. Тем не менее, динамический линковщик не
 нуждается в полиморфизме на уровне языка ассемблера: он не интерпретирует и
@@ -33,6 +45,8 @@ are not necessary for our task, but instead we have to have specific data
 types and instructions which are typically used to implement dynamic
 linking. Therefore, our TAL formalization has some differences from
 original Typed Assembly Language. \textbf{TODO}.
+
+\textbf{TODO}.
 
 The lack of type variables is the first difference. It greatly simplifies
 original TAL language and allows to simplify our formalization. However,
