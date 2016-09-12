@@ -42,9 +42,12 @@
   basicstyle=\ttfamily,
 }
 
+\usepackage{hyperref}
+
 \usepackage[bw]{agda}
 \newcommand{\ignore}[1]{}
-\newcommand{\C}{\AgdaInductiveConstructor}
+\providecommand{\C}{\AgdaInductiveConstructor}
+\renewcommand{\C}{\AgdaInductiveConstructor}
 \newcommand{\F}{\AgdaFunction}
 \newcommand{\labeledfigure}[3]{%
 \begin{figure}%

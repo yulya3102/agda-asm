@@ -145,4 +145,4 @@ reason about correctness of performed program transformations.
 
 The sources used in this paper available at
 }
-\textbf{TODO: URL}.
+\url{https://github.com/yulya3102/agda-asm}.
