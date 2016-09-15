@@ -55,12 +55,12 @@ got {Ψ = atom x ∷ Ψ} (there f) = there $ got f
 got {Ψ = code Γ DS CS ∷ Ψ} (there f)
   = there (there (there (got f)))
 
-func : ∀ {Γ Ψ DS CS} → code Γ DS CS ∈ Ψ
+linked-symbol : ∀ {Γ Ψ DS CS} → code Γ DS CS ∈ Ψ
     → code Γ DS CS ∈ pltize Ψ
-func (here refl) = there (there (here refl))
-func {Ψ = atom x ∷ Ψ} (there f) = there $ func f
-func {Ψ = code Γ DS CS ∷ Ψ} (there f)
-  = there (there (there (func f)))
+linked-symbol (here refl) = there (there (here refl))
+linked-symbol {Ψ = atom x ∷ Ψ} (there f) = there $ linked-symbol f
+linked-symbol {Ψ = code Γ DS CS ∷ Ψ} (there f)
+  = there (there (there (linked-symbol f)))
 \end{code}
 }
 
@@ -86,7 +86,7 @@ GOT и PLT. В целях простоты будем считать, что з�
 данной работе не рассматривается.
 
 Определенные дальше в листинге \ref{fig:changeABI} функции \F{plt}, \F{got}
-и \F{func} позволяют, зная, по
+и \F{linked-symbol} позволяют, зная, по
 какому адресу находилась функция \AgdaBound{f} \AgdaSymbol{=} \F{code} \AgdaBound{\Gamma} \AgdaBound{DS} \AgdaBound{CS} в неслинкованной программе, определить,
 по каким адресам будут расположены в слинкованной программе соответствующие
 этой функции элемент PLT $plt.f$, элемент GOT $got.f$ и сама функция
@@ -188,6 +188,6 @@ pltize-data = pltize-idata []
 dynamic : ∀ {ST} → Program ST → Program (pltize-state ST)
 dynamic (program memory start)
   -- TODO: replace every `call f` with `call (plt f)`
-  = program (pltize-data memory) (func start)
+  = program (pltize-data memory) (linked-symbol start)
 \end{code}
 }

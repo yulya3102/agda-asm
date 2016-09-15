@@ -52,7 +52,7 @@ module ListChg (A : Set) where
 
 module RegDiff where
 
-  open ListChg RegType public
+  open ListChg WordType public
   open DiffDefinition chgapply public
 
 module StackDiff (A : Set) where
@@ -69,7 +69,7 @@ module StackDiff (A : Set) where
 module StateDiff where
   data Chg (S : StateType) : Set where
     rchg  : RegDiff.Chg (StateType.registers S) → Chg S
-    dschg : StackDiff.Chg RegType (StateType.datastack S) → Chg S
+    dschg : StackDiff.Chg WordType (StateType.datastack S) → Chg S
     cschg : StackDiff.Chg (RegFileTypes × DataStackType)
              (StateType.callstack S) → Chg S
 
@@ -92,7 +92,7 @@ open StateDiff public
 
 DataStackChg : StateType → Set
 DataStackChg S
-  = StackDiff.Chg RegType (StateType.datastack S)
+  = StackDiff.Chg WordType (StateType.datastack S)
 
 CallStackChg : StateType → Set
 CallStackChg S

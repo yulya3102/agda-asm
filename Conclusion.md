@@ -27,11 +27,11 @@ linker:
     Зная, по какому смещению в неслинкованном объектном файле располагался
     некоторый блок кода, динамический линковщик может сказать, где этот
     блок кода будет располагаться в динамически слинкованной библиотеке
-    (функция \F{func}).
+    (функция \F{linked-symbol}).
 }{
     Dynamic linker knows where code block will be stored in linked object
     file by its offset in non-linked object file (as shown by function
-    \F{func}).
+    \F{linked-symbol}).
 }
 \item
 \iftoggle{russian-draft}{

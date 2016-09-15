@@ -46,11 +46,11 @@ module Meta where
     (Block : (S : StateType) → Diff S → Set)
     where
 
-    data RegValue (Ψ : HeapTypes) : RegType → Set where
+    data RegValue (Ψ : HeapTypes) : WordType → Set where
       ptr : ∀ {τ} → τ ∈ Ψ → RegValue Ψ (τ *)
       int : ℕ → RegValue Ψ int
 
-    data Value (Ψ : HeapTypes) : Type → Set where
+    data Value (Ψ : HeapTypes) : ArbitraryType → Set where
       atom : ∀ {τ} → RegValue Ψ τ → Value Ψ (atom τ)
       block : ∀ {Γ DS CS d}
             → Block (sttype Γ Ψ DS CS) d
@@ -138,7 +138,7 @@ module Meta where
       rewrite sym px | atom-ptr-unptr (load M p)
       = store-loaded p M
 
-    data DataStack (Ψ : HeapTypes) : List RegType → Set
+    data DataStack (Ψ : HeapTypes) : List WordType → Set
       where
       []   : DataStack Ψ []
       _∷_  : ∀ {τ DS} → RegValue Ψ τ

@@ -6,14 +6,14 @@ open import Data.Nat
 open import Data.List
 open import Data.Product
 
-data RegType : Set
-data Type : Set
+data WordType : Set
+data ArbitraryType : Set
 DataStackType : Set
 CallStackType : Set
 
-RegFileTypes = List RegType
-HeapTypes = List Type
-DataStackType = List RegType
+RegFileTypes = List WordType
+HeapTypes = List ArbitraryType
+DataStackType = List WordType
 CallStackType = List (RegFileTypes × DataStackType)
 \end{code}
 }
@@ -33,16 +33,16 @@ record StateType : Set
 
 \labeledfigure{fig:types}{Supported data types}{
 \begin{code}
-data RegType
+data WordType
   where
-  _*  : Type → RegType
-  int : RegType
+  _*  : ArbitraryType → WordType
+  int : WordType
 
-data Type
+data ArbitraryType
   where
-  atom : RegType → Type
+  atom : WordType → ArbitraryType
   code : RegFileTypes
        → DataStackType → CallStackType
-       → Type
+       → ArbitraryType
 \end{code}
 }

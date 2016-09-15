@@ -30,7 +30,7 @@ GOT[_]-correctness : ∀ {Γ Ψ DS CS}
                    → (H : Data (pltize Ψ))
                    → Set
 GOT[ f ]-correctness H
-    = loadptr H (got f) ≡ func f
+    = loadptr H (got f) ≡ linked-symbol f
 
 PLT[_]-correctness : ∀ {Γ Ψ DS CS}
                    → (f : code Γ DS CS ∈ Ψ)

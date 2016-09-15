@@ -38,7 +38,7 @@ exec-plt : ∀ {Γ Ψ DS CS}
          → (S : State (sttype Γ (pltize Ψ) DS CS))
          → GOT[ f ]-correctness (State.memory S)
          → exec-block S (plt-stub (got f))
-         ≡ (S , loadblock (State.memory S) (func f))
+         ≡ (S , loadblock (State.memory S) (linked-symbol f))
 exec-plt f S p rewrite sym p = exec-ijmp S (got f)
 
 exblock-eq-proof : ∀ {Γ Ψ DS CS}
@@ -51,7 +51,7 @@ exblock-eq-proof : ∀ {Γ Ψ DS CS}
                    (block (plt-stub (got f)) S)
                    (block
                      (proj₂ $ loadblock (State.memory S)
-                                        (func f))
+                                        (linked-symbol f))
                      S)
 exblock-eq-proof f S p
   = left (exec-block-≡ (plt-stub (got f)) _ S S
@@ -66,7 +66,7 @@ block-eq-proof : ∀ {Γ Ψ DS CS}
                       × (PLT[ f ]-correctness
                             (State.memory S)))
                  (plt f)
-                 (func f)
+                 (linked-symbol f)
 block-eq-proof {Γ} {Ψ} {DS} {CS} f
   = block-eq-assuming lemma
   where
@@ -76,7 +76,7 @@ block-eq-proof {Γ} {Ψ} {DS} {CS} f
           × (PLT[ f ]-correctness $ State.memory S)
           → ExBlockEq
             (construct-exblock (plt f) S)
-            (construct-exblock (func f) S)
+            (construct-exblock (linked-symbol f) S)
     lemma S (got-correctness , plt-correctness)
       rewrite plt-correctness
       = exblock-eq-proof f S got-correctness

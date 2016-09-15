@@ -189,7 +189,7 @@ linker-diff ST = dsChg (StackDiff.pop refl)
 LinkerS = pltize-state ∘ LinkerBlockS
 
 exec-pushc-i : ∀ {Ψ StateΓ StateDS StateCS}
-             → {τ : RegType} (value : RegValue Ψ τ)
+             → {τ : WordType} (value : RegValue Ψ τ)
              → (R : Registers Ψ StateΓ)
              → (M : Data Ψ)
              → (DS : DataStack Ψ StateDS)
