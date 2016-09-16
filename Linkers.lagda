@@ -14,10 +14,6 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; cong)
 
 open import MetaAsm
 open import Asm
-open import Programs
-
-static : ∀ {ST} → Program ST → Program ST
-static = id
 \end{code}
 }
 
@@ -188,10 +184,5 @@ pltize-idata Δ (_∷_ {code Γ DS CS} {τs} (block x) Ψ)
 
 pltize-data : ∀ {Ψ} → Data Ψ → Data (pltize Ψ)
 pltize-data = pltize-idata []
-
-dynamic : ∀ {ST} → Program ST → Program (pltize-state ST)
-dynamic (program memory start)
-  -- TODO: replace every `call f` with `call (plt f)`
-  = program (pltize-data memory) (linked-symbol start)
 \end{code}
 }
