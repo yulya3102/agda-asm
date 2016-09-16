@@ -16,13 +16,13 @@ open import MetaAsm public
 open Meta public
 open import Diffs public
 
-data ControlInstr (S : StateType) : Maybe (CallStackChg S) → Set
+data BranchInstr (S : StateType) : Maybe (CallStackChg S) → Set
 data Instr (S : StateType) : SmallChg S → Set
 
-open Blocks ControlInstr Instr public
+open Blocks BranchInstr Instr public
 open Values Block public
 
-data ControlInstr (S : StateType) where
+data BranchInstr (S : StateType) where
   call : ∀ {Γ DS}
        → (f : code
          (StateType.registers S)
@@ -31,24 +31,24 @@ data ControlInstr (S : StateType) where
          ∈ StateType.memory S)
        → (cont : code Γ DS (StateType.callstack S)
                ∈ StateType.memory S)
-       → ControlInstr S (Maybe.just $ StackDiff.push (Γ , DS))
+       → BranchInstr S (Maybe.just $ StackDiff.push (Γ , DS))
   jmp[_] : (ptr : atom
          (code
          (StateType.registers S)
          (StateType.datastack S)
          (StateType.callstack S) *)
          ∈ StateType.memory S)
-       → ControlInstr S nothing
+       → BranchInstr S nothing
   jmp : (f : code
         (StateType.registers S)
         (StateType.datastack S)
         (StateType.callstack S)
         ∈ StateType.memory S)
-      → ControlInstr S nothing
+      → BranchInstr S nothing
   ret  : ∀ {CS}
        → (p : StateType.callstack S
        ≡ (StateType.registers S , StateType.datastack S) ∷ CS)
-       → ControlInstr S (just (StackDiff.pop p))
+       → BranchInstr S (just (StackDiff.pop p))
 
 data Instr (S : StateType) where
   mov   : ∀ {σ τ}
@@ -66,19 +66,19 @@ data Instr (S : StateType) where
         → (p : StateType.datastack S ≡ τ ∷ DS)
         → Instr S (regstack (RegDiff.chg r τ) (StackDiff.pop p))
 
-control-instr-semantics : ∀ {S c}
+branch-instr-semantics : ∀ {S c}
              → State S
-             → ControlInstr S c
+             → BranchInstr S c
              → CallStack
                (StateType.memory S)
                (StateType.callstack (dapply S (csChg S c)))
              × Σ (Diff (dapply S (csChg S c)))
                  (Block (dapply S (csChg S c)))
-control-instr-semantics (state Γ Ψ DS CS) (call f cont)
+branch-instr-semantics (state Γ Ψ DS CS) (call f cont)
   = cont ∷ CS , loadblock Ψ f
-control-instr-semantics (state Γ Ψ DS CS) (jmp f)
+branch-instr-semantics (state Γ Ψ DS CS) (jmp f)
   = CS , loadblock Ψ f
-control-instr-semantics (state Γ Ψ DS (f ∷ CS)) (ret refl)
+branch-instr-semantics (state Γ Ψ DS (f ∷ CS)) (ret refl)
   = CS , loadblock Ψ f
 \end{code}
 }
@@ -97,7 +97,7 @@ semantics is defined like this:
 }
 
 \begin{code}
-control-instr-semantics S (jmp[ p ])
+branch-instr-semantics S (jmp[ p ])
   = State.callstack S
   , loadblock (State.memory S)
     (loadptr (State.memory S) p)
@@ -138,7 +138,7 @@ exec-instr (state Γ Ψ DS CS) (pushc i)
 exec-instr (state Γ Ψ (v ∷ DS) CS) (pop r refl)
   = toreg Γ r v , Ψ , DS
 
-open ExecBlk Instr ControlInstr exec-instr control-instr-semantics public
+open ExecBlk Instr BranchInstr exec-instr branch-instr-semantics public
 open import BlockEq Block exec-block public
 \end{code}
 }

@@ -18,7 +18,7 @@ module Meta where
   open Diffs
 
   module Blocks
-    (ControlInstr : (S : StateType)
+    (BranchInstr : (S : StateType)
                   → Maybe (CallStackChg S)
                   → Set)
     (Instr : (S : StateType) → SmallChg S → Set)
@@ -32,7 +32,7 @@ module Meta where
     data Block (S : StateType) : Diff S → Set
       where
       ↝ : ∀ {c}
-        → (i : ControlInstr S c)
+        → (i : BranchInstr S c)
         → Block S (csChg S c)
       _∙_ : ∀ {c d}
            → (i : Instr S c)
@@ -183,44 +183,44 @@ module Meta where
 
   module ExecBlk
     (Instr : (S : StateType) → Diffs.SmallChg S → Set)
-    (ControlInstr : (S : StateType)
+    (BranchInstr : (S : StateType)
                   → Maybe (Diffs.CallStackChg S)
                   → Set)
     (exec-instr : ∀ {S c}
                 → Values.State
-                  (Blocks.Block ControlInstr Instr)
+                  (Blocks.Block BranchInstr Instr)
                   S
                 → Instr S c
                 → Values.Registers
-                 (Blocks.Block ControlInstr Instr)
+                 (Blocks.Block BranchInstr Instr)
                  (StateType.memory S)
                  (StateType.registers
                    (Diffs.dapply S (Diffs.sChg c)))
                 × (Values.Data
-                  (Blocks.Block ControlInstr Instr)
+                  (Blocks.Block BranchInstr Instr)
                   (StateType.memory S)
                 × Values.DataStack
-                 (Blocks.Block ControlInstr Instr)
+                 (Blocks.Block BranchInstr Instr)
                  (StateType.memory S)
                  (StateType.datastack
                    (Diffs.dapply S (Diffs.sChg c)))))
-    (exec-control : ∀ {S c}
+    (exec-branch : ∀ {S c}
                  → Values.State
-                   (Blocks.Block ControlInstr Instr)
+                   (Blocks.Block BranchInstr Instr)
                    S
-                 → ControlInstr S c
+                 → BranchInstr S c
                  → Values.CallStack
-                  (Blocks.Block ControlInstr Instr)
+                  (Blocks.Block BranchInstr Instr)
                   (StateType.memory S)
                   (StateType.callstack
                     (Diffs.dapply S (Diffs.csChg S c)))
                  × Σ (Diffs.Diff
                        (Diffs.dapply S (Diffs.csChg S c)))
-                     (Blocks.Block ControlInstr Instr
+                     (Blocks.Block BranchInstr Instr
                        (Diffs.dapply S (Diffs.csChg S c))))
     where
     open Diffs
-    open Blocks ControlInstr Instr
+    open Blocks BranchInstr Instr
     open Values Block
 
     module DiffLemmas where
@@ -270,7 +270,7 @@ module Meta where
                → State (dapply ST d)
                × Σ (Diff (dapply ST d)) (Block (dapply ST d))
     exec-block {S} (state Γ Ψ DS CS) (Blocks.↝ {c} ci)
-      with exec-control (state Γ Ψ DS CS) ci
+      with exec-branch (state Γ Ψ DS CS) ci
     ... | CS' , next-block
       rewrite dapply-csChg S c
       = state Γ Ψ DS CS' , next-block
