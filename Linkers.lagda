@@ -55,10 +55,12 @@ got {Ψ = atom x ∷ Ψ} (there f) = there $ got f
 got {Ψ = code Γ DS CS ∷ Ψ} (there f)
   = there (there (there (got f)))
 
-linked-symbol : ∀ {Γ Ψ DS CS} → code Γ DS CS ∈ Ψ
+linked-symbol : ∀ {Γ Ψ DS CS}
+    → code Γ DS CS ∈ Ψ
     → code Γ DS CS ∈ pltize Ψ
 linked-symbol (here refl) = there (there (here refl))
-linked-symbol {Ψ = atom x ∷ Ψ} (there f) = there $ linked-symbol f
+linked-symbol {Ψ = atom x ∷ Ψ} (there f)
+  = there $ linked-symbol f
 linked-symbol {Ψ = code Γ DS CS ∷ Ψ} (there f)
   = there (there (there (linked-symbol f)))
 \end{code}
@@ -131,6 +133,8 @@ plt-stub got = ↝ jmp[ got ]
 как динамический загрузчик должен после загрузки библиотеки с нужной
 функцией заполнить соответствующие ей элементы GOT, положив в них ее адрес,
 исполнение указанного блока PLT будет приводить к исполнению самой функции.
+Код такого блока PLT, выраженный в используемой формализации языка
+ассемблера, приведен в листинге \ref{fig:plt-stub}.
 
 Как было сказано в секции \ref{sec:asm-review}, индексом Agda-типа блока
 является описание изменений типа состояния исполнителя,

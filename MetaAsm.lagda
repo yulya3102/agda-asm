@@ -27,11 +27,12 @@ module Meta where
 \end{code}
 }
 
-\labeledfigure{fig:block}{Recursive definition of code block}{
+\labeledfigure{fig:block}{Recursive definition of basic block}{
 \begin{code}
     data Block (S : StateType) : Diff S → Set
       where
-      ↝ : ∀ {c} → ControlInstr S c
+      ↝ : ∀ {c}
+        → (i : ControlInstr S c)
         → Block S (csChg S c)
       _∙_ : ∀ {c d}
            → (i : Instr S c)
