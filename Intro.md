@@ -112,7 +112,16 @@ Agda \citep{agda}
 \citep{danielsson2006formalisation} \citep{hancock2013small}
 \citep{mcbridedjinn}.
 }{
-\textbf{TODO}
+Proof-carrying code is written with modern proof assistants, which are
+based on type theory and Curry-Howard correspondence
+\citep{sorensen2006lectures}. Coq \citep{coq} and Agda \citep{agda} may be
+noted as the closest to general purpose programming languages. Coq was used
+to get significant results such as four color theorem proof
+\citep{gonthier2008formal} and compiler of the C language that performs
+formally correct optimizations \citep{compcert}. On the other hand, Agda is
+used to formalize languages and their properties
+\citep{danielsson2006formalisation} \citep{hancock2013small}
+\citep{mcbridedjinn}.
 }
 
 \iftoggle{russian-draft}{

@@ -1,7 +1,7 @@
 \iftoggle{russian-draft}{
 \section{Доказательство эквивалентности динамически и статически слинкованных функций}
 }{
-\section{TODO}
+\section{Proof of the equivalence of dynamically and statically linked functions}
 }
 
 \label{sec:proof}

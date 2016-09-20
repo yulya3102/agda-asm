@@ -1,7 +1,7 @@
 \iftoggle{russian-draft}{
 \section{Динамическая линковка и загрузка}
 }{
-\section{TODO}
+\section{Dynamic linking and loading}
 }
 
 \ignore{

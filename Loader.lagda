@@ -1,7 +1,7 @@
 \iftoggle{russian-draft}{
 \section{Эквивалентность динамически и статически слинкованных функций}
 }{
-\section{TODO}
+\section{Equivalence of dynamically and statically linked functions}
 }
 
 \ignore{

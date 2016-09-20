@@ -25,7 +25,7 @@ open import BlockEq Block exec-block
 \iftoggle{russian-draft}{
 \section{Доказательство свойств эквивалентности для эквивалентности исполняемых блоков}
 }{
-\section{TODO}
+\section{Properties of equivalence relation for the executable blocks equivalence}
 }
 
 \label{sec:is-equivalence}

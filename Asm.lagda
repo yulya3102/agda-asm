@@ -88,16 +88,14 @@ branch-instr-semantics (state Γ Ψ DS (f ∷ CS)) (ret refl)
 инструкции непрямого перехода \C{jmp[\_]}. Потому описание семантики других
 инструкций здесь не приведено.
 }{
-\textbf{TODO}
+To describe dynamic linking semantics we only need semantics of the
+indirect jump instruction \C{jmp[\_]}. Therefore, semantics of other
+instructions are not described here.
 }
 \iftoggle{russian-draft}{
 Для этой инструкции семантика определена следующим образом:
 }{
-TODO
-
-The important part of dynamic linking is branch instructions and its
-semantics, in particular, indirect jump instruction \C{jmp[\_]}. Its
-semantics is defined like this:
+Semantics for this instruction is defined like this:
 }
 
 \begin{code}

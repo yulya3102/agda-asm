@@ -14,8 +14,18 @@
 необходимость наличия определенных типов данных и инструкций, используемых
 в реализации динамической линковки. В связи с этим используемая
 формализация TAL имеет несколько существенных отличий от оригинального
-Typed Assembly Language, синтаксис которого приведен в \citep[fig. 13]{tal}.
+Typed Assembly Language, синтаксис которого приведен в
+}{
+Original Typed Assembly Language is powerful enough to implement high-level
+language features such as parametric polymorphism or records. These features
+are not necessary for our task, but instead we have to have specific data
+types and instructions which are typically used to implement dynamic
+linking. Therefore, our TAL formalization has some differences from
+original Typed Assembly Language. The syntax of TAL can be found in
+}
+\citep[fig. 13]{tal}.
 
+\iftoggle{russian-draft}{
 Прежде чем описывать особенности используемой формализации, сделаем
 пару замечаний по используемой терминологии.
 В разных версиях TAL текущее состояние исполняемой программы называлось
@@ -28,7 +38,11 @@ Typed Assembly Language, синтаксис которого приведен в
 разных слоев абстракции: оно может как ссылаться на сущность в коде на
 Agda, так и на сущность "тип" из TAL. Чтобы избежать путаницы, ссылаться на
 типы из Agda мы будем с помощью фразы Agda-тип.
+}{
+\textbf{TODO}.
+}
 
+\iftoggle{russian-draft}{
 Первым отличием используемой формализации от оригинального TAL
 является отсутствие параметров типов. Это является
 значительным упрощением исходного языка, позволяющим сильно упростить
@@ -41,15 +55,6 @@ Agda, так и на сущность "тип" из TAL. Чтобы избежа
 динамический линковщик также не нуждается. Вместе с типом кортежа из языка
 удаляются неинициализированные значения и метки инициализированности.
 }{
-Original Typed Assembly Language is powerful enough to implement high-level
-language featues such as parametric polymorphism or records. These features
-are not necessary for our task, but instead we have to have specific data
-types and instructions which are typically used to implement dynamic
-linking. Therefore, our TAL formalization has some differences from
-original Typed Assembly Language. \textbf{TODO}.
-
-\textbf{TODO}.
-
 The lack of type variables is the first difference. It greatly simplifies
 original TAL language and allows to simplify our formalization. However,
 dynamic linker does not need polymorphism at assembly language level: it

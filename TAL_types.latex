@@ -7,7 +7,11 @@
 потенциально произвольного размера. Agda-тип \F{ArbitraryType}
 описывает типы произвольного размера, которые включают в себя типы размером
 с регистр с помощью конструктора \C{atom}.
+}{
+\textbf{TODO}.
+}
 
+\iftoggle{russian-draft}{
 Действительно необходимой для формализации динамической линковки является
 семантика инструкции непрямого перехода, позволяющая динамически менять
 целевую точку передачи исполнения. Аргументом этой инструкции является
@@ -19,7 +23,19 @@
 формализации от оригинального
 TAL. По сути, это тип кортежа из оригинального
 TAL, но фиксированной длины и без метки инициализированности.
+}{
+What is really necessary for dynamic linking formalization is indirect jump
+instruction semantics. This instruction allows to dynamically change target
+executable code. The argument of this instruction is a pointer to a memory
+location where the address of target executable code is stored. To
+correctly type indirect jump instruction we need to support the type of
+pointer to typed memory (the type \C{\_*} from listing \ref{fig:types}).
+This is the third difference from the original Typed Assembly Language.
+Essentially, this is the tuple type from the original TAL, but without
+initialization flag and of fixed length.
+}
 
+\iftoggle{russian-draft}{
 Динамическая линковка добавляет в объектные файлы код-"прослойку" между
 различными библиотеками, исполняемый при вызове внешних функций. Этот код
 не должен никак влиять на семантику программы. Это означает, что мы не
@@ -37,18 +53,6 @@ TAL, но фиксированной длины и без метки иници�
 Это еще одно существенное отличие
 используемой формализации от оригинального TAL.
 }{
-\textbf{TODO}.
-
-What is really necessary for dynamic linking formalization is indirect jump
-instruction semantics. This instruction allows to dynamically change target
-executable code. The argument of this instruction is a pointer to a memory
-location where the address of target executable code is stored. To
-correctly type indirect jump instruction we need to support the type of
-pointer to typed memory (the type \C{\_*} from listing \ref{fig:types}).
-This is the third difference from the original Typed Assembly Language.
-Essentially, this is the tuple type from the original TAL, but without
-initialization flag and of fixed length.
-
 \textbf{\emph{TODO:}}
 Dynamic linker adds intermedium code between different libraries. This code
 is called when external function is called. It must not affect program
