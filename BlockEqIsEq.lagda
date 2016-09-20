@@ -6,8 +6,9 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans
 open import Relation.Binary
 open import Function
 
+open import Core
 open import MetaAsm
-open Diffs
+open import Diffs
 open Meta
 
 module BlockEqIsEq
