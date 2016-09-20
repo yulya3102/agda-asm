@@ -14,7 +14,7 @@ and dynamically linked functions.  But which blocks of code should be
 considered equivalent?
 }
 
-\labeledfigure{fig:eq-blocks-example}{Пример эквивалентных функций}{
+\labeledfigure{fig:eq-blocks-example}{Equivalent functions example}{
 \lstinputlisting[style=asm]{eq-blocks-example.asm}
 }
 
@@ -89,7 +89,7 @@ executable blocks. Definition of \emph{executable block} is shown in listing
 \ref{fig:ExecutableBlock}.
 }
 
-\labeledfigure{fig:ExecutableBlock}{Определение исполняемого блока}{
+\labeledfigure{fig:ExecutableBlock}{Executable block definition}{
 \begin{code}
   record ExecutableBlock (ST : StateType) : Set
     where
@@ -173,7 +173,7 @@ blocks equivalence}. It has three constructors, each for different case:
 }
 \end{itemize}
 
-\labeledfigure{fig:ExBlockEq}{Определение эквивалентности исполняемых блоков}{
+\labeledfigure{fig:ExBlockEq}{Executable blocks equivalence definition}{
 \begin{code}
   data ExBlockEq
     : {ST₁ ST₂ : StateType}
@@ -224,7 +224,7 @@ and \texttt{rbx2} from listing {fig:eq-exblocks-example} are equivalent for
 some specific initial machine states.
 }
 
-\labeledfigure{fig:eq-exblocks-example}{Пример эквивалентных исполняемых блоков}{
+\labeledfigure{fig:eq-exblocks-example}{Equivalent executable blocks example}{
 \lstinputlisting[style=asm]{eq-exblocks-example.asm}
 }
 
@@ -261,7 +261,7 @@ dynamically linked functions relies on assumption of dynamic loader
 correctness.
 }
 
-\labeledfigure{fig:BlockEqAssuming}{Определение эквивалентности блоков}{
+\labeledfigure{fig:BlockEqAssuming}{Blocks equivalence definition}{
 \begin{code}
   record BlockEqAssuming
     {Γ : RegFileTypes}

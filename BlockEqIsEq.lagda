@@ -21,7 +21,11 @@ open import BlockEq Block exec-block
 \end{code}
 }
 
-# Доказательство свойств эквивалентности для эквивалентности исполняемых блоков
+\iftoggle{russian-draft}{
+\section{Доказательство свойств эквивалентности для эквивалентности исполняемых блоков}
+}{
+\section{TODO}
+}
 
 \label{sec:is-equivalence}
 

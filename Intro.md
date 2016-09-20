@@ -99,15 +99,21 @@ programming languages. MTAL describes static linking of separate object
 files, but, same as Bedrock, it lacks formalizations of dynamic linking.
 }
 
+\iftoggle{russian-draft}{
 Для написания proof-carrying code используются современные proof
 assistant-ы, опирающиеся на теорию типов и соответствие Карри-Говарда
-[@sorensen2006lectures]. Среди них можно выделить Coq [@coq] и Agda [@agda]
+\citep{sorensen2006lectures}. Среди них можно выделить Coq \citep{coq} и
+Agda \citep{agda}
 как наиболее близкие к высокоуровневым языкам программирования общего
 назначения.  Coq использовался в таких крупных работах, как доказательство
-теоремы о четырех красках [@gonthier2008formal] и компилятор языка C с
-доказанно корректными оптимизациями [@compcert], в то время как Agda
+теоремы о четырех красках \citep{gonthier2008formal} и компилятор языка C с
+доказанно корректными оптимизациями \citep{compcert}, в то время как Agda
 зачастую используется в работах, формализующих языки и их свойства
-[@danielsson2006formalisation] [@hancock2013small] [@mcbridedjinn].
+\citep{danielsson2006formalisation} \citep{hancock2013small}
+\citep{mcbridedjinn}.
+}{
+\textbf{TODO}
+}
 
 \iftoggle{russian-draft}{
 TAL является хорошей моделью для рассуждений про исполнение низкоуровневого
