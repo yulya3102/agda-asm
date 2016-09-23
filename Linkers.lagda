@@ -148,6 +148,28 @@ $got.f$ and original function $f$ \AgdaSymbol{=} \F{code} \V{\Gamma} \V{DS}
 \V{CS} will be stored in dynamically linked program.
 }
 
+\ignore{
+\begin{code}
+pltize-ptr : ∀ {Ψ τ} → τ ∈ Ψ → τ ∈ pltize Ψ
+pltize-ptr {[]} ()
+pltize-ptr {_ ∷ Ψ} {atom _}      (here refl) = here refl
+pltize-ptr {_ ∷ Ψ} {code _ _ _} (here refl) = here refl
+pltize-ptr {atom _ ∷ Ψ}          (there px)  = there (pltize-ptr px)
+pltize-ptr {code _ _ _ ∷ Ψ}     (there px)  = there (there (there (pltize-ptr px)))
+
+pltize-atom : ∀ {Ψ τ} → RegValue Ψ τ → RegValue (pltize Ψ) τ
+pltize-atom (ptr x) = ptr (pltize-ptr x)
+pltize-atom (int x) = int x
+
+pltize-state : StateType → StateType
+pltize-state ST = record ST { memory = pltize $ StateType.memory ST }
+
+postulate
+  pltize-diff : ∀ {ST} → Diff ST → Diff (pltize-state ST)
+  pltize-block : ∀ {ST d} → Block ST d → Block (pltize-state ST) (pltize-diff d)
+\end{code}
+}
+
 \labeledfigure{fig:plt-stub}{PLT block definition}{
 \begin{code}
 plt-stub : ∀ {Γ Ψ DS CS}
