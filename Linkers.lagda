@@ -30,7 +30,13 @@ open import Asm
 этого формализация разбиения программы на различные библиотеки является
 лишним усложнением.
 }{
-\textbf{TODO}
+This work does not consider object files and programs as actual files.
+Instead it focuses on the program ABI, which can be discussed without
+splitting a program into separate libraries. This paper focuses on the
+program code transformations performed by dynamic linker and not the way
+that external symbols should be searched for. Keeping this in mind,
+formalization of splitting a program into separate libraries seems like
+extra complication.
 }
 
 \labeledfigure{fig:changeABI}{Object file ABI changes performed by linker}{
@@ -82,7 +88,15 @@ GOT и PLT. В целях простоты будем считать, что з�
 \AgdaBound{DS} и вызовов \AgdaBound{CS}, в динамически слинкованной
 программе будет целых три элемента в памяти:
 }{
-\textbf{TODO}
+With simplification stated earlier, notion of the "external" symbol is
+reduced to marking blocks that should have corresponding GOT and PLT
+elements. In order of simplicity, we will consider every code block as
+having its own GOT and PLT entries. Function \F{pltize} from listing
+\ref{fig:changeABI} shows how dynamic linker changes the layout of memory
+by adding new elements to it. Instead of every block $f$ from original
+program, that expects register state \V{Γ}, data stack \V{DS} and call
+stack \V{CS}, dynamically linked program will have three elements in
+memory:
 }
 
 \begin{itemize}
@@ -91,19 +105,20 @@ GOT и PLT. В целях простоты будем считать, что з�
     соответствующий этому блоку кода блок PLT, который является блоком кода
     того же типа, что и $f$;
 }{
-    \textbf{TODO}
+    blok PLT that corresponds to this block $f$, and it have the same type
+    as $f$;
 }
 \item
 \iftoggle{russian-draft}{
     элемент GOT, являющийся указателем на блок кода того же типа, что и $f$;
 }{
-    \textbf{TODO}
+    GOT entry that is a pointer to a block of the same type as $f$;
 }
 \item
 \iftoggle{russian-draft}{
     сам блок кода $f$.
 }{
-    \textbf{TODO}
+    block $f$.
 }
 \end{itemize}
 
@@ -112,7 +127,14 @@ GOT и PLT. В целях простоты будем считать, что з�
 располагаются рядом с кодом. Это не влияет на семантику программы,
 потому перестановка элементов в памяти и группировка таблиц GOT и PLT в
 данной работе не рассматривается.
+}{
+In real programs PLT and GOT are stored in additional sections and not
+around the actual code. This does not change the program semantics, so we
+do not cover in this paper rearrangement of memory elements and grouping
+GOT and PLT entries together.
+}
 
+\iftoggle{russian-draft}{
 Определенные дальше в листинге \ref{fig:changeABI} функции \F{plt}, \F{got}
 и \F{linked-symbol} позволяют, зная, по
 какому адресу находилась функция \AgdaBound{f} \AgdaSymbol{=} \F{code} \AgdaBound{\Gamma} \AgdaBound{DS} \AgdaBound{CS} в неслинкованной программе, определить,
@@ -120,7 +142,10 @@ GOT и PLT. В целях простоты будем считать, что з�
 этой функции элемент PLT $plt.f$, элемент GOT $got.f$ и сама функция
 $f$ соответственно.
 }{
-\textbf{TODO}
+Functions \F{plt}, \F{got} and \F{unlinked-symbol} from listing
+\ref{fig:changeABI} allow to determine where PLT entry $plt.f$, GOT entry
+$got.f$ and original function $f$ \AgdaSymbol{=} \F{code} \V{\Gamma} \V{DS}
+\V{CS} will be stored in dynamically linked program.
 }
 
 \labeledfigure{fig:plt-stub}{PLT block definition}{
@@ -143,7 +168,19 @@ plt-stub got = ↝ jmp[ got ]
 исполнение указанного блока PLT будет приводить к исполнению самой функции.
 Код такого блока PLT, выраженный в используемой формализации языка
 ассемблера, приведен в листинге \ref{fig:plt-stub}.
+}{
+As stated earlier, PLT block should in runtime get address of linked
+external function and continue execution with code from that address. The
+simplest PLT block looks like this: using specified in compile-time address
+of corresponding GOT entry, it executes indirect jump instruction
+\C{jmp[\_]} with address, stored in the GOT entry. As long as dynamic
+loader correclty fills corresponding GOT elements after loading external
+library, execution of specified PLT block will lead to execution of the
+function itself. Code of such PLT block in our formalization of the
+assembly language is shown in listing \ref{fig:plt-stub}.
+}
 
+\iftoggle{russian-draft}{
 Как было сказано в секции \ref{sec:asm-review}, индексом Agda-типа блока
 является описание изменений типа состояния исполнителя,
 производимых этим блоком. В случае с блоком \F{plt-stub} это \C{dempty}:
@@ -152,5 +189,10 @@ plt-stub got = ↝ jmp[ got ]
 функции через ее блок PLT не был бы прозрачным и менял бы семантику
 программы.
 }{
-\textbf{TODO}
+As noted in the \ref{sec:asm-review} section, Agda type of a block is
+indexed by a description of machine state changes performed by this block.
+For the \F{plt-stub} block it is an empty change \C{dempty}, because this
+block does not change anything. Otherwise, function call through the
+corresponding PLT block would be noticable and would change the program
+semantics.
 }

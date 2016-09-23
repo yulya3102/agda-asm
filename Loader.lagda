@@ -28,7 +28,12 @@ open import Linkers
 предположение \F{PLT[ f ]-correctness} утверждает, что по адресу,
 соответствующему нужному блоку PLT, действительно находится блок PLT.
 }{
-\textbf{TODO}
+The proof of equivalence of PLT block and corresponding functions relies on
+assumptions of correctness of dynamic loader. These assumptions are shown
+in listing \ref{fig:correctness}. Assumption \F{GOT[ f ]-correctness}
+states that corresponding to function $f$ GOT element contains the address
+of the function $f$. Assumption \F{PLT[ f ]-correctness} states that address
+corresponding to appropriate PLT function contains the PLT block.
 }
 
 \labeledfigure{fig:correctness}{Properties of the dynamic loader}{
@@ -57,19 +62,43 @@ PLT[ f ]-correctness H
 состояние исполнителя \AgdaBound{S} не изменится, а исполнение передастся
 на блок, загруженный из адреса, записаного в ячейке памяти \AgdaBound{p},
 переданной аргументом в \C{jmp[\_]}.
+}{
+Code of the proof of the equivalence of function $f$ and its PLT block is
+shown in appendix \ref{sec:proof}. First, using instruction \C{jmp[\_]}
+semantics, lemma \F{exec-ijmp} states that execution of block with this
+instruction does not change machine state \V{S}. It also states that
+execution continues with block loaded from address from the variable \V{p}
+which is an argument of that \C{jmp[\_]} instruction.
+}
 
+\iftoggle{russian-draft}{
 Вторая лемма, \F{exec-plt}, используя предположение о корректности GOT
 и лемму \F{exec-ijmp}, показывает, что исполнение блока PLT, ссылающегося на
 GOT некоторой функции $f$, приводит к исполнению функции $f$ в исходном
 состоянии исполнителя.
+}{
+Second lemma, \F{exec-plt}, uses the assumption of GOT correctness and
+lemma \F{exec-ijmp}. It states that execution of the PLT block referring to
+the GOT of some function $f$ leads to execution of the function $f$ in
+the same machine state.
+}
 
+\iftoggle{russian-draft}{
 Затем лемма \F{exblock-eq-proof}, используя предыдущую лемму,
 конструирует отношение эквивалентности исполняемых блоков для блока PLT
 функции $f$ и ее самой для одного и того же состояния исполнителя $S$.
+}{
+Then lemma \F{exblock-eq-proof}, using previous lemma, constructs the
+executable blocks equivalence for the PLT block of some function $f$ and
+function $f$ itself for some machine state $S$.
+}
 
+\iftoggle{russian-draft}{
 После этого \F{block-eq-proof} строит искомое отношение эквивалентности
 блоков для произвольных одинаковых состояний исполнителя, удовлетворяющих
 предположениям о корректности работы динамического загрузчика.
 }{
-\textbf{TODO}
+After that \F{block-eq-proof} constructs desired block equivalence relation
+for arbitrary machine state that meets assumptions of correctness of
+dynamic loader's work result.
 }
