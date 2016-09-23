@@ -40,7 +40,15 @@ Agda, так и на сущность "тип" из TAL. Чтобы избежа
 типы из Agda мы будем с помощью фразы Agda-тип.
 }{
 Before describing features of used formalization, we will make some remarks
-about \textbf{TODO}.
+about terminology used in this paper. In different TAL versions current
+state of executed program was called differently: in TAL and STAL it was
+called \emph{program} \citep[fig. 13]{tal} \citep{stal}, whereas in MTAL it
+was called \emph{program state} \citep{mtal}. We will call it
+\emph{\textbf{program state}}.
+Aside from that, the word "type" can be used to refer to different items
+from different abstraction layers: it can refer to types from Agda code as
+well as to types from TAL. We will refer to types from Agda code with the
+phrase "Agda-type".
 }
 
 \iftoggle{russian-draft}{
