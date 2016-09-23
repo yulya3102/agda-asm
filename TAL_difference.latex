@@ -39,7 +39,8 @@ original Typed Assembly Language. The syntax of TAL can be found in
 Agda, так и на сущность "тип" из TAL. Чтобы избежать путаницы, ссылаться на
 типы из Agda мы будем с помощью фразы Agda-тип.
 }{
-\textbf{TODO}.
+Before describing features of used formalization, we will make some remarks
+about \textbf{TODO}.
 }
 
 \iftoggle{russian-draft}{
