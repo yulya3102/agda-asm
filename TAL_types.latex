@@ -8,7 +8,13 @@
 описывает типы произвольного размера, которые включают в себя типы размером
 с регистр с помощью конструктора \C{atom}.
 }{
-\textbf{TODO}.
+All supported data types are shown in listing \ref{fig:types}. In our
+formalization data types are described with two different Agda-types:
+\F{WordType} and \F{ArbitraryType}. Agda-type \F{WordType} describes only
+register-sized types. It is used to correctly type instructions like
+\C{mov} from memory to register, when memory can contain arbitrary-sized
+types. Agda-type \F{ArbitraryType} describes types of arbitrary size, which
+include register-sized types with constructor \C{atom}.
 }
 
 \iftoggle{russian-draft}{
@@ -29,8 +35,9 @@ instruction semantics. This instruction allows to dynamically change target
 executable code. The argument of this instruction is a pointer to a memory
 location where the address of target executable code is stored. To
 correctly type indirect jump instruction we need to support the type of
-pointer to typed memory (the type \C{\_*} from listing \ref{fig:types}).
-This is the third difference from the original Typed Assembly Language.
+pointer to typed memory (constructor \C{\_*} of Agda-type \F{WordType} from
+listing \ref{fig:types}).  This is the third difference of our
+formalization from the original Typed Assembly Language.
 Essentially, this is the tuple type from the original TAL, but without
 initialization flag and of fixed length.
 }
@@ -53,17 +60,19 @@ initialization flag and of fixed length.
 Это еще одно существенное отличие
 используемой формализации от оригинального TAL.
 }{
-\textbf{\emph{TODO:}}
 Dynamic linker adds intermedium code between different libraries. This code
 is called when external function is called. It must not affect program
 semantics. Therefore, we can't hide call stack in abstractions, because it
-can be affected by additional procedure calls. \emph{Programs} of original TAL
-includes \emph{instruction sequence}, \emph{register files} and \emph{heaps}. Our
-formalization additionally includes \emph{stack}, which is split in two parts:
-\emph{data stack} and \emph{call stack}. Instruction sequence type from original TAL
+can be affected by additional procedure calls. \emph{Program state} of
+original TAL includes currently executed \emph{instruction sequence},
+\emph{register files} and \emph{heaps}. Our
+formalization additionally includes stack, which is split in two parts:
+\emph{data stack} and \emph{call stack}. Aside from that, constructor
+\C{code} of Agda-type \F{ArbitraryType}, corresponding to the instruction
+sequence type, has additional arguments.
+Instruction sequence type from original TAL
 contained only expected \emph{register file type}, but in our formalization
-it contains also types of expected data stack and call stack, as shown
-in \C{code} constructor of listing \ref{fig:types}. This is another
+it contains also types of expected data stack and call stack. This is another
 difference from original TAL.
 }
 
@@ -79,17 +88,42 @@ TAL и STAL, описываются отображением из имен ре�
 указателей (меток) в соответствующие им типы. Типы стека данных,
 описываемые Agda-типом \F{DataStackType}, как и в STAL, описываются списком
 типов, соответствующим находящимся на стеке элементам. Типы стека вызовов,
-описываемые типом \F{CallStackType}, описываются похожим списком,
+описываемые Agda-типом \F{CallStackType}, описываются похожим списком,
 определяющим типы
 указателей-адресов возврата. Так как данная статья фокусируется на описании
 семантики динамической линковки, детали реализации на Agda этих отображений
 здесь не описаны.
+}{
+\emph{Machine state} is the part of the \emph{program state} that does not
+contain \emph{instruction sequence}. Definition of Agda-type \F{StateType}
+that describes type of machine state is shown in listing
+\ref{fig:statetype}.
+Types of registers, described by Agda-type \F{RegFileTypes}, as in original
+TAL and STAL, are described by a mapping from register names to
+corresponding types. In the same manner, types of memory elements,
+described by Agda-type \F{HeapTypes} are a mapping from pointers (labels)
+to corresponding types. Types of data stack are described by Agda-type
+\F{DataStackType} and, as in STAL, are described by list of types,
+corresponding to elements on stack. Types of call stack, described by
+Agda-type \F{CallStackType}, are described by similar list, defining
+types of return address pointers.
+This paper focuses on description of dynamic linking semantics, so
+implementation of these mappings is not described here.
+}
 
+\iftoggle{russian-draft}{
 Разные инструкции меняют различные части состояния исполнителя. Инструкции,
 определяющие, какой код будет исполняться дальше, будем называть
 \emph{инструкциями перехода}, а все остальные инструкции —
 \emph{инструкциями общего назначения}.
+}{
+Different instructions change different parts of machine state.
+We will refer to instructions that define which code will be executed next
+as \emph{branch instructions}. All other instructions we will call
+\emph{general purpose instructions}.
+}
 
+\iftoggle{russian-draft}{
 Так как линковка принимает во внимание только переходы между различными
 частями загруженного в память кода, удобно ввести понятие \textbf{\emph{базового
 блока}}. Базовым блоком мы будем называть последовательность инструкций
@@ -99,7 +133,11 @@ TAL и STAL, описываются отображением из имен ре�
 задается конструктором \C{code} Agda-типа \F{ArbitraryType} из листинга
 \ref{fig:types} и описывает, в каком состоянии исполнителя может быть
 исполнен этот блок.
+}{
+\textbf{TODO}
+}
 
+\iftoggle{russian-draft}{
 Для обеспечения корректности вызова функции $g$ в конце
 базового блока $f$ необходимо понимать, как блок $f$ типа $S_f$ меняет
 типы регистров и стеков и может ли он к концу своего исполнения получить
@@ -124,7 +162,22 @@ TAL и STAL, описываются отображением из имен ре�
 изменение состояния исполнителя, описываемое Agda-типом \F{Diff}. В
 результате получается блок с изменением, составленным с помощью функции
 \F{dappend} из изменений инструкции \AgdaBound{i} и блока \AgdaBound{b}.
+}{
+\textbf{TODO}
 
+To ensurre that function $g$ call in the end of the \emph{block}
+(\emph{instruction sequence}) $f$ is correct, we have to know how block $f$
+of type $S_f$ changes register file types and stack types and whether it
+can transform machine state type $S_f$ to expected by function $g$ machine
+state type $S_g$. To achieve this, type of block should contain not only
+expected types of register file and stack, but some description of how this
+block changes differnet parts of machine state type. This description is
+stored in datatype \F{Diff}, which takes as parameter machine state type
+that can be changed by this \emph{diff}. Recursive definitoin of the
+\emph{code block} is shown in listing \ref{fig:block}. \textbf{TODO}
+}
+
+\iftoggle{russian-draft}{
 Семантика приведенного языка ассемблера определяется двумя функциями,
 описывающими семантику инструкций общего назначения \F{Instr} и инструкций
 перехода \F{BranchInstr}. Каждому виду инструкций разрешено менять только
@@ -139,25 +192,6 @@ TAL и STAL, описываются отображением из имен ре�
 образом: результатом исполнения блока является пара из нового состояния
 исполнителя и блока, который нужно исполнить следующим.
 }{
-\textbf{TODO: block}
-
-\emph{Machine state} is the part of the \emph{program} that does not
-contain \emph{instruction sequence}. Its type is shown in listing
-\ref{fig:statetype}. \textbf{TODO}
-
-\textbf{TODO: block}
-
-To ensurre that function $g$ call in the end of the \emph{block}
-(\emph{instruction sequence}) $f$ is correct, we have to know how block $f$
-of type $S_f$ changes register file types and stack types and whether it
-can transform machine state type $S_f$ to expected by function $g$ machine
-state type $S_g$. To achieve this, type of block should contain not only
-expected types of register file and stack, but some description of how this
-block changes differnet parts of machine state type. This description is
-stored in datatype \F{Diff}, which takes as parameter machine state type
-that can be changed by this \emph{diff}. Recursive definitoin of the
-\emph{code block} is shown in listing \ref{fig:block}. \textbf{TODO}
-
 Semantics of this assembly language is defined by two functions describing
 semantics of regular instructions (\emph{instructions} from original TAL)
 and branch instructions (last instructions in \emph{instruction sequence}
