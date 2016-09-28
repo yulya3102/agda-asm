@@ -38,7 +38,7 @@ phase, but compilation contains few more steps. Recent research shows that
 a lot of errors occur during link-time optimizations phase, which also
 needs verification.
 
-This paper presents formalization of a simple model of a linking process.
+This paper presents formalization of a simple model of a linking mechanisms.
 Dynamic linking is performed by two tools: dynamic linker and dynamic
 loader. Formalization of dynamic linker includes description of performed
 program transformations, and formalization of dynamic loader contains
