@@ -18,7 +18,8 @@ SOURCES = \
 	$(BUILD)/Conclusion.latex \
 	$(BUILD)/Appendix.latex \
 	$(BUILD)/BlockEqIsEq.latex \
-	$(BUILD)/RuntimeEq.latex
+	$(BUILD)/RuntimeEq.latex \
+	$(BUILD)/Acknowledgements.latex
 
 INCLUDE_EXAMPLES = \
 	eq-blocks-example.asm \
