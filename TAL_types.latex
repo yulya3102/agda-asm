@@ -12,7 +12,7 @@ All supported data types are shown in listing \ref{fig:types}. In our
 formalization data types are described with two different Agda-types:
 \F{WordType} and \F{ArbitraryType}. Agda-type \F{WordType} describes only
 register-sized types. It is used to correctly type instructions like
-\C{mov} from memory to register, when memory can contain arbitrary-sized
+\C{mov} from memory to register, when the memory can contain arbitrary-sized
 types. Agda-type \F{ArbitraryType} describes types of arbitrary size, which
 include register-sized types with constructor \C{atom}.
 }
@@ -38,8 +38,8 @@ correctly type indirect jump instruction we need to support the type of
 pointer to typed memory (constructor \C{\_*} of Agda-type \F{WordType} from
 listing \ref{fig:types}).  This is the third difference of our
 formalization from the original Typed Assembly Language.
-Essentially, this is the tuple type from the original TAL, but without
-initialization flag and of fixed length.
+Essentially, this is the tuple type from the original TAL without the
+initialization flag, but with fixed length.
 }
 
 \iftoggle{russian-draft}{
@@ -61,7 +61,7 @@ initialization flag and of fixed length.
 используемой формализации от оригинального TAL.
 }{
 Dynamic linker adds intermedium code between different libraries. This code
-is called when external function is called. It must not affect program
+is invoked when external function is called. It must not affect program
 semantics. Therefore, we can't hide call stack in abstractions, because it
 can be affected by additional procedure calls. \emph{Program state} of
 original TAL includes currently executed \emph{instruction sequence},
@@ -103,12 +103,12 @@ TAL and STAL, are described by a mapping from register names to
 corresponding types. In the same manner, types of memory elements,
 described by Agda-type \F{HeapTypes} are a mapping from pointers (labels)
 to corresponding types. Types of data stack are described by Agda-type
-\F{DataStackType} and, as in STAL, are described by list of types,
+\F{DataStackType} and, as in STAL, are described by the list of types
 corresponding to elements on stack. Types of call stack, described by
-Agda-type \F{CallStackType}, are described by similar list, defining
+Agda-type \F{CallStackType}, are described by a similar list defining
 types of return address pointers.
 This paper focuses on description of dynamic linking semantics, so
-implementation of these mappings is not described here.
+implementations of these mappings are not described here.
 }
 
 \iftoggle{russian-draft}{
@@ -136,9 +136,9 @@ as \emph{branch instructions}. All other instructions we will call
 }{
 Since linking takes into account only jumps between different parts of
 loaded executable code, it is useful to define \textbf{\emph{basic block}}.
-Basic block is a sequence of general-purpose instructions followed by
+Basic block is a sequence of general-purpose instructions followed by a
 branch instruction. It corresponds to the \emph{instruction sequence} from
-the original TAL. Type of a basic block is specified by the constructor
+the original TAL. The type of a basic block is specified by the constructor
 \C{code} of Agda-type \F{ArbitraryType} from listing \ref{fig:types}. It
 describes in which state this block can be executed.
 }
@@ -169,30 +169,31 @@ describes in which state this block can be executed.
 результате получается блок с изменением, составленным с помощью функции
 \F{dappend} из изменений инструкции \AgdaBound{i} и блока \AgdaBound{b}.
 }{
-To ensurre that function $g$ call in the end of the basic block
+To ensure that function $g$ call at the end of the basic block
 $f$ is correct, we have to know how block $f$
 of type $S_f$ changes register file types and stack types and whether it
-can transform machine state type $S_f$ to expected by function $g$ machine
-state type $S_g$. To achieve this, Agda-type of block is indexed by some
+can transform machine state type $S_f$ to machine state type $S_g$ expected
+by function $g$. To achieve that, Agda-type of block is indexed by some
 description of how this
-block changes differnet parts of machine state type. This description is
-stored in datatype \F{Diff}, which takes as parameter machine state type
+block changes differnet parts of the machine state type. This description is
+stored in Agda-type \F{Diff}, which takes as parameter machine state type
 that can be changed by this diff. Recursive definition of the Agda-type of
 \emph{basic block} is shown in listing \ref{fig:block}.
-Constructor \C{↝} allows to construct block consisting of a single branch
+Constructor \C{↝} allows to construct a block consisting of a single branch
 instruction \V{i} that changes type of call stack by change \V{c}.
-Expression \F{csChg} \V{S} \V{c} from this constructor transforms call
+Expression \F{csChg} \V{S} \V{c} of this constructor transforms call
 stack change \V{c} into common diff \F{Diff} of machine state of type
 \V{S}.
 Constructor \C{\_∙\_} adds general-purpose instruction \V{i} with change
 \V{c} to the beginning of the block \V{b}. Type of block \V{b} must come
-out from type of instruction \V{i} after applying with function \F{dapply}
-change \V{c}, corresponding to this instruction, as shown in the type of
-the block \V{b}. Expression \F{sChg} \V{c} from type of that block,
+out from the type of instruction \V{i} after applying change \V{c}
+corresponding to this instruction with function \F{dapply}, as shown in the
+type of the block \V{b}. Expression \F{sChg} \V{c} of the type of that
+block,
 similarly to the previous constructor, transforms instruction-specific
 change \V{c} to common machine state diff \F{Diff}. This results into a
 block with diff that consists of changes corresponding to instruction \V{i}
-and block \V{b}, combined with function \F{dappend}.
+and block \V{b}, combined with the function \F{dappend}.
 }
 
 \iftoggle{russian-draft}{
@@ -215,11 +216,11 @@ semantics of general-purpose instructions \F{Instr} and branch instructions
 \F{BranchInstr}. Each kind of instruction is allowed to change only part of
 \emph{program state} \F{State}.
 Therefore, these functions take as parameter \emph{program state} and
-return new state of part of program state that they are allowed to change.
-For example, result of execution of general-purpose instructions is a tuple
-of register file, heap and data stack. On the other hand, branch
-instruction execution
-result is a pair of new call stack state and next block to execute.
+return a new state of the part of the program state that they are allowed
+to change.  For example, the result of an execution of general-purpose
+instructions is a tuple of register file, heap and data stack. On the other
+hand, the branch instruction execution result is a pair of a new call stack
+state and next block to execute.
 Moreover, semantics of the block is described in the same manner: block
 execution result is a pair of the new machine state and next block to
 execute.

@@ -90,7 +90,7 @@ branch-instr-semantics (state Γ Ψ DS (f ∷ CS)) (ret refl)
 }{
 To describe dynamic linking semantics we only need semantics of the
 indirect jump instruction \C{jmp[\_]}. Therefore, semantics of other
-instructions are not described here.
+instructions is not described here.
 }
 \iftoggle{russian-draft}{
 Для этой инструкции семантика определена следующим образом:
@@ -114,8 +114,8 @@ branch-instr-semantics S (jmp[ p ])
 }{
 Execution of indirect jump to the pointer \AgdaBound{p} in machine state
 \AgdaBound{S} does not change call stack \F{State.callstack} \AgdaBound{S},
-and execution will be continued from instruction sequence loaded from
-\F{State.memory} \AgdaBound{S} by pointer loaded from memory by
+and execution will be continued from the instruction sequence loaded from
+\F{State.memory} \AgdaBound{S} by the pointer loaded from memory by
 \AgdaBound{p}.
 }
 

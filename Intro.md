@@ -53,10 +53,10 @@ Language (TAL) \citep{tal}, описывающая некоторый низко
 файлов, но формализации механизмов динамической линковки, как и в Bedrock,
 представлено не было.
 }{
-Software verification can be difficult and therefore neglected. However,
-the complexity of verification may be worth the result for a certain range
-of software. For example, development tools (toolchains) should be
-verified, because errors in toolchains are especially hard to find.
+Software verification can be difficult and therefore neglected. Despite the
+complexity of task, it is worth verifying a certain range of software such
+as development tools (toolchains), because errors in toolchains are
+especially hard to find.
 Moreover, toolchains are commonly used even in those areas where the cost
 of failure is extremely high.
 
@@ -67,36 +67,36 @@ correct optimizations. Another project, CompCert \citep{compcert}, is
 closer to realistic toolchains: it's a compiler of the C language that
 performs optimizations which are proven to preserve semantics of the
 compiled program. However, even CompCert does not cover all steps of
-compilation: it uses system linker, which is not verified.
+compilation: it uses a system linker which is not verified.
 
-Linker might seem to be quite simple program, and it's hard to make a
+The linker might seem to be quite a simple program and it's hard to make a
 mistake in its code. Probably, it has been that way until link-time
 optimizations appeared. These optimizations make program logic more
 complex, making it possible to introduce a bug in linker's source code.
-Recent research \citep{ltostress} proves it: stress-testing for linkers
-revealed myriad of bugs during link-time optimizations (LTO) phase. It
+Recent research proves it: stress-testing for linkers revealed myriad of
+bugs during link-time optimizations (LTO) phase \citep{ltostress}. It
 shows that linker verification should not be neglected.
 
-Linker is low-level program that works with object files containing machine
-code. Therefore, to reason about it we need formalization of low-level
-language close to machine code. Bedrock \citep{bedrock}, one of most
+Linker is a low-level program that works with object files containing machine
+code. Therefore, to reason about it we need formalization of a low-level
+language close to machine code. Bedrock \citep{bedrock}, one of the most
 notable results in this area, is a Coq \citep{coq} library that allows to
 write code using abstractions associated with assembly language. Within the
 Bedrock project, support for linking with external libraries was
 implemented \citep{bedrocklinkers}, but there were no formalizations of
 widely used dynamic linking mechanisms.
 
-There is also excellent formalization of assembly language — Typed Assembly
+There is also an excellent formalization of assembly language — Typed Assembly
 Language (TAL) \citep{tal}. It describes typed low-level language that
 supports high-level abstractions such as type variables and tuples. This
-language has variety of extensions, adding support of stack mechanisms
+language has a variety of extensions adding support of stack mechanisms
 (STAL) \citep{stal}, realistic x86 assembly language (TALx86)
 \citep{talx86} and even separate compilation and object files manipulation
-(MTAL) \citep{mtal}. The last of aforementioned TAL extensions, modular
+(MTAL) \citep{mtal}. The latter, modular
 assembly language, is based on Luca Cardelli's work \citep{cardelli} that
 formalizes mechanisms and algorithms of static linking for high-level
 programming languages. MTAL describes static linking of separate object
-files, but, same as Bedrock, it lacks formalizations of dynamic linking.
+files, but as in Bedrock, it lacks dynamic linking formalizations.
 }
 
 \iftoggle{russian-draft}{
@@ -112,7 +112,7 @@ Agda \citep{agda}
 \citep{danielsson2006formalisation} \citep{hancock2013small}
 \citep{mcbridedjinn}.
 }{
-Proof-carrying code is written with modern proof assistants, which are
+Proof-carrying code is written with modern proof assistants which are
 based on type theory and Curry-Howard correspondence
 \citep{sorensen2006lectures}. Coq \citep{coq} and Agda \citep{agda} may be
 noted as the closest to general purpose programming languages. Coq was used
@@ -154,10 +154,10 @@ loader implies equivalence of statically and dynamically linked functions.
 
 Исходный код, описываемый в данной статье, находится по адресу
 }{
-This work can be considered first steps in area of dynamic linking
+This work can be considered first step in the area of dynamic linking
 formalization. It can eventually result in verified linker that allows to
 reason about correctness of performed program transformations.
 
-The sources used in this paper available at
+The sources used in this paper are available at
 }
 \url{https://github.com/yulya3102/agda-asm}.

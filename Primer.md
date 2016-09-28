@@ -33,12 +33,12 @@ support exernal variables.
 вызов динамически слинкованной функции.
 }{
 Dynamic linking allows to use external symbols without including libraries
-into the object file, as would be done in static linking. On the other
-hand, dynamic linker needs to make object file usable by filling
+into the object file, as it would be done in static linking. On the other
+hand, the dynamic linker needs to make object file usable by filling
 \emph{relocations} - "empty" arguments of jumps to external functions. But
 dynamic linker can't change any code in place where relocation appeared.
-Otherwise, symbols that are placed in object file after that relocation
-would shift from their original positions, invalidating any instruction,
+Otherwise, symbols that are placed in the object file after that relocation
+would shift from their original positions, invalidating any instruction
 referring to them with their relative address. To prevent this, dynamic
 linker creates a section with code which is called PLT (Procedure Linkage
 Table). In this section for every external function $f$ it generates a
@@ -68,9 +68,9 @@ section should be filled in runtime by dynamic loader.
 процедуры $plt.f$ приведет к исполнению функции $f$.
 }{
 Procedures $plt.f$ added to the PLT section consist of a single
-instruction: indirect jump by the $got.f$ pointer. If the $got.f$ contain
-correct address of function $f$ loaded to memory, then execution of the
-$plt.f$ procedure will lead to execution of the function $f$.
+instruction: indirect jump by the $got.f$ pointer. If the $got.f$ contains
+correct address of function $f$ loaded to memory, then the execution of the
+$plt.f$ procedure will lead to the execution of the function $f$.
 }
 
 \iftoggle{russian-draft}{
@@ -82,11 +82,11 @@ $plt.f$ procedure will lead to execution of the function $f$.
 состоит важность инструкции indirect jump: она позволяет в рантайме менять
 целевую точку инструкций перехода.
 }{
-After this transformation there still $got.f$ variables that need to be
+After this transformation there are still $got.f$ variables that need to be
 filled. But this is significantly different from the original unlinked
 object file: relocations could be filled only before running program,
 whereas $got.f$ variables can be filled in runtime. This is why indirect
-jump instruction is so important: it allows to change target point of jump
+jump instruction is so important: it allows to change the target point of jump
 instructions in runtime.
 }
 
@@ -96,7 +96,7 @@ instructions in runtime.
 динамический загрузчик заполняет секции GOT загруженных библиотек, и код
 становится полностью пригодным для исполнения.
 }{
-Dynamic linker performs this transformation on the object files, and its
-work ends on it. After that dynamic loader in runtime fills GOT sections of
-loaded libraries, and code becomes suitable for execution.
+The dynamic linker performs this transformation on the object files and
+then its work ends. After that the dynamic loader in runtime fills GOT
+sections of loaded libraries and the code becomes suitable for execution.
 }

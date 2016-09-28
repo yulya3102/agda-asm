@@ -47,8 +47,7 @@ was called \emph{program state} \citep{mtal}. We will call it
 \emph{\textbf{program state}}.
 Aside from that, the word "type" can be used to refer to different items
 from different abstraction layers: it can refer to types from Agda code as
-well as to types from TAL. We will refer to types from Agda code with the
-phrase "Agda-type".
+well as types from TAL. We will refer to types from Agda code as "Agda-type".
 }
 
 \iftoggle{russian-draft}{
