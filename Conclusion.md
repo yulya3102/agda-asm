@@ -6,10 +6,10 @@
 этой формализации определены основные свойства динамического
 линковщика:
 }{
-This paper formalizes in Agda simple model of dynamic linking. This model
-describes how linker changes code of programs and libraries during the
-linking process. This formalization states following properties of dynamic
-linker:
+This paper formalizes a simple model of dynamic linking in Agda. This model
+describes how linker changes the code of programs and libraries during the
+linking process. This formalization states following properties of the
+dynamic linker:
 }
 
 \begin{itemize}
@@ -19,7 +19,7 @@ linker:
     Описано, как динамический линковщик меняет layout программы и какие
     элементы он в нее добавляет (функция \F{pltize}).
 }{
-    Dynamic linker changes layout of program in a specific way, adding
+    The dynamic linker changes layout of a program in a specific way, adding
     certain elements to it (as described by function \F{pltize})
 }
 \item
@@ -29,7 +29,8 @@ linker:
     блок кода будет располагаться в динамически слинкованной библиотеке
     (функция \F{linked-symbol}).
 }{
-    Dynamic linker knows where code block will be stored in linked object
+    The dynamic linker knows where the code block will be stored in a
+    linked object
     file by its offset in non-linked object file (as shown by function
     \F{linked-symbol}).
 }
@@ -43,12 +44,13 @@ linker:
     функций на вызовы известных блоков PLT, выполнять link-time
     оптимизации.
 }{
-    Given function identificator (which in this formalization is simply
-    offset in object file), dynamic linker can get corresponding GOT and
-    PLT elements (as shown by functions \F{got} and \F{plt}). This
-    information is available in link-time, therefore it can be used in
-    linking process: linker can substitute "unknown" funciton calls with
-    calls to their PLT blocks and perform link-time optimizations.
+    Given function identificator (which in this formalization is simply an
+    offset in object file), the dynamic linker can get corresponding GOT
+    and PLT elements (as shown by functions \F{got} and \F{plt}). This
+    information is available in link-time, therefore it can be used in a
+    linking process: the linker can substitute calls to PLT blocks of
+    "unknown" functions for calls to "unknown" funcitons themself and
+    perform link-time optimizations.
 }
 \item
 \iftoggle{russian-draft}{
@@ -56,7 +58,7 @@ linker:
     для каждой внешней функции (функция \F{plt-stub}), а значит, можно
     рассуждать про семантику этого кода.
 }{
-    Code of each PLT element if known in advance (it is shown in function
+    The code of each PLT element is known in advance (it is shown in function
     \F{plt-stub}), so you can reason about its semantics.
 }
 \item
@@ -66,8 +68,9 @@ linker:
     выполнение каких свойств требуется в рантайме (функции \F{GOT[ f
     ]-correctness}, \F{PLT[ f ]-correctness})
 }{
-    Correctness of dynamic linking relies on correctness of dynamic loader.
-    Dynamic linker can explicitly state which properties of dynamic loader
+    The correctness of the dynamic linking relies on the correctness of the
+    dynamic loader.  The dynamic linker can explicitly state which
+    properties of the dynamic loader
     it needs (functions \F{GOT[ f ]-correctness} and \F{PLT[ f
     ]-correctness}).
 }
@@ -75,7 +78,7 @@ linker:
 \iftoggle{russian-draft}{
     Доказано, что динамическая линковка не меняет семантику программы.
 }{
-    Dynamic linking does not change program semantics.
+    The dynamic linking does not change program semantics.
 }
 \end{itemize}
 
@@ -96,18 +99,19 @@ dynamic linker/loader.
 Описанные результаты могут повлиять на дальнейшие исследования, связанные
 с:
 }{
-These formal specification allows to reason about correctness of dynamic
-linking and can be used as basis for creating of formally verified dynamic
-linker and dynamic loader.
+These formal specifications allow to reason about the correctness of the
+dynamic linking and can be used as basis for creating formally verified
+dynamic linker and loader.
 
-This research can be continued in following directions: (1) formalization
-of "lazy" linking ABI, used in modern ELF libraries; (2) formallization of
+This research can be continued in the following directions: (1) the
+formalization of "lazy" linking ABI, used in modern ELF libraries; (2) the
+formallization of
 filling relocations process and its properties, as done by
-\citep{cardelli}; (3) formallization of binary files parsing, memory
+\citep{cardelli}; (3) the formallization of binary files parsing, memory
 mapping and interaction with operating system, required for completing
 realistic dynamic linker/loader.
 
-Results described in this paper can influence on further research related
+Results described in this paper can influence further research related
 to:
 }
 
@@ -123,10 +127,10 @@ to:
     гарантиями не только трансляцию кода, но и линковку и связанные с ней
     оптимизации.
 }{
-    Further work can have a significant imact on LTO, which is currently
-    to the best of my knowledge doesn't have any formal semantics.
+    Further work can have a significant impact on LTO, which to the best of
+    my knowledge currently doesn't have any formal semantics.
     Moreover, it can form toolchain with CompCert, which can cover not only
-    translation phase, but linking and related optimizations.
+    translation phase, but also linking and related optimizations.
 }
 \item
     \textbf{\emph{Typed Assembly Language}}.

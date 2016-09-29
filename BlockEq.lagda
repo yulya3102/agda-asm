@@ -29,7 +29,7 @@ considered equivalent?
 Functions \texttt{f} and \texttt{g} from listing
 \ref{fig:eq-blocks-example} both store integer $1$ in the \texttt{rax}
 register. This functions are executed identically from big step
-semantics point of view: they transform machine state in equivalent way,
+semantics point of view: they transform machine state in an equivalent way,
 producing equivalent results from equivalent initial machine states.
 Let us define function equivalence as equivalence of their start blocks.
 }
@@ -83,8 +83,9 @@ Let us define several auxiliary definitions.
 corresponding type.
 
 The main benefit of this definition is that execution of executable block
-can produce exactly one result, even if there are conditional execution in
-block. Uniqueness of the block execution result allows us to reason about
+can produce exactly one result, even if there is a conditional execution in
+the block. The uniqueness of the block execution result allows us to reason
+about
 executable blocks. Definition of \emph{executable block} is shown in listing
 \ref{fig:ExecutableBlock}.
 }
@@ -138,7 +139,7 @@ executable blocks. Definition of \emph{executable block} is shown in listing
 эквивалентность двух исполняемых блоков в разных случаях:
 }{
 \textbf{\emph{Executable blocks equivalence}}.
-Two executable blocks $A$ and $B$ are equivalent, if there exists two
+Two executable blocks $A$ and $B$ are equivalent, if there exist two
 execution sequences starting from $A$ and $B$, leading to same executable
 block $C$.
 
@@ -220,7 +221,8 @@ appendix \ref{sec:is-equivalence}.
 But this definition is not the desired definition of blocks equivalence,
 described earlier. For example, for some initial machine states completely
 different code blocks can be equivalent. For example, blocks \texttt{rax1}
-and \texttt{rbx2} from listing {fig:eq-exblocks-example} are equivalent for
+and \texttt{rbx2} from listing \ref{fig:eq-exblocks-example} are equivalent
+for
 some specific initial machine states.
 }
 
@@ -253,11 +255,11 @@ blocks equivalence using executable blocks equivalence.
 if for any initial machine state $S$ executable blocks $(f, S)$ and $(g,
 S)$ are equivalent.
 
-Definition of blocks equivalence is shown in listing
+The definition of blocks equivalence is shown in listing
 \ref{fig:BlockEqAssuming}. Moreover, this definition allows to use
 specified assumption to construct blocks equivalence. It's important
 because proof of semantic equivalence of call of statically and
-dynamically linked functions relies on assumption of dynamic loader
+dynamically linked function relies on the assumption of a dynamic loader
 correctness.
 }
 
