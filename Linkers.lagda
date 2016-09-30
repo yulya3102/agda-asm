@@ -31,7 +31,7 @@ open import Asm
 лишним усложнением.
 }{
 This work does not consider object files and programs as actual files.
-Instead it focuses on the program ABI which can be discussed without
+Instead, it focuses on the program ABI which can be discussed without
 splitting a program into separate libraries. This paper focuses on the
 program code transformations performed by a dynamic linker and not the way
 that external symbols should be searched for. Keeping this in mind,
@@ -106,7 +106,7 @@ memory:
     соответствующий этому блоку кода блок PLT, который является блоком кода
     того же типа, что и $f$;
 }{
-    blok PLT that corresponds to this block $f$, and it has the same type
+    the PLT block that corresponds to this block $f$, and it has the same type
     as $f$;
 }
 \item
@@ -119,7 +119,7 @@ memory:
 \iftoggle{russian-draft}{
     сам блок кода $f$.
 }{
-    block $f$.
+    the block $f$.
 }
 \end{itemize}
 
@@ -129,7 +129,7 @@ memory:
 потому перестановка элементов в памяти и группировка таблиц GOT и PLT в
 данной работе не рассматривается.
 }{
-In real programs PLT and GOT are stored in additional sections and not
+In real programs, PLT and GOT are stored in additional sections and not
 around the actual code. This does not change the program semantics, so we
 do not cover in this paper rearrangement of memory elements and grouping
 GOT and PLT entries together.
@@ -177,12 +177,12 @@ plt-stub got = ↝ jmp[ got ]
 Код такого блока PLT, выраженный в используемой формализации языка
 ассемблера, приведен в листинге \ref{fig:plt-stub}.
 }{
-As stated earlier, PLT block should in runtime get address of linked
+As stated earlier, PLT block should in runtime get the address of linked
 external function and continue execution with code from that address. The
 simplest PLT block looks like this: using specified in compile-time address
 of corresponding GOT entry, it executes indirect jump instruction
 \C{jmp[\_]} with address, stored in the GOT entry. As long as the dynamic
-loader correclty fills corresponding GOT elements after loading external
+loader correctly fills corresponding GOT elements after loading an external
 library, the execution of specified PLT block will lead to the execution of
 the function itself. The code of such PLT block in our formalization of the
 assembly language is shown in listing \ref{fig:plt-stub}.
@@ -201,6 +201,6 @@ As noted in section \ref{sec:asm-review}, Agda type of a block is
 indexed by a description of machine state changes performed by this block.
 For the \F{plt-stub} block it is an empty change \C{dempty}, because this
 block does not change anything. Otherwise, function call through the
-corresponding PLT block would be noticable and would change the program
+corresponding PLT block would be noticeable and would change the program
 semantics.
 }

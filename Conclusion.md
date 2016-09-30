@@ -1,4 +1,4 @@
-# Discussion
+# Conclusion and future work
 
 \iftoggle{russian-draft}{
 В этой статье формализована на Agda простая модель динамической линковки,
@@ -44,12 +44,12 @@ dynamic linker:
     функций на вызовы известных блоков PLT, выполнять link-time
     оптимизации.
 }{
-    Given function identificator (which in this formalization is simply an
+    Given function identifier (which in this formalization is simply an
     offset in object file), the dynamic linker can get corresponding GOT
     and PLT elements (as shown by functions \F{got} and \F{plt}). This
     information is available in link-time, therefore it can be used in a
     linking process: the linker can substitute calls to PLT blocks of
-    "unknown" functions for calls to "unknown" funcitons themself and
+    "unknown" functions for calls to "unknown" functions themselves and
     perform link-time optimizations.
 }
 \item
@@ -99,16 +99,16 @@ dynamic linker/loader.
 Описанные результаты могут повлиять на дальнейшие исследования, связанные
 с:
 }{
-These formal specifications allow to reason about the correctness of the
-dynamic linking and can be used as basis for creating formally verified
+These formal specifications allow reasoning about the correctness of the
+dynamic linking and can be used as a basis for creating formally verified
 dynamic linker and loader.
 
 This research can be continued in the following directions: (1) the
 formalization of "lazy" linking ABI, used in modern ELF libraries; (2) the
-formallization of
+formalization of
 filling relocations process and its properties, as done by
-\citep{cardelli}; (3) the formallization of binary files parsing, memory
-mapping and interaction with operating system, required for completing
+\citep{cardelli}; (3) the formalization of binary files parsing, memory
+mapping and interaction with the operating system, required for completing
 realistic dynamic linker/loader.
 
 Results described in this paper can influence further research related
@@ -130,7 +130,7 @@ to:
     Further work can have a significant impact on LTO, which to the best of
     my knowledge currently doesn't have any formal semantics.
     Moreover, it can form toolchain with CompCert, which can cover not only
-    translation phase, but also linking and related optimizations.
+    translation phase but also linking and related optimizations.
 }
 \item
     \textbf{\emph{Typed Assembly Language}}.

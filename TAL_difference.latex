@@ -18,7 +18,7 @@ Typed Assembly Language, синтаксис которого приведен в
 }{
 Original Typed Assembly Language is powerful enough to implement high-level
 language features such as parametric polymorphism or records. These features
-are not necessary for our task, but instead we have to have specific data
+are not necessary for our task, but instead, we have to have specific data
 types and instructions which are typically used to implement dynamic
 linking. Therefore, our TAL formalization has some differences from
 original Typed Assembly Language. The syntax of TAL can be found in

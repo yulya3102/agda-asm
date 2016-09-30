@@ -29,7 +29,7 @@ open import Linkers
 соответствующему нужному блоку PLT, действительно находится блок PLT.
 }{
 The proof of equivalence of PLT block and corresponding functions relies on
-assumptions of correctness of dynamic loader. These assumptions are shown
+assumptions of the correctness of dynamic loader. These assumptions are shown
 in listing \ref{fig:correctness}. Assumption \F{GOT[ f ]-correctness}
 states that corresponding to function $f$ GOT element contains the address
 of the function $f$. Assumption \F{PLT[ f ]-correctness} states that the
@@ -99,6 +99,6 @@ function $f$ itself for some machine state $S$.
 предположениям о корректности работы динамического загрузчика.
 }{
 After that \F{block-eq-proof} constructs desired block equivalence relation
-for arbitrary machine state that meets assumptions of correctness of
+for arbitrary machine state that meets assumptions of the correctness of
 dynamic loader's work result.
 }

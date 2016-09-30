@@ -26,29 +26,28 @@ optimizations (LTO), который тоже необходимо верифиц
 создание верифицированных динамического загрузчика и динамического
 линковщика, позволяющих делать корректные оптимизации на этапе линковки.
 }{
-Nowadays there is no doubt it is possible to verify low-level and system
+Nowadays, without doubt, it is possible to verify low-level and system
 software. In particular, we can write low-level code and prove its
 properties with modern proof assistants. This can be important especially
-in development of runtime systems. For example, for C, the native language
-of plenty of platforms, there
-is CompCert, a compiler that proves correctness of performed optimizations.
+in the development of runtime systems. For example, for C, the native
+language of plenty of platforms, there is CompCert, a compiler that proves
+the correctness of performed optimizations.
 
 Existing compilation verification systems are directed at translation
 phase, but compilation contains few more steps. Recent research shows that
 a lot of errors occur during link-time optimizations phase which also
 needs verification.
 
-This paper presents formalization of a simple model of a linking mechanisms.
+This paper presents a formalization of a simple model of linking mechanisms.
 Dynamic linking is performed by two tools: a dynamic linker and a dynamic
 loader. The formalization of the dynamic linker includes description of
 performed program transformations and formalization of the dynamic loader
 contains invariants provided by the dynamic loader in runtime. Moreover,
-this paper shows that if these conditions are met, then semantics of
-dynamically-linked function call is the same as semantics of
-statically-linked function
-call.
+this paper shows that if these conditions are met, then the semantics of a
+dynamically-linked function call is the same as the semantics of a
+statically-linked function call.
 
 This paper forms the basis for further research aimed at creation of a
-verified dynamic linker and loader allowing to perform correct
+verified dynamic linker and loader allowing to correctly perform
 link-time optimizations.
 }

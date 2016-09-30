@@ -31,7 +31,7 @@ Functions \texttt{f} and \texttt{g} from listing
 register. This functions are executed identically from big step
 semantics point of view: they transform machine state in an equivalent way,
 producing equivalent results from equivalent initial machine states.
-Let us define function equivalence as equivalence of their start blocks.
+Let us define function equivalence as the equivalence of their start blocks.
 }
 
 \ignore{
@@ -139,8 +139,8 @@ executable blocks. Definition of \emph{executable block} is shown in listing
 эквивалентность двух исполняемых блоков в разных случаях:
 }{
 \textbf{\emph{Executable blocks equivalence}}.
-Two executable blocks $A$ and $B$ are equivalent, if there exist two
-execution sequences starting from $A$ and $B$, leading to same executable
+Two executable blocks $A$ and $B$ are equivalent if there exist two
+execution sequences starting from $A$ and $B$, leading to the same executable
 block $C$.
 
 Listing \ref{fig:ExBlockEq} shows the definition of the \emph{executable
@@ -169,7 +169,7 @@ blocks equivalence}. It has three constructors, each for different case:
     \C{right} - симметрично предыдущему случаю, шаг исполнения для другого
     блока.
 }{
-    \C{right} - simmetric to the previous case, execution step for the
+    \C{right} - symmetric to the previous case, execution step for the
     second block.
 }
 \end{itemize}
@@ -256,7 +256,7 @@ if for any initial machine state $S$ executable blocks $(f, S)$ and $(g,
 S)$ are equivalent.
 
 The definition of blocks equivalence is shown in listing
-\ref{fig:BlockEqAssuming}. Moreover, this definition allows to use
+\ref{fig:BlockEqAssuming}. Moreover, this definition allows using
 specified assumption to construct blocks equivalence. It's important
 because proof of semantic equivalence of call of statically and
 dynamically linked function relies on the assumption of a dynamic loader
