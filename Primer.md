@@ -36,14 +36,14 @@ Dynamic linking allows using external symbols without including libraries
 into the object file, as it would be done in static linking. On the other
 hand, the dynamic linker needs to make object file usable by filling
 \emph{relocations} - "empty" arguments of jumps to external functions. But
-dynamic linker can't change any code in the place where relocation appeared.
+dynamic linker can not change any code in the place where relocation appeared.
 Otherwise, symbols that are placed in the object file after that relocation
 would shift from their original positions, invalidating any instruction
 referring to them with their relative address. To prevent this, dynamic
 linker creates a section with code which is called PLT (Procedure Linkage
 Table). In this section for every external function $f$ it generates a
 procedure $plt.f$ and fills corresponding relocations with $plt.f$
-procedure address. Thereby, it fills relocations and doesn't break relative
+procedure address. Thereby, it fills relocations and does not break relative
 addresses. Inside the new section, dynamic linker can generate any code that
 is necessary to call dynamically linked function.
 }

@@ -18,19 +18,6 @@ CallStackType = List (RegFileTypes × DataStackType)
 \end{code}
 }
 
-\labeledfigure{fig:statetype}{Machine state type}{
-\begin{code}
-record StateType : Set
-  where
-  constructor sttype
-  field
-    registers : RegFileTypes
-    memory    : HeapTypes
-    datastack : DataStackType
-    callstack : CallStackType
-\end{code}
-}
-
 \labeledfigure{fig:types}{Supported data types}{
 \begin{code}
 data WordType
@@ -44,5 +31,18 @@ data ArbitraryType
   code : RegFileTypes
        → DataStackType → CallStackType
        → ArbitraryType
+\end{code}
+}
+
+\labeledfigure{fig:statetype}{Machine state type}{
+\begin{code}
+record StateType : Set
+  where
+  constructor sttype
+  field
+    registers : RegFileTypes
+    memory    : HeapTypes
+    datastack : DataStackType
+    callstack : CallStackType
 \end{code}
 }

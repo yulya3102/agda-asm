@@ -128,7 +128,7 @@ to:
     оптимизации.
 }{
     Further work can have a significant impact on LTO, which to the best of
-    my knowledge currently doesn't have any formal semantics.
+    my knowledge currently does not have any formal semantics.
     Moreover, it can form toolchain with CompCert, which can cover not only
     translation phase but also linking and related optimizations.
 }

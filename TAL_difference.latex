@@ -7,7 +7,7 @@
 \label{sec:asm-review}
 
 \iftoggle{russian-draft}{
-Оригинальный Typed Assembly Language достаточно выразителен для
+Оригинальный Typed Assembly Language (TAL) достаточно выразителен для
 реализации возможностей высокоуровневых языков, таких как параметрический
 полиморфизм или пользовательские структуры данных. Для нашей задачи эти
 возможности не являются существенными, но вместо этого возникает
@@ -16,9 +16,9 @@
 формализация TAL имеет несколько существенных отличий от оригинального
 Typed Assembly Language, синтаксис которого приведен в
 }{
-Original Typed Assembly Language is powerful enough to implement high-level
+Original Typed Assembly Language (TAL) is powerful enough to implement high-level
 language features such as parametric polymorphism or records. These features
-are not necessary for our task, but instead, we have to have specific data
+are not necessary for our task. Instead, we ought to have specific data
 types and instructions which are typically used to implement dynamic
 linking. Therefore, our TAL formalization has some differences from
 original Typed Assembly Language. The syntax of TAL can be found in
@@ -39,7 +39,7 @@ original Typed Assembly Language. The syntax of TAL can be found in
 Agda, так и на сущность "тип" из TAL. Чтобы избежать путаницы, ссылаться на
 типы из Agda мы будем с помощью фразы Agda-тип.
 }{
-Before describing features of used formalization, we will make some remarks
+Before describing features of our formalization, we will make some remarks
 about terminology used in this paper. In different TAL versions current
 state of executed program was called differently: in TAL and STAL it was
 called \emph{program} \citep[fig. 13]{tal} \citep{stal}, whereas in MTAL it
@@ -63,7 +63,8 @@ well as types from TAL. We will refer to types from Agda code as "Agda-type".
 динамический линковщик также не нуждается. Вместе с типом кортежа из языка
 удаляются неинициализированные значения и метки инициализированности.
 }{
-The lack of type variables is the first difference. It greatly simplifies
+The first difference of TAL and our formalization is the lack of type
+variables. It greatly simplifies
 original TAL language and allows to simplify our formalization. However,
 dynamic linker does not need polymorphism at assembly language level: it
 does not interpret and does not change input code, only appending

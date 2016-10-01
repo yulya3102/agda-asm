@@ -44,7 +44,7 @@ extra complication.
 pltize : HeapTypes → HeapTypes
 pltize [] = []
 pltize (atom x ∷ Ψ) = atom x ∷ pltize Ψ
-pltize (code Γ DS CS ∷ Ψ)
+pltize ((code Γ DS CS) ∷ Ψ)
   = plt-f ∷ (got-f ∷ (f ∷ pltize Ψ))
   where
     f = code Γ DS CS
@@ -91,7 +91,7 @@ GOT и PLT. В целях простоты будем считать, что з�
 With simplification stated earlier, the notion of the "external" symbol is
 reduced to marking blocks that should have corresponding GOT and PLT
 elements. In order of simplicity, we will consider every code block as
-having its own GOT and PLT entries. Function \F{pltize} from listing
+having its own GOT and PLT entries. Function \F{pltize} from Listing
 \ref{fig:changeABI} shows how the dynamic linker changes the layout of
 memory by adding new elements to it. Instead of every block $f$ from the
 original
@@ -143,7 +143,7 @@ GOT and PLT entries together.
 этой функции элемент PLT $plt.f$, элемент GOT $got.f$ и сама функция
 $f$ соответственно.
 }{
-Functions \F{plt}, \F{got} and \F{unlinked-symbol} from listing
+Functions \F{plt}, \F{got} and \F{unlinked-symbol} from Listing
 \ref{fig:changeABI} allow to determine where PLT entry $plt.f$, GOT entry
 $got.f$ and original function $f$ \AgdaSymbol{=} \F{code} \V{\Gamma} \V{DS}
 \V{CS} will be stored in the dynamically linked program.
@@ -185,7 +185,7 @@ of corresponding GOT entry, it executes indirect jump instruction
 loader correctly fills corresponding GOT elements after loading an external
 library, the execution of specified PLT block will lead to the execution of
 the function itself. The code of such PLT block in our formalization of the
-assembly language is shown in listing \ref{fig:plt-stub}.
+assembly language is shown in Listing \ref{fig:plt-stub}.
 }
 
 \iftoggle{russian-draft}{
@@ -197,7 +197,7 @@ assembly language is shown in listing \ref{fig:plt-stub}.
 функции через ее блок PLT не был бы прозрачным и менял бы семантику
 программы.
 }{
-As noted in section \ref{sec:asm-review}, Agda type of a block is
+As noted in Section \ref{sec:asm-review}, Agda type of a block is
 indexed by a description of machine state changes performed by this block.
 For the \F{plt-stub} block it is an empty change \C{dempty}, because this
 block does not change anything. Otherwise, function call through the

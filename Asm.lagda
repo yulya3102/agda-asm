@@ -114,7 +114,7 @@ branch-instr-semantics S (jmp[ p ])
 }{
 Execution of indirect jump to the pointer \AgdaBound{p} in machine state
 \AgdaBound{S} does not change call stack \F{State.callstack} \AgdaBound{S},
-and execution will be continued from the instruction sequence loaded from
+and execution will be continued from the block loaded from
 \F{State.memory} \AgdaBound{S} by the pointer loaded from memory by
 \AgdaBound{p}.
 }

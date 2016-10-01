@@ -58,18 +58,19 @@ complexity of the task, it is worth verifying a certain range of software such
 as development tools (toolchains), because errors in toolchains are
 especially hard to find.
 Moreover, toolchains are commonly used even in those areas where the cost
-of failure is extremely high.
+of failure is extremely high such as avionics or nuclear reactor control
+systems.
 
 Efforts are being made to develop verified toolchains, but it is still far
 from creation of completely reliable development tools. For example, VeLLVM
 \citep{vellvm} formalizes LLVM intermediate language and performs formally
 correct optimizations. Another project, CompCert \citep{compcert}, is
-closer to realistic toolchains: it's a compiler of the C language that
+closer to realistic toolchains: it is a compiler of the C language that
 performs optimizations which are proven to preserve the semantics of the
 compiled program. However, even CompCert does not cover all steps of
-compilation: it uses a system linker which is not verified.
+compilation: for example, it uses a system linker which is not verified.
 
-The linker might seem to be quite a simple program and it's hard to make a
+The linker might seem to be quite a simple program and it is hard to make a
 mistake in its code. Probably, it has been that way until link-time
 optimizations appeared. These optimizations make program logic more
 complex, making it possible to introduce a bug in linker's source code.
@@ -78,7 +79,7 @@ bugs during link-time optimizations (LTO) phase \citep{ltostress}. It
 shows that linker verification should not be neglected.
 
 The linker is a low-level program that works with object files containing machine
-code. Therefore, to reason about it, we need formalization of a low-level
+code. Therefore, to reason about it, we need a formalization of a low-level
 language close to machine code. Bedrock \citep{bedrock}, one of the most
 notable results in this area, is a Coq \citep{coq} library that allows
 writing code using abstractions associated with assembly language. Within the
@@ -87,9 +88,10 @@ implemented \citep{bedrocklinkers}, but there were no formalizations of
 widely used dynamic linking mechanisms.
 
 There is also an excellent formalization of assembly language — Typed Assembly
-Language (TAL) \citep{tal}. It describes typed low-level language that
+Language (TAL) \citep{tal}. It describes low-level language with the static
+type system that
 supports high-level abstractions such as type variables and tuples. This
-language has a variety of extensions adding support of stack mechanisms
+language has a variety of extensions that provide support for stack mechanisms
 (STAL) \citep{stal}, realistic x86 assembly language (TALx86)
 \citep{talx86} and even separate compilation and object files manipulation
 (MTAL) \citep{mtal}. The latter, modular
@@ -138,9 +140,9 @@ TAL является хорошей моделью для рассуждений
 }{
 TAL is a great model for reasoning about execution of low-level code, but
 existing TAL tools are written in ML and all proofs about TAL programs
-appeared as appendixes in corresponding papers. This paper uses
+appear in appendixes of the corresponding papers. This paper uses
 Agda \citep{agda} formalization of abstract language that is close to
-TALx86 and STAL. Using this language, this paper formalizes what elements
+TALx86 and STAL. This paper formalizes what elements
 are appended to program code during the dynamic linking process, introduces
 definition of code blocks equivalence and proves that correct dynamic
 loader implies the equivalence of statically and dynamically linked functions.
@@ -154,10 +156,10 @@ loader implies the equivalence of statically and dynamically linked functions.
 
 Исходный код, описываемый в данной статье, находится по адресу
 }{
-This work can be considered first step in the area of dynamic linking
+This work can be considered as a first step in the area of dynamic linking
 formalization. It can eventually result in verified linker that allows to
 reason about the correctness of performed program transformations.
 
-The sources used in this paper are available at
+The source codes used in this paper are available at
 }
 \url{https://github.com/yulya3102/agda-asm}.

@@ -30,7 +30,7 @@ open import Linkers
 }{
 The proof of equivalence of PLT block and corresponding functions relies on
 assumptions of the correctness of dynamic loader. These assumptions are shown
-in listing \ref{fig:correctness}. Assumption \F{GOT[ f ]-correctness}
+in Listing \ref{fig:correctness}. Assumption \F{GOT[ f ]-correctness}
 states that corresponding to function $f$ GOT element contains the address
 of the function $f$. Assumption \F{PLT[ f ]-correctness} states that the
 address corresponding to appropriate PLT function contains the PLT block.
@@ -64,7 +64,7 @@ PLT[ f ]-correctness H
 переданной аргументом в \C{jmp[\_]}.
 }{
 The code of the proof of the equivalence of function $f$ and its PLT block is
-shown in appendix \ref{sec:proof}. First, using instruction \C{jmp[\_]}
+shown in Appendix \ref{sec:proof}. First, using instruction \C{jmp[\_]}
 semantics, lemma \F{exec-ijmp} states that execution of block with this
 instruction does not change machine state \V{S}. It also states that
 execution continues with block loaded from the address from the variable \V{p}
