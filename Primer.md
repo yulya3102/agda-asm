@@ -16,7 +16,7 @@ support external variables.
 Динамическая линковка предполагает использование внешних символов из
 библиотек без включения этих библиотек в объектный файл, как это было бы
 при статической линковке. При этом динамическому линковщику необходимо
-чем-то заполнить \emph{релокации} - "пустые" аргументы инструкций перехода на
+чем-то заполнить \emph{релокации} - ``пустые'' аргументы инструкций перехода на
 внешние функции из объектного файла, и тем самым сделать их пригодными к
 исполнению. Но динамический линковщик не может менять код
 непосредственно в месте появления релокации. В противном случае последующий
@@ -35,7 +35,7 @@ support external variables.
 Dynamic linking allows using external symbols without including libraries
 into the object file, as it would be done in static linking. On the other
 hand, the dynamic linker needs to make object file usable by filling
-\emph{relocations} - "empty" arguments of jumps to external functions. But
+\emph{relocations} - ``empty'' arguments of jumps to external functions. But
 dynamic linker can not change any code in the place where relocation appeared.
 Otherwise, symbols that are placed in the object file after that relocation
 would shift from their original positions, invalidating any instruction

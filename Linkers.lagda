@@ -77,7 +77,7 @@ linked-symbol {Ψ = code Γ DS CS ∷ Ψ} (there f)
 }
 
 \iftoggle{russian-draft}{
-С указанным выше упрощением понятие "внешнего" символа сводится всего лишь
+С указанным выше упрощением понятие ``внешнего'' символа сводится всего лишь
 к указанию на то, какие блоки кода должны иметь соответствующие им элементы
 GOT и PLT. В целях простоты будем считать, что записи GOT и PLT
 генерируются на каждый блок кода. Приведенная в листинге
@@ -88,7 +88,7 @@ GOT и PLT. В целях простоты будем считать, что з�
 \AgdaBound{DS} и вызовов \AgdaBound{CS}, в динамически слинкованной
 программе будет целых три элемента в памяти:
 }{
-With simplification stated earlier, the notion of the "external" symbol is
+With simplification stated earlier, the notion of the ``external'' symbol is
 reduced to marking blocks that should have corresponding GOT and PLT
 elements. In order of simplicity, we will consider every code block as
 having its own GOT and PLT entries. Function \F{pltize} from Listing

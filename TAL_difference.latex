@@ -34,9 +34,9 @@ original Typed Assembly Language. The syntax of TAL can be found in
 время как в MTAL его называли \emph{состоянием программы (program state)}
 \citep{mtal}.
 Мы будем его называть \emph{\textbf{состоянием программы}}.
-Кроме того, слово "тип" может быть использовано для описания сущностей из
+Кроме того, слово ``тип'' может быть использовано для описания сущностей из
 разных слоев абстракции: оно может как ссылаться на сущность в коде на
-Agda, так и на сущность "тип" из TAL. Чтобы избежать путаницы, ссылаться на
+Agda, так и на сущность ``тип'' из TAL. Чтобы избежать путаницы, ссылаться на
 типы из Agda мы будем с помощью фразы Agda-тип.
 }{
 Before describing features of our formalization, we will make some remarks
@@ -45,9 +45,10 @@ state of executed program was called differently: in TAL and STAL it was
 called \emph{program} \citep[fig. 13]{tal} \citep{stal}, whereas in MTAL it
 was called \emph{program state} \citep{mtal}. We will call it
 \emph{\textbf{program state}}.
-Aside from that, the word "type" can be used to refer to different items
+Aside from that, the word ``type'' can be used to refer to different items
 from different abstraction layers: it can refer to types from Agda code as
-well as types from TAL. We will refer to types from Agda code as "Agda-type".
+well as types from TAL. We will refer to types from Agda code as
+``Agda-type''.
 }
 
 \iftoggle{russian-draft}{
@@ -71,6 +72,6 @@ does not interpret and does not change input code, only appending
 additional elements to it.
 
 The lack of tuples is the second difference. Dynamic linker does not need
-it either. Uninitialized "garbage" values and initialization flags are
+it either. Uninitialized ``garbage'' values and initialization flags are
 deleted from language along with tuple type.
 }

@@ -43,10 +43,10 @@ initialization flag, but with a fixed length.
 }
 
 \iftoggle{russian-draft}{
-Динамическая линковка добавляет в объектные файлы код-"прослойку" между
+Динамическая линковка добавляет в объектные файлы код-``прослойку'' между
 различными библиотеками, исполняемый при вызове внешних функций. Этот код
 не должен никак влиять на семантику программы. Это означает, что мы не
-можем абстрагироваться от стека вызовов, который может быть "испорчен"
+можем абстрагироваться от стека вызовов, который может быть ``испорчен''
 вызовом дополнительных процедур. \emph{Состояние программы} оригинального TAL, помимо исполняемой
 последовательности инструкций, включало в себя состояния регистров и
 памяти. В используемой формализации оно дополнительно включает в себя
@@ -141,7 +141,7 @@ as \emph{branch instructions}. Instructions like \C{jmp}, \C{call}, and
 единственную точку входа, которая совпадает с ее первым базовым блоком.
 В некоторых случаях, когда не имеет значения, сколько блоков содержит
 функция, но важно, что существует входная точка, мы будем взаимозаменять
-слова "блок" и "функция", ссылаясь на первый базовый блок некоторой функции.
+слова ``блок'' и ``функция'', ссылаясь на первый базовый блок некоторой функции.
 }{
 Since linking takes into account only jumps between different parts of
 loaded executable code, it is useful to define \textbf{\emph{basic block}}.
@@ -154,8 +154,8 @@ describes in which state this block can be executed.
 Functions can contain several basic blocks linked with jumps. What is
 essential to the function that it has the unique start point that matches
 its first basic block. Sometimes, it does not matter how many blocks a
-function has. If that is the case, we can use the word "function" as well
-as the word "block", referring to the first block of a function.
+function has. If that is the case, we can use the word ``function'' as well
+as the word ``block'', referring to the first block of a function.
 }
 
 \iftoggle{russian-draft}{

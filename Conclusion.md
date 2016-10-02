@@ -40,7 +40,7 @@ dynamic linker:
     просто смещение в объектном файле), динамический линкер может указать
     на соответствующие этой функции элементы GOT и PLT (функции \F{got} и
     \F{plt}). Так как эта информация известна в link-time, становится
-    возможным использовать их на этом этапе: заменять вызовы "неизвестных"
+    возможным использовать их на этом этапе: заменять вызовы ``неизвестных''
     функций на вызовы известных блоков PLT, выполнять link-time
     оптимизации.
 }{
@@ -49,7 +49,7 @@ dynamic linker:
     and PLT elements (as shown by functions \F{got} and \F{plt}). This
     information is available in link-time, therefore it can be used in a
     linking process: the linker can substitute calls to PLT blocks of
-    "unknown" functions for calls to "unknown" functions themselves and
+    ``unknown'' functions for calls to ``unknown'' functions themselves and
     perform link-time optimizations.
 }
 \item
@@ -89,7 +89,7 @@ dynamic linker:
 загрузчика.
 
 Проведенные исследования могут иметь продолжение в следующих направлениях:
-(1) формализация ABI "ленивой" линковки, используемой в современных
+(1) формализация ABI ``ленивой'' линковки, используемой в современных
 библиотеках формата ELF; (2) формализация процесса заполнения релокаций
 динамическим загрузчиком и его свойств, как это сделано в \citep{cardelli};
 (3) формализация разбора бинарных файлов, загрузки кода в память и
@@ -104,7 +104,7 @@ dynamic linking and can be used as a basis for creating formally verified
 dynamic linker and loader.
 
 This research can be continued in the following directions: (1) the
-formalization of "lazy" linking ABI, used in modern ELF libraries; (2) the
+formalization of ``lazy'' linking ABI, used in modern ELF libraries; (2) the
 formalization of
 filling relocations process and its properties, as done by
 \citep{cardelli}; (3) the formalization of binary files parsing, memory

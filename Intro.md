@@ -80,7 +80,8 @@ shows that linker verification should not be neglected.
 
 The linker is a low-level program that works with object files containing machine
 code. Therefore, to reason about it, we need a formalization of a low-level
-language close to machine code. Bedrock \citep{bedrock}, one of the most
+language that uses abstractions associated with the machine code, like
+registers and stack. Bedrock \citep{bedrock}, one of the most
 notable results in this area, is a Coq \citep{coq} library that allows
 writing code using abstractions associated with assembly language. Within the
 Bedrock project, support for linking with external libraries was
