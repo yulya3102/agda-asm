@@ -115,11 +115,13 @@ the implementations of these mappings.
 Разные инструкции меняют различные части состояния исполнителя. Инструкции,
 определяющие, какой код будет исполняться дальше, будем называть
 \emph{инструкциями перехода}, а все остальные инструкции —
-\emph{инструкциями общего назначения}.
+\emph{инструкциями общего назначения}. Примерами инструкций перехода
+являются такие инструкции, как \C{jmp}, \C{call} и \C{jnz}.
 }{
 Different instructions change different parts of machine state.
 We will refer to instructions that define which code will be executed next
-as \emph{branch instructions}. All other instructions we will call
+as \emph{branch instructions}. Instructions like \C{jmp}, \C{call}, and
+\C{jnz} are branch instructions. All other instructions we will call
 \emph{general purpose instructions}.
 }
 
@@ -133,6 +135,13 @@ as \emph{branch instructions}. All other instructions we will call
 задается конструктором \C{code} Agda-типа \F{ArbitraryType} из листинга
 \ref{fig:types} и описывает, в каком состоянии исполнителя может быть
 исполнен этот блок.
+
+Функции могут состоять из нескольких базовых блоков, связанными переходами.
+Главная отличительная особенность функции состоит в том, что она имеет
+единственную точку входа, которая совпадает с ее первым базовым блоком.
+В некоторых случаях, когда не имеет значения, сколько блоков содержит
+функция, но важно, что существует входная точка, мы будем взаимозаменять
+слова "блок" и "функция", ссылаясь на первый базовый блок некоторой функции.
 }{
 Since linking takes into account only jumps between different parts of
 loaded executable code, it is useful to define \textbf{\emph{basic block}}.
@@ -141,6 +150,12 @@ branch instruction. It corresponds to the \emph{instruction sequence} from
 the original TAL. The type of a basic block is specified by the constructor
 \C{code} of Agda-type \F{ArbitraryType} from Listing \ref{fig:types}. It
 describes in which state this block can be executed.
+
+Functions can contain several basic blocks linked with jumps. What is
+essential to the function that it has the unique start point that matches
+its first basic block. Sometimes, it does not matter how many blocks a
+function has. If that is the case, we can use the word "function" as well
+as the word "block", referring to the first block of a function.
 }
 
 \iftoggle{russian-draft}{
@@ -173,16 +188,16 @@ To ensure that function $g$ call at the end of the basic block
 $f$ is correct, we have to know how block $f$
 of type $S_f$ changes register file types and stack types and whether it
 can transform machine state type $S_f$ to machine state type $S_g$ expected
-by function $g$. To achieve that, Agda-type \F{Block} is indexed by some
-description of how this
+by function $g$. To achieve that, Agda-type corresponding to the block is
+indexed by some description of how this
 block changes different parts of the machine state type. This description is
 stored in Agda-type \F{Diff}, which takes as parameter machine state type
-that can be changed by this diff. Recursive definition of the Agda-type of
+that can be changed by this \F{Diff}. Recursive definition of the Agda-type of
 \emph{basic block} is shown in Listing \ref{fig:block}.
 Constructor \C{↝} allows constructing a block consisting of a single branch
 instruction \V{i} that changes type of call stack by change \V{c}.
 Expression \F{csChg} \V{S} \V{c} of this constructor transforms call
-stack change \V{c} into common diff \F{Diff} of machine state of type
+stack change \V{c} into common \F{Diff} of machine state of type
 \V{S}.
 Constructor \C{\_∙\_} adds general-purpose instruction \V{i} with change
 \V{c} to the beginning of the block \V{b}. Type of block \V{b} must come
@@ -191,8 +206,8 @@ corresponding to this instruction with function \F{dapply}, as shown in the
 type of the block \V{b}. Expression \F{sChg} \V{c} of the type of that
 block,
 similarly to the previous constructor, transforms instruction-specific
-change \V{c} to common machine state diff \F{Diff}. This results into a
-block with diff that consists of changes corresponding to instruction \V{i}
+change \V{c} to common \F{Diff} of machine state. This results into a
+block with \F{Diff} that consists of changes corresponding to instruction \V{i}
 and block \V{b}, combined with the function \F{dappend}.
 }
 
