@@ -76,6 +76,10 @@ linked-symbol {Ψ = code Γ DS CS ∷ Ψ} (there f)
 \end{code}
 }
 
+**TODO: here, there, refl**
+
+**TODO: pltize statement**
+
 \iftoggle{russian-draft}{
 С указанным выше упрощением понятие ``внешнего'' символа сводится всего лишь
 к указанию на то, какие блоки кода должны иметь соответствующие им элементы
@@ -122,6 +126,10 @@ memory:
     the block $f$.
 }
 \end{itemize}
+
+**TODO: got and plt statements**
+
+**TODO: linked-symbol statement**
 
 \iftoggle{russian-draft}{
 В реальности таблицы PLT и GOT вынесены в отдельные секции и не
@@ -187,6 +195,8 @@ library, the execution of specified PLT block will lead to the execution of
 the function itself. The code of such PLT block in our formalization of the
 assembly language is shown in Listing \ref{fig:plt-stub}.
 }
+
+**TODO: plt-stub statement**
 
 \iftoggle{russian-draft}{
 Как было сказано в секции \ref{sec:asm-review}, индексом Agda-типа блока

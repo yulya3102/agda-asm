@@ -36,6 +36,8 @@ of the function $f$. Assumption \F{PLT[ f ]-correctness} states that the
 address corresponding to appropriate PLT function contains the PLT block.
 }
 
+**TODO: GOT[ f ]-correctness and PLT[ f ]-correctness statements**
+
 \labeledfigure{fig:correctness}{Properties of the dynamic loader}{
 \begin{code}
 GOT[_]-correctness : ∀ {Γ Ψ DS CS}
@@ -102,3 +104,5 @@ After that \F{block-eq-proof} constructs desired block equivalence relation
 for arbitrary machine state that meets assumptions of the correctness of
 dynamic loader's work result.
 }
+
+**TODO: program semantics statement**

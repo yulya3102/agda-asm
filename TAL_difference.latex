@@ -6,6 +6,10 @@
 
 \label{sec:asm-review}
 
+\textbf{TODO: why TAL}
+
+\textbf{TODO: we won't specify our language}
+
 \iftoggle{russian-draft}{
 Оригинальный Typed Assembly Language (TAL) достаточно выразителен для
 реализации возможностей высокоуровневых языков, таких как параметрический
@@ -50,6 +54,8 @@ from different abstraction layers: it can refer to types from Agda code as
 well as types from TAL. We will refer to types from Agda code as
 ``Agda-type''.
 }
+
+\textbf{TODO: simplify}
 
 \iftoggle{russian-draft}{
 Первым отличием используемой формализации от оригинального TAL

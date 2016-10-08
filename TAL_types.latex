@@ -1,3 +1,5 @@
+\textbf{TODO: simplify}
+
 \iftoggle{russian-draft}{
 Все поддерживаемые типы данных указаны в листинге \ref{fig:types}.
 В нашей формализации типы данных описываются двумя разными Agda-типами:
@@ -16,6 +18,8 @@ register-sized types. It is used to correctly type instructions like
 types. Agda-type \F{ArbitraryType} describes types of arbitrary size, which
 include register-sized types with constructor \C{atom}.
 }
+
+\textbf{TODO: simplify}
 
 \iftoggle{russian-draft}{
 Действительно необходимой для формализации динамической линковки является
@@ -41,6 +45,8 @@ formalization from the original Typed Assembly Language.
 Essentially, this is the tuple type from the original TAL without the
 initialization flag, but with a fixed length.
 }
+
+\textbf{TODO: simplify}
 
 \iftoggle{russian-draft}{
 Динамическая линковка добавляет в объектные файлы код-``прослойку'' между
@@ -157,6 +163,8 @@ its first basic block. Sometimes, it does not matter how many blocks a
 function has. If that is the case, we can use the word ``function'' as well
 as the word ``block'', referring to the first block of a function.
 }
+
+\textbf{TODO: simplify}
 
 \iftoggle{russian-draft}{
 Для обеспечения корректности вызова функции $g$ в конце
