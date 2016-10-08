@@ -6,12 +6,12 @@ AGDA_INCLUDE = -i . -i ./agda-stdlib/src
 
 SOURCES = \
 	$(BUILD)/Intro.latex \
+	$(BUILD)/Primer.latex \
 	$(BUILD)/TAL_difference.latex \
 	$(BUILD)/Core.latex \
 	$(BUILD)/TAL_types.latex \
 	$(BUILD)/MetaAsm.latex \
 	$(BUILD)/Asm.latex \
-	$(BUILD)/Primer.latex \
 	$(BUILD)/Linkers.latex \
 	$(BUILD)/BlockEq.latex \
 	$(BUILD)/Loader.latex \

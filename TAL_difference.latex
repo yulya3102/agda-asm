@@ -1,7 +1,7 @@
 \iftoggle{russian-draft}{
 \section{Обзор используемой формализации TAL}
 }{
-\section{TAL formalization}
+\section{TAL formalization overview}
 }
 
 \label{sec:asm-review}

@@ -20,7 +20,7 @@ dynamic linker:
     элементы он в нее добавляет (функция \F{pltize}).
 }{
     The dynamic linker changes layout of a program in a specific way, adding
-    certain elements to it (as described by function \F{pltize})
+    certain elements to it (as described by function \F{pltize}).
 }
 \item
 \iftoggle{russian-draft}{
