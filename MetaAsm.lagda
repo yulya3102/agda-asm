@@ -33,7 +33,7 @@ module Meta where
       where
       ↝ : ∀ {c}
         → (i : BranchInstr S c)
-        → Block S (csChg S c)
+        → Block S (csChg c)
       _∙_ : ∀ {c d}
            → (i : Instr S c)
            → (b : Block (dapply S (sChg c)) d)
@@ -213,11 +213,11 @@ module Meta where
                   (Blocks.Block BranchInstr Instr)
                   (StateType.memory S)
                   (StateType.callstack
-                    (Diffs.dapply S (Diffs.csChg S c)))
+                    (Diffs.dapply S (Diffs.csChg c)))
                  × Σ (Diffs.Diff
-                       (Diffs.dapply S (Diffs.csChg S c)))
+                       (Diffs.dapply S (Diffs.csChg c)))
                      (Blocks.Block BranchInstr Instr
-                       (Diffs.dapply S (Diffs.csChg S c))))
+                       (Diffs.dapply S (Diffs.csChg c))))
     where
     open Diffs
     open Blocks BranchInstr Instr
@@ -225,7 +225,7 @@ module Meta where
 
     module DiffLemmas where
       dapply-csChg : ∀ S → (c : Maybe (CallStackChg S))
-                   → dapply S (csChg S c)
+                   → dapply S (csChg c)
                    ≡ record S {
                      callstack = maybe′
                        (StackDiff.chgapply _ (StateType.callstack S))

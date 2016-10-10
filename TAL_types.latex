@@ -114,13 +114,13 @@ that can be changed by this \F{Diff}. Recursive definition of the Agda-type of
 изменения \V{c} с помощью функции \F{dapply}, что показано в типе блока
 \V{b}. В результате получается блок с изменением, составленным с помощью
 функции \F{dappend} из изменений инструкции \AgdaBound{i} и блока
-\AgdaBound{b}. Выражения же \F{csChg} \V{S} \V{c} и \F{sChg} \V{c}
+\AgdaBound{b}. Выражения же \F{csChg} \V{c} и \F{sChg} \V{c}
 преобразовывают специфичное для инструкции \V{i} изменение \V{c} в общее
 изменение состояния исполнителя, описываемое Agda-типом \F{Diff}.
 
 % Constructor \C{↝} allows constructing a block consisting of a single branch
 % instruction \V{i} that changes type of call stack by change \V{c}.
-% Expression \F{csChg} \V{S} \V{c} of this constructor transforms call
+% Expression \F{csChg} \V{c} of this constructor transforms call
 % stack change \V{c} into common \F{Diff} of machine state of type
 % \V{S}.
 % Constructor \C{\_∙\_} adds general-purpose instruction \V{i} with change

@@ -71,9 +71,9 @@ branch-instr-semantics : ∀ {S c}
              → BranchInstr S c
              → CallStack
                (StateType.memory S)
-               (StateType.callstack (dapply S (csChg S c)))
-             × Σ (Diff (dapply S (csChg S c)))
-                 (Block (dapply S (csChg S c)))
+               (StateType.callstack (dapply S (csChg c)))
+             × Σ (Diff (dapply S (csChg c)))
+                 (Block (dapply S (csChg c)))
 branch-instr-semantics (state Γ Ψ DS CS) (call f cont)
   = cont ∷ CS , loadblock Ψ f
 branch-instr-semantics (state Γ Ψ DS CS) (jmp f)

@@ -119,6 +119,6 @@ sChg (onlyreg r) = regChg r
 sChg (onlystack d) = dsChg d
 sChg (regstack r d) = dchg (rchg r) $ dchg (dschg d) dempty
 
-csChg : ∀ S → Maybe (CallStackChg S) → Diff S
-csChg S (just x) = dchg (cschg x) dempty
-csChg S nothing = dempty
+csChg : ∀ {S} → Maybe (CallStackChg S) → Diff S
+csChg (just x) = dchg (cschg x) dempty
+csChg nothing = dempty
