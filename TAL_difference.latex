@@ -87,3 +87,87 @@ The lack of tuples is the second difference. Dynamic linker does not need
 it either. Uninitialized ``garbage'' values and initialization flags are
 deleted from language along with tuple type.
 }
+
+\textbf{TODO: simplify}
+
+\iftoggle{russian-draft}{
+Все поддерживаемые типы данных указаны в листинге \ref{fig:types}.
+В нашей формализации типы данных описываются двумя разными Agda-типами:
+\F{WordType} и \F{ArbitraryType}. Agda-тип \F{WordType} описывает только типы размером с
+регистр и используется для корректной типизации таких инструкций, как,
+например, копирование значения в регистр из ячейки памяти, которая может быть
+потенциально произвольного размера. Agda-тип \F{ArbitraryType}
+описывает типы произвольного размера, которые включают в себя типы размером
+с регистр с помощью конструктора \C{atom}.
+}{
+All supported data types are shown in Listing \ref{fig:types}. In our
+formalization data types are described with two different Agda-types:
+\F{WordType} and \F{ArbitraryType}. Agda-type \F{WordType} describes only
+register-sized types. It is used to correctly type instructions like
+\C{mov} from memory to register when the memory can contain arbitrary-sized
+types. Agda-type \F{ArbitraryType} describes types of arbitrary size, which
+include register-sized types with constructor \C{atom}.
+}
+
+\textbf{TODO: simplify}
+
+\iftoggle{russian-draft}{
+Действительно необходимой для формализации динамической линковки является
+семантика инструкции непрямого перехода, позволяющая динамически менять
+целевую точку передачи исполнения. Аргументом этой инструкции является
+указатель на ячейку памяти, в которой находится указатель на блок кода,
+который необходимо исполнить. Для корректной типизации этой инструкции в
+поддерживаемые типы данных необходимо добавить тип указателя на
+типизированную ячейку памяти (конструтор \C{\_*} Agda-типа \F{WordType} в
+листинге \ref{fig:types}).  Это является третьим отличием используемой
+формализации от оригинального
+TAL. По сути, это тип кортежа из оригинального
+TAL, но фиксированной длины и без метки инициализированности.
+}{
+What is really necessary for dynamic linking formalization is the semantics of
+indirect jump instruction. This instruction allows to dynamically change target
+executable code. The argument of this instruction is a pointer to a memory
+location where the address of target executable code is stored. To
+correctly type indirect jump instruction we need to support the type of
+pointer to typed memory (constructor \C{\_*} of Agda-type \F{WordType} from
+Listing \ref{fig:types}).  This is the third difference of our
+formalization from the original Typed Assembly Language.
+Essentially, this is the tuple type from the original TAL without the
+initialization flag, but with a fixed length.
+}
+
+\textbf{TODO: simplify}
+
+\iftoggle{russian-draft}{
+Динамическая линковка добавляет в объектные файлы код-``прослойку'' между
+различными библиотеками, исполняемый при вызове внешних функций. Этот код
+не должен никак влиять на семантику программы. Это означает, что мы не
+можем абстрагироваться от стека вызовов, который может быть ``испорчен''
+вызовом дополнительных процедур. \emph{Состояние программы} оригинального TAL, помимо исполняемой
+последовательности инструкций, включало в себя состояния регистров и
+памяти. В используемой формализации оно дополнительно включает в себя
+состояние стека, который для простоты реализации был разделен на две части:
+стек данных и стек вызовов. Кроме того, конструктор \C{code} Agda-типа
+\F{ArbitraryType}, соответстующий типу последовательности
+инструкций, имеет дополнительные аргументы по сравнению с оригинальным TAL.
+В используемой формализации аргументами этого конструктора
+являются ожидаемые типы регистров, стека данных и стека вызовов, в
+то время в оригинальном TAL в аргументах отсутствовали типы стеков.
+Это еще одно существенное отличие
+используемой формализации от оригинального TAL.
+}{
+Dynamic linker adds intermedium code between different libraries. This code
+is invoked when an external function is called. It must not affect program
+semantics. Therefore, we can not hide call stack in abstractions, because it
+can be affected by additional procedure calls. \emph{Program state} of
+original TAL includes currently executed \emph{instruction sequence},
+\emph{register files} and \emph{heaps}. Our
+formalization additionally includes stack, which is split into two parts:
+\emph{data stack} and \emph{call stack}. Aside from that, constructor
+\C{code} of Agda-type \F{ArbitraryType}, corresponding to the instruction
+sequence type, has additional arguments.
+Instruction sequence type from original TAL
+contained only expected \emph{register file type}, but in our
+formalization, it contains also types of expected data stack and call
+stack. This is another difference from original TAL.
+}

@@ -12,6 +12,7 @@ SOURCES = \
 	$(BUILD)/TAL_types.latex \
 	$(BUILD)/MetaAsm.latex \
 	$(BUILD)/Asm.latex \
+	$(BUILD)/DynLinkLoading.latex \
 	$(BUILD)/Linkers.latex \
 	$(BUILD)/BlockEq.latex \
 	$(BUILD)/Loader.latex \
