@@ -80,8 +80,6 @@ function has. If that is the case, we can use the word ``function'' as well
 as the word ``block'', referring to the first block of a function.
 }
 
-\textbf{TODO: simplify}
-
 \iftoggle{russian-draft}{
 Для обеспечения корректности вызова функции $g$ в конце
 базового блока $f$ необходимо понимать, как блок $f$ типа $S_f$ меняет

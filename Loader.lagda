@@ -36,7 +36,13 @@ of the function $f$. Assumption \F{PLT[ f ]-correctness} states that the
 address corresponding to appropriate PLT function contains the PLT block.
 }
 
-**TODO: GOT[ f ]-correctness and PLT[ f ]-correctness statements**
+Таким образом, динамический линковщик может явно указать, на какие
+свойства динамического загрузчика он опирается, и, используя их,
+доказать свою корректность. При этом, если динамический загрузчик делит
+свою кодовую базу с динамическим линковщик (что немаловероятно),
+пруфассистант может при компиляции кода проверить, что динамический
+загрузчик обладает теми же свойствами, на которые полагается динамический
+линковщик.
 
 \labeledfigure{fig:correctness}{Properties of the dynamic loader}{
 \begin{code}
@@ -104,5 +110,5 @@ After that \F{block-eq-proof} constructs desired block equivalence relation
 for arbitrary machine state that meets assumptions of the correctness of
 dynamic loader's work result.
 }
-
-**TODO: program semantics statement**
+Полученное доказательство говорит о том, что динамическая линковка не
+меняет семантику программы.

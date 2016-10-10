@@ -17,36 +17,34 @@ dynamic linker:
 \item
 \iftoggle{russian-draft}{
     Описано, как динамический линковщик меняет layout программы и какие
-    элементы он в нее добавляет (функция \F{pltize}).
+    элементы он в нее добавляет.
 }{
     The dynamic linker changes layout of a program in a specific way, adding
-    certain elements to it (as described by function \F{pltize}).
+    certain elements to it.
 }
 \item
 \iftoggle{russian-draft}{
     Зная, по какому смещению в неслинкованном объектном файле располагался
     некоторый блок кода, динамический линковщик может сказать, где этот
-    блок кода будет располагаться в динамически слинкованной библиотеке
-    (функция \F{linked-symbol}).
+    блок кода будет располагаться в динамически слинкованной библиотеке.
 }{
     The dynamic linker knows where the code block will be stored in a
     linked object
-    file by its offset in non-linked object file (as shown by function
-    \F{linked-symbol}).
+    file by its offset in non-linked object file.
 }
 \item
 \iftoggle{russian-draft}{
     Зная идентификатор функции (в данной простой реализации это
     просто смещение в объектном файле), динамический линкер может указать
-    на соответствующие этой функции элементы GOT и PLT (функции \F{got} и
-    \F{plt}). Так как эта информация известна в link-time, становится
+    на соответствующие этой функции элементы GOT и PLT. Так как эта
+    информация известна в link-time, становится
     возможным использовать их на этом этапе: заменять вызовы ``неизвестных''
     функций на вызовы известных блоков PLT, выполнять link-time
     оптимизации.
 }{
     Given function identifier (which in this formalization is simply an
     offset in object file), the dynamic linker can get corresponding GOT
-    and PLT elements (as shown by functions \F{got} and \F{plt}). This
+    and PLT elements. This
     information is available in link-time, therefore it can be used in a
     linking process: the linker can substitute calls to PLT blocks of
     ``unknown'' functions for calls to ``unknown'' functions themselves and
@@ -55,24 +53,21 @@ dynamic linker:
 \item
 \iftoggle{russian-draft}{
     Заранее известно, какой именно код динамический линковщик генерирует
-    для каждой внешней функции (функция \F{plt-stub}), а значит, можно
+    для каждой внешней функции, а значит, можно
     рассуждать про семантику этого кода.
 }{
-    The code of each PLT element is known in advance (it is shown in function
-    \F{plt-stub}), so you can reason about its semantics.
+    The code of each PLT element is known in advance, so you can reason
+    about its semantics.
 }
 \item
 \iftoggle{russian-draft}{
     Корректность работы динамической линковки полагается на корректность
     работы динамического загрузчика, при этом явно формулируется,
-    выполнение каких свойств требуется в рантайме (функции \F{GOT[ f
-    ]-correctness}, \F{PLT[ f ]-correctness})
+    выполнение каких свойств требуется в рантайме.
 }{
     The correctness of the dynamic linking relies on the correctness of the
     dynamic loader.  The dynamic linker can explicitly state which
-    properties of the dynamic loader
-    it needs (functions \F{GOT[ f ]-correctness} and \F{PLT[ f
-    ]-correctness}).
+    properties of the dynamic loader.
 }
 \item
 \iftoggle{russian-draft}{

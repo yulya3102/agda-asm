@@ -22,10 +22,6 @@ formalization of splitting a program into separate libraries seems like
 extra complication.
 }
 
-\textbf{TODO: here, there, refl}
-
-\textbf{TODO: pltize statement}
-
 \iftoggle{russian-draft}{
 С указанным выше упрощением понятие ``внешнего'' символа сводится всего лишь
 к указанию на то, какие блоки кода должны иметь соответствующие им элементы
@@ -73,10 +69,6 @@ memory:
 }
 \end{itemize}
 
-\textbf{TODO: got and plt statements}
-
-\textbf{TODO: linked-symbol statement}
-
 \iftoggle{russian-draft}{
 В реальности таблицы PLT и GOT вынесены в отдельные секции и не
 располагаются рядом с кодом. Это не влияет на семантику программы,
@@ -97,11 +89,27 @@ GOT and PLT entries together.
 этой функции элемент PLT $plt.f$, элемент GOT $got.f$ и сама функция
 $f$ соответственно.
 }{
-Functions \F{plt}, \F{got} and \F{unlinked-symbol} from Listing
+Functions \F{plt}, \F{got} and \F{linked-symbol} from Listing
 \ref{fig:changeABI} allow to determine where PLT entry $plt.f$, GOT entry
 $got.f$ and original function $f$ \AgdaSymbol{=} \F{code} \V{\Gamma} \V{DS}
 \V{CS} will be stored in the dynamically linked program.
 }
+Аргументами этих функций являются адреса функций в неслинкованной
+программе, которые в нашей формализации выражены Agda-типами принадлежности
+блока кода \C{code} \V{\Gamma} \V{DS} \V{CS} списку типов памяти \V{\Psi}.
+Конструкторами такого отношения принадлежности являются \C{here} и
+\C{there}. Первый из них говорит, что элемент лежит в начале данного
+списка, и предоставляет доказательство равенства искомого элемента и
+начала списка, конструируемое с помощью \C{refl}. Второй конструктор,
+\C{there}, говорит о том, что элемент лежит в хвосте списка, с помощью
+рекурсивно сконструированного отношения принадлежности концу списка.
+
+Таким образом, динамический линковщик знает, где в слинкованном объектном
+файле будет расположен какой-либо блок кода, и может указать, где будут
+находиться соответствующие ему элементы GOT и PLT. Эта информация известа в
+link-time и может быть использована в процессе линковки: например,
+линковщик может заменять вызовы блоков PLT на вызовы самих функций и
+выполнять link-time optimizations.
 
 \iftoggle{russian-draft}{
 Как было указано ранее, блок PLT должен обеспечивать получение в рантайме
@@ -126,8 +134,6 @@ the function itself. The code of such PLT block in our formalization of the
 assembly language is shown in Listing \ref{fig:plt-stub}.
 }
 
-\textbf{TODO: plt-stub statement}
-
 \iftoggle{russian-draft}{
 Как было сказано в секции \ref{sec:asm-review}, индексом Agda-типа блока
 является описание изменений типа состояния исполнителя,
@@ -144,3 +150,7 @@ block does not change anything. Otherwise, function call through the
 corresponding PLT block would be noticeable and would change the program
 semantics.
 }
+
+Каким бы ни был блок PLT для какого-либо варианта динамической линковки,
+его код всегда известен линковщику заранее. Это позволяет строить
+доказательства про семантику динамически слинкованного кода.
