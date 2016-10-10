@@ -61,32 +61,10 @@ well as types from TAL. We will refer to types from Agda code as
 ``Agda-type''.
 }
 
-\textbf{TODO: simplify}
-
-\iftoggle{russian-draft}{
-Первым отличием используемой формализации от оригинального TAL
-является отсутствие параметров типов. Это является
-значительным упрощением исходного языка, позволяющим сильно упростить
-используемую формализацию. Тем не менее, динамический линковщик не
-нуждается в полиморфизме на уровне языка ассемблера: он не интерпретирует и
-не меняет данный ему код, всего лишь добавляя к нему дополнительные
-элементы.
-
-Вторым отличием является отсутствие кортежей в памяти, в которых
-динамический линковщик также не нуждается. Вместе с типом кортежа из языка
-удаляются неинициализированные значения и метки инициализированности.
-}{
-The first difference of TAL and our formalization is the lack of type
-variables. It greatly simplifies
-original TAL language and allows to simplify our formalization. However,
-dynamic linker does not need polymorphism at assembly language level: it
-does not interpret and does not change input code, only appending
-additional elements to it.
-
-The lack of tuples is the second difference. Dynamic linker does not need
-it either. Uninitialized ``garbage'' values and initialization flags are
-deleted from language along with tuple type.
-}
+Исходный язык TAL был значительно упрощен, что позволило сильно упростить
+используемую формализацию. Так, динамический линковщик не нуждается в
+полиморфизме на уровне языка ассемблера и сложных типах данных, что ведет к
+удалению из языка параметров типов, кортежей и меток инициализированности.
 
 \textbf{TODO: simplify}
 
@@ -99,19 +77,7 @@ deleted from language along with tuple type.
 потенциально произвольного размера. Agda-тип \F{ArbitraryType}
 описывает типы произвольного размера, которые включают в себя типы размером
 с регистр с помощью конструктора \C{atom}.
-}{
-All supported data types are shown in Listing \ref{fig:types}. In our
-formalization data types are described with two different Agda-types:
-\F{WordType} and \F{ArbitraryType}. Agda-type \F{WordType} describes only
-register-sized types. It is used to correctly type instructions like
-\C{mov} from memory to register when the memory can contain arbitrary-sized
-types. Agda-type \F{ArbitraryType} describes types of arbitrary size, which
-include register-sized types with constructor \C{atom}.
-}
 
-\textbf{TODO: simplify}
-
-\iftoggle{russian-draft}{
 Действительно необходимой для формализации динамической линковки является
 семантика инструкции непрямого перехода, позволяющая динамически менять
 целевую точку передачи исполнения. Аргументом этой инструкции является
@@ -119,26 +85,11 @@ include register-sized types with constructor \C{atom}.
 который необходимо исполнить. Для корректной типизации этой инструкции в
 поддерживаемые типы данных необходимо добавить тип указателя на
 типизированную ячейку памяти (конструтор \C{\_*} Agda-типа \F{WordType} в
-листинге \ref{fig:types}).  Это является третьим отличием используемой
+листинге \ref{fig:types}).  Это является очередным отличием используемой
 формализации от оригинального
 TAL. По сути, это тип кортежа из оригинального
 TAL, но фиксированной длины и без метки инициализированности.
-}{
-What is really necessary for dynamic linking formalization is the semantics of
-indirect jump instruction. This instruction allows to dynamically change target
-executable code. The argument of this instruction is a pointer to a memory
-location where the address of target executable code is stored. To
-correctly type indirect jump instruction we need to support the type of
-pointer to typed memory (constructor \C{\_*} of Agda-type \F{WordType} from
-Listing \ref{fig:types}).  This is the third difference of our
-formalization from the original Typed Assembly Language.
-Essentially, this is the tuple type from the original TAL without the
-initialization flag, but with a fixed length.
-}
 
-\textbf{TODO: simplify}
-
-\iftoggle{russian-draft}{
 Динамическая линковка добавляет в объектные файлы код-``прослойку'' между
 различными библиотеками, исполняемый при вызове внешних функций. Этот код
 не должен никак влиять на семантику программы. Это означает, что мы не
@@ -156,6 +107,25 @@ initialization flag, but with a fixed length.
 Это еще одно существенное отличие
 используемой формализации от оригинального TAL.
 }{
+All supported data types are shown in Listing \ref{fig:types}. In our
+formalization data types are described with two different Agda-types:
+\F{WordType} and \F{ArbitraryType}. Agda-type \F{WordType} describes only
+register-sized types. It is used to correctly type instructions like
+\C{mov} from memory to register when the memory can contain arbitrary-sized
+types. Agda-type \F{ArbitraryType} describes types of arbitrary size, which
+include register-sized types with constructor \C{atom}.
+
+What is really necessary for dynamic linking formalization is the semantics of
+indirect jump instruction. This instruction allows to dynamically change target
+executable code. The argument of this instruction is a pointer to a memory
+location where the address of target executable code is stored. To
+correctly type indirect jump instruction we need to support the type of
+pointer to typed memory (constructor \C{\_*} of Agda-type \F{WordType} from
+Listing \ref{fig:types}).  This is the next difference of our
+formalization from the original Typed Assembly Language.
+Essentially, this is the tuple type from the original TAL without the
+initialization flag, but with a fixed length.
+
 Dynamic linker adds intermedium code between different libraries. This code
 is invoked when an external function is called. It must not affect program
 semantics. Therefore, we can not hide call stack in abstractions, because it
