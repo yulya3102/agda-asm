@@ -6,12 +6,18 @@
 
 \label{sec:asm-review}
 
-\textbf{TODO: why TAL}
-
-\textbf{TODO: we won't specify our language}
+Как было указано ранее, Typed Assembly Language (TAL) является хорошей
+моделью для доказательств, касающихся семантики низкоуровневого кода,
+потому для данной работы мы будем использовать формализацию на Agda
+некоторого низкоуровневого языка, близкого к TAL. Тем не менее, полное
+описание используемой формализации окажется слишком большим, сложным и не
+полностью соответствующим цели этой статьи, потому мы не будем полностью
+специфицировать язык используемой формализации. Вместо этого мы укажем, чем
+он отличается от оригинального TAL, кратко опишем его особенности и поясним
+смысл типов и конструкторов, используемых в листингах.
 
 \iftoggle{russian-draft}{
-Оригинальный Typed Assembly Language (TAL) достаточно выразителен для
+Оригинальный TAL достаточно выразителен для
 реализации возможностей высокоуровневых языков, таких как параметрический
 полиморфизм или пользовательские структуры данных. Для нашей задачи эти
 возможности не являются существенными, но вместо этого возникает
@@ -20,7 +26,7 @@
 формализация TAL имеет несколько существенных отличий от оригинального
 Typed Assembly Language, синтаксис которого приведен в
 }{
-Original Typed Assembly Language (TAL) is powerful enough to implement high-level
+Original TAL is powerful enough to implement high-level
 language features such as parametric polymorphism or records. These features
 are not necessary for our task. Instead, we ought to have specific data
 types and instructions which are typically used to implement dynamic
