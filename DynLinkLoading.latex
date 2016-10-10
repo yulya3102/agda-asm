@@ -94,6 +94,7 @@ Functions \F{plt}, \F{got} and \F{linked-symbol} from Listing
 $got.f$ and original function $f$ \AgdaSymbol{=} \F{code} \V{\Gamma} \V{DS}
 \V{CS} will be stored in the dynamically linked program.
 }
+\iftoggle{russian-draft}{
 Аргументами этих функций являются адреса функций в неслинкованной
 программе, которые в нашей формализации выражены Agda-типами принадлежности
 блока кода \C{code} \V{\Gamma} \V{DS} \V{CS} списку типов памяти \V{\Psi}.
@@ -108,8 +109,26 @@ $got.f$ and original function $f$ \AgdaSymbol{=} \F{code} \V{\Gamma} \V{DS}
 файле будет расположен какой-либо блок кода, и может указать, где будут
 находиться соответствующие ему элементы GOT и PLT. Эта информация известа в
 link-time и может быть использована в процессе линковки: например,
-линковщик может заменять вызовы блоков PLT на вызовы самих функций и
+линковщик может вставлять вызовы блоков PLT вместо вызовов самих функций и
 выполнять link-time optimizations.
+}{
+These functions take function addresses from unlinked program, which in our
+code are expressed with Agda-types of list membership showing that code
+block \C{code} \V{\Gamma} \V{DS} \V{CS} is a member of memory types list
+\V{\Psi}. \C{here} and \C{there} are the constructors of this membership
+relation. The former states that specified element is at the beginning of
+the list and provides a proof of equality of specified element and the head of
+the list, which is constructed by \C{refl}. The latter, constructor
+\C{there}, states that the element belongs to the tail of the list, proving
+that by recursively constructed relation of membership to the tail of the
+list.
+
+Therefore, the dynamic linker knows where the code block and corresponding
+GOT and PLT elements will be in the linked object file. This information is
+known at link-time and can be used in the linking process. For example, the
+dynamic linker can substitute calls to PLT block for calls to corresponding
+functions and perform link-time optimizations.
+}
 
 \iftoggle{russian-draft}{
 Как было указано ранее, блок PLT должен обеспечивать получение в рантайме
@@ -151,6 +170,12 @@ corresponding PLT block would be noticeable and would change the program
 semantics.
 }
 
+\iftoggle{russian-draft}{
 Каким бы ни был блок PLT для какого-либо варианта динамической линковки,
 его код всегда известен линковщику заранее. Это позволяет строить
 доказательства про семантику динамически слинкованного кода.
+}{
+Regardless of what PLT block is like, the dynamic linker knows its code in
+advance. Using this information, it can reason about the semantics of the
+dynamically linked code.
+}

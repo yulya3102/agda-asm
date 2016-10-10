@@ -6,6 +6,7 @@
 
 \label{sec:asm-review}
 
+\iftoggle{russian-draft}{
 Как было указано ранее, Typed Assembly Language (TAL) является хорошей
 моделью для доказательств, касающихся семантики низкоуровневого кода,
 потому для данной работы мы будем использовать формализацию на Agda
@@ -15,6 +16,15 @@
 специфицировать язык используемой формализации. Вместо этого мы укажем, чем
 он отличается от оригинального TAL, кратко опишем его особенности и поясним
 смысл типов и конструкторов, используемых в листингах.
+}{
+As stated earlier, Typed Assembly Language (TAL) is a great model for
+reasoning about low-level code semantics, so we will use an Agda
+formalization of a low-level language that is close to TAL. However, a full
+description of used formalization would be too big, complex and not really
+relevant to the main goal of this paper. So instead, we will specify
+how our formalization differs from the original Typed Assembly Language and
+explain the semantics of types and functions used in listings.
+}
 
 \iftoggle{russian-draft}{
 Оригинальный TAL достаточно выразителен для
@@ -61,10 +71,17 @@ well as types from TAL. We will refer to types from Agda code as
 ``Agda-type''.
 }
 
+\iftoggle{russian-draft}{
 Исходный язык TAL был значительно упрощен, что позволило сильно упростить
 используемую формализацию. Так, динамический линковщик не нуждается в
 полиморфизме на уровне языка ассемблера и сложных типах данных, что ведет к
 удалению из языка параметров типов, кортежей и меток инициализированности.
+}{
+We greatly simplified the original TAL, which allowed us to simplify our
+formalization. The dynamic linker does not need complex data types and type
+polymorphism at assembly language level, so tuples, initialization flags,
+and type parameters are absent in our formalization.
+}
 
 \iftoggle{russian-draft}{
 Все поддерживаемые типы данных указаны в листинге \ref{fig:types}.
@@ -85,8 +102,10 @@ types. Agda-type \F{ArbitraryType} describes types of arbitrary size, which
 include register-sized types with constructor \C{atom}.
 }
 
+\iftoggle{russian-draft}{
 Действительно необходимым для нашей задачи типом данных является
-типизированный указатель, так как аргументом ключевой инструкции непрямого
+типизированный указатель, так как аргументом ключевой для динамической
+линковки инструкции непрямого
 перехода является указатель на ячейку памяти, содержащую адрес блока кода,
 который нужно исполнить. Этому типу соответствует конструктор \C{\_*}
 Agda-типа \F{WordType} из листинга \ref{fig:types}. По сути, это тип
@@ -97,7 +116,20 @@ Agda-типа \F{WordType} из листинга \ref{fig:types}. По сути,
 вызова внешних функций, должен не влиять на семантику программу, а потому
 не может абстрагироваться от стека вызовов, который он может случайно
 ``испортить''.
+}{
+The key to the dynamic linking is the indirect jump instruction that takes
+as an argument a pointer to a memory location where the address of target
+executable code is stored. Therefore, the type of pointer to typed memory is
+essential for our task. The constructor \C{\_*} from the Agda-type
+\F{WordType} corresponds to this type.
+Essentially, this is the tuple type from the original TAL without the
+initialization flag, but with a fixed length.
 
+In addition, the dynamic linker adds intermedium code that is invoked when
+an external function is called. That code must not affect program
+semantics. Therefore it can not hide call stack in abstractions because it
+can be affected by additional procedure calls.
+}
 \iftoggle{russian-draft}{
 \emph{Состояние программы} оригинального TAL, помимо исполняемой
 последовательности инструкций, включало в себя состояния регистров и
@@ -112,21 +144,6 @@ Agda-типа \F{WordType} из листинга \ref{fig:types}. По сути,
 Это еще одно существенное отличие
 используемой формализации от оригинального TAL.
 }{
-% What is really necessary for dynamic linking formalization is the semantics of
-% indirect jump instruction. This instruction allows to dynamically change target
-% executable code. The argument of this instruction is a pointer to a memory
-% location where the address of target executable code is stored. To
-% correctly type indirect jump instruction we need to support the type of
-% pointer to typed memory (constructor \C{\_*} of Agda-type \F{WordType} from
-% Listing \ref{fig:types}).  This is the next difference of our
-% formalization from the original Typed Assembly Language.
-% Essentially, this is the tuple type from the original TAL without the
-% initialization flag, but with a fixed length.
-
-% Dynamic linker adds intermedium code between different libraries. This code
-% is invoked when an external function is called. It must not affect program
-% semantics. Therefore, we can not hide call stack in abstractions, because it
-% can be affected by additional procedure calls.
 \emph{Program state} of
 original TAL includes currently executed \emph{instruction sequence},
 \emph{register files} and \emph{heaps}. Our

@@ -103,6 +103,7 @@ stored in Agda-type \F{Diff}, which takes as parameter machine state type
 that can be changed by this \F{Diff}. Recursive definition of the Agda-type of
 \emph{basic block} is shown in Listing \ref{fig:block}.
 }
+\iftoggle{russian-draft}{
 Конструктор \C{↝} позволяет получить блок, состоящий из
 одной инструкции перехода \V{i}, применяющей изменение стека вызовов типа
 \V{c}. Конструктор \C{\_∙\_} добавляет инструкцию общего назначения
@@ -115,22 +116,19 @@ that can be changed by this \F{Diff}. Recursive definition of the Agda-type of
 \AgdaBound{b}. Выражения же \F{csChg} \V{c} и \F{sChg} \V{c}
 преобразовывают специфичное для инструкции \V{i} изменение \V{c} в общее
 изменение состояния исполнителя, описываемое Agda-типом \F{Diff}.
-
-% Constructor \C{↝} allows constructing a block consisting of a single branch
-% instruction \V{i} that changes type of call stack by change \V{c}.
-% Expression \F{csChg} \V{c} of this constructor transforms call
-% stack change \V{c} into common \F{Diff} of machine state of type
-% \V{S}.
-% Constructor \C{\_∙\_} adds general-purpose instruction \V{i} with change
-% \V{c} to the beginning of the block \V{b}. Type of block \V{b} must come
-% out from the type of instruction \V{i} after applying change \V{c}
-% corresponding to this instruction with function \F{dapply}, as shown in the
-% type of the block \V{b}. Expression \F{sChg} \V{c} of the type of that
-% block,
-% similarly to the previous constructor, transforms instruction-specific
-% change \V{c} to common \F{Diff} of machine state. This results into a
-% block with \F{Diff} that consists of changes corresponding to instruction \V{i}
-% and block \V{b}, combined with the function \F{dappend}.
+}{
+Constructor \C{↝} allows constructing a block consisting of a single branch
+instruction \V{i} that changes type of call stack by change \V{c}.
+Constructor \C{\_∙\_} adds general-purpose instruction \V{i} with change
+\V{c} to the beginning of the block \V{b}. Type of block \V{b} must come
+out from the type of instruction \V{i} after applying change \V{c}
+corresponding to this instruction with function \F{dapply}, as shown in the
+type of the block \V{b}. This results into a block with \F{Diff} that
+consists of changes corresponding to instruction \V{i} and block \V{b},
+combined with the function \F{dappend}.  Expressions \F{csChg} \V{c} and
+\F{sChg} \V{c} of that constructors transform instruction-specific change
+\V{c} to common \F{Diff} of machine state.
+}
 
 \iftoggle{russian-draft}{
 Семантика приведенного языка ассемблера определяется двумя функциями,
