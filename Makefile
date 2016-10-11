@@ -14,7 +14,9 @@ SOURCES = \
 	$(BUILD)/Asm.latex \
 	$(BUILD)/DynLinkLoading.latex \
 	$(BUILD)/Linkers.latex \
+	$(BUILD)/BlockEqDefinition.latex \
 	$(BUILD)/BlockEq.latex \
+	$(BUILD)/EquivalenceProof.latex \
 	$(BUILD)/Loader.latex \
 	$(BUILD)/Conclusion.latex \
 	$(BUILD)/Appendix.latex \

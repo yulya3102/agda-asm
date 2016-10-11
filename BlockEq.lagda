@@ -1,39 +1,3 @@
-\iftoggle{russian-draft}{
-\section{Эквивалентность блоков кода}
-}{
-\section{Block equivalence}
-}
-
-\iftoggle{russian-draft}{
-Одна из целей настоящей работы - показать эквивалентность семантик вызова
-статически слинкованной функции и динамически слинкованной функции. Но
-какие блоки кода должны считаться эквивалентными?
-}{
-This paper focuses on proving the semantic equivalence of call of statically
-and dynamically linked functions.  But which blocks of code should be
-considered equivalent?
-}
-
-\labeledfigure{fig:eq-blocks-example}{Equivalent functions example}{
-\lstinputlisting[style=asm]{eq-blocks-example.asm}
-}
-
-\iftoggle{russian-draft}{
-Функции \texttt{f} и \texttt{g} в листинге \ref{fig:eq-blocks-example} обе
-кладут число $1$ в регистр \texttt{rax}. Эти функции исполняются одинаково
-в смысле семантики большого шага:
-одинаковые начальные состояния исполнителя они преобразуют в одинаковые
-конечные состояния исполнителя. Определим эквивалентность функций как
-эквивалентность их входных блоков.
-}{
-Functions \texttt{f} and \texttt{g} from Listing
-\ref{fig:eq-blocks-example} both store integer $1$ in the \texttt{rax}
-register. These functions are executed identically from big step
-semantics point of view: they transform machine state in an equivalent way
-producing equivalent results from equivalent initial machine states.
-Let us define function equivalence as the equivalence of their start blocks.
-}
-
 \ignore{
 \begin{code}
 open import Data.Product
@@ -61,33 +25,6 @@ module BlockEq
 \begin{code}
   open Values Block
 \end{code}
-}
-
-\iftoggle{russian-draft}{
-Введем несколько вспомогательных определений.
-
-\textbf{\emph{Исполняемый блок}} - это пара из блока и состояния исполнителя
-соответствующего типа.
-
-Преимущество от определения исполняемого блока как отдельной сущности в том,
-что
-блок, исполняемый в заданном состоянии исполнителя, будет давать ровно один
-результат, даже если сам блок оканчивается условным переходом. Единственность
-результата позволяет рассуждать об исполнении блоков. Определение
-Agda-типа \emph{исполняемого блока} приведено в листинге
-\ref{fig:ExecutableBlock}.
-}{
-Let us introduce several auxiliary definitions.
-
-\textbf{\emph{Executable block}} is a pair of block and machine state of
-corresponding type.
-
-The main benefit of this definition is that execution of executable block
-can produce exactly one result, even if there is a conditional execution in
-the block. The uniqueness of the block execution result allows us to reason
-about
-executable blocks. Definition of \emph{executable block} is shown in Listing
-\ref{fig:ExecutableBlock}.
 }
 
 \labeledfigure{fig:ExecutableBlock}{Executable block definition}{
@@ -127,53 +64,6 @@ executable blocks. Definition of \emph{executable block} is shown in Listing
 \end{code}
 }
 
-\iftoggle{russian-draft}{
-\textbf{\emph{Эквивалентность исполняемых блоков}}.
-Два исполняемых блока $A$ и $B$ эквивалентны, если существует две
-последовательности исполнения $AC$ и $BC$, начинающиеся из $A$ и $B$
-соответственно, приводящие к одному и тому же блоку $C$.
-
-В листинге \ref{fig:ExBlockEq} приведено определение Agda-типа
-\emph{эквивалентности
-исполняемых блоков}. Оно имеет три конструктора, позволяющих показать
-эквивалентность двух исполняемых блоков в разных случаях:
-}{
-\textbf{\emph{Executable blocks equivalence}}.
-Two executable blocks $A$ and $B$ are equivalent if there exist two
-execution sequences starting from $A$ and $B$, leading to the same executable
-block $C$.
-
-Listing \ref{fig:ExBlockEq} shows the definition of the \emph{executable
-blocks equivalence}. It has three constructors, each for different case:
-}
-
-\begin{itemize}
-\tightlist
-\item
-\iftoggle{russian-draft}{
-    \C{equal} - исполняемый блок $A$ эквивалентнен сам себе;
-}{
-    \C{equal} - executable block $A$ is equivalent to itself;
-}
-\item
-\iftoggle{russian-draft}{
-    \C{left} - результатом исполнения исполняемого блока $A_1$ является
-    блок $A_2$, и блок $A_2$ эквивалентнен блоку $B$, тогда блок $A_1$
-    эквивалентнен блоку $B$;
-}{
-    \C{left} - execution of the executable block $A_1$ results in a block
-    $A_2$, and the block $A_2$ is equivalent to the block $B$;
-}
-\item
-\iftoggle{russian-draft}{
-    \C{right} - симметрично предыдущему случаю, шаг исполнения для другого
-    блока.
-}{
-    \C{right} - symmetric to the previous case, execution step for the
-    second block.
-}
-\end{itemize}
-
 \labeledfigure{fig:ExBlockEq}{Executable blocks equivalence definition}{
 \begin{code}
   data ExBlockEq
@@ -202,65 +92,6 @@ blocks equivalence}. It has three constructors, each for different case:
           → ExBlockEq B A₂
           → ExBlockEq B A₁
 \end{code}
-}
-
-\iftoggle{russian-draft}{
-Приведенное отношение действительно является отношением эквивалентности.
-Доказательство требуемых свойств приведено в приложении
-\ref{sec:is-equivalence}.
-
-Но приведенное отношение не является желаемым отношением эквивалентности,
-описанным ранее.
-Например, если правильно подобрать начальные состояния для блоков, то
-эквивалентными окажутся самые разные блоки. Такими, например, являются
-блоки \texttt{rax1} и \texttt{rbx2} из листинга \ref{fig:eq-exblocks-example}.
-}{
-This definition meets axioms for equivalence relation, as proven in
-Appendix \ref{sec:is-equivalence}.
-
-But this definition is not the desired definition of blocks equivalence,
-described earlier. For example, for some initial machine states completely
-different code blocks can be equivalent. For example, blocks \texttt{rax1}
-and \texttt{rbx2} from Listing \ref{fig:eq-exblocks-example} are equivalent
-for
-some specific initial machine states.
-}
-
-\labeledfigure{fig:eq-exblocks-example}{Equivalent executable blocks example}{
-\lstinputlisting[style=asm]{eq-exblocks-example.asm}
-}
-
-\iftoggle{russian-draft}{
-В листинге \ref{fig:eq-blocks-example} блоки \texttt{f} и \texttt{g} были
-эквивалентными для любых начальных
-состояний исполнителя. Определим эквивалентность блоков, используя
-эквивалентность исполняемых блоков.
-
-\textbf{\emph{Эквивалентность блоков}}. Два блока $f$ и $g$ эквивалентны, если
-для любых начальных состояний $S$ исполняемые блоки $(f, S)$ и $(g, S)$
-экививалентны.
-
-Определение такой эквивалентности приведено в листинге
-\ref{fig:BlockEqAssuming}. Кроме того, приведенное определение позволяет
-указать, в каком предположении эквивалентность блоков будет выполняться.
-Это важно, поскольку доказательство эквивалентности вызова статически и
-динамически слинкованных программ опирается на предположение о корректности
-результата работы динамического загрузчика.
-}{
-Blocks \texttt{f} and \texttt{g} from Listing \ref{fig:eq-blocks-example}
-are equivalent for any equivalent initial machine states. Let us define
-blocks equivalence using executable blocks equivalence.
-
-\textbf{\emph{Blocks equivalence}}. Two blocks $f$ and $g$ are equivalent,
-if for any initial machine state $S$ executable blocks $(f, S)$ and $(g,
-S)$ are equivalent.
-
-The definition of blocks equivalence is shown in Listing
-\ref{fig:BlockEqAssuming}. Moreover, this definition allows using
-specified assumption to construct blocks equivalence. It is important
-because the proof of semantic equivalence of statically and
-dynamically linked function calls relies on the assumption of a dynamic loader
-correctness.
 }
 
 \labeledfigure{fig:BlockEqAssuming}{Blocks equivalence definition}{

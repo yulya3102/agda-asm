@@ -1,3 +1,11 @@
+\iftoggle{russian-draft}{
+\section{Доказательство свойств эквивалентности для эквивалентности исполняемых блоков}
+}{
+\section{Properties of equivalence relation for the executable blocks equivalence}
+}
+
+\label{sec:is-equivalence}
+
 \ignore{
 \begin{code}
 open import Data.Product
@@ -21,14 +29,6 @@ module BlockEqIsEq
 open import BlockEq Block exec-block
 \end{code}
 }
-
-\iftoggle{russian-draft}{
-\section{Доказательство свойств эквивалентности для эквивалентности исполняемых блоков}
-}{
-\section{Properties of equivalence relation for the executable blocks equivalence}
-}
-
-\label{sec:is-equivalence}
 
 \begin{code}
 isEquivalence : ∀ {ST}
