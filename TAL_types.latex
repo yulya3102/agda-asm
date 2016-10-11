@@ -97,9 +97,9 @@ $f$ is correct, we have to know how block $f$
 of type $S_f$ changes register file types and stack types and whether it
 can transform machine state type $S_f$ to machine state type $S_g$ expected
 by function $g$. To achieve that, Agda-type corresponding to the block is
-indexed by some description of how this
+indexed by a description of how this
 block changes different parts of the machine state type. This description is
-stored in Agda-type \F{Diff}, which takes as parameter machine state type
+stored in Agda-type \F{Diff}, which takes as a parameter machine state type
 that can be changed by this \F{Diff}. Recursive definition of the Agda-type of
 \emph{basic block} is shown in Listing \ref{fig:block}.
 }
@@ -118,7 +118,7 @@ that can be changed by this \F{Diff}. Recursive definition of the Agda-type of
 изменение состояния исполнителя, описываемое Agda-типом \F{Diff}.
 }{
 Constructor \C{↝} allows constructing a block consisting of a single branch
-instruction \V{i} that changes type of call stack by change \V{c}.
+instruction \V{i} that changes type of the call stack by change \V{c}.
 Constructor \C{\_∙\_} adds general-purpose instruction \V{i} with change
 \V{c} to the beginning of the block \V{b}. Type of block \V{b} must come
 out from the type of instruction \V{i} after applying change \V{c}
@@ -148,13 +148,13 @@ combined with the function \F{dappend}.  Expressions \F{csChg} \V{c} and
 Semantics of this assembly language is defined by two functions describing
 semantics of general-purpose instructions \F{Instr} and branch instructions
 \F{BranchInstr}. Each kind of instruction is allowed to change only part of
-\emph{program state} \F{State}.
-Therefore, these functions take as parameter \emph{program state} and
+the \emph{program state} \F{State}.  Therefore, these functions take as a
+parameter a \emph{program state} and
 return a new state of the part of the program state that they are allowed
 to change.  For example, general-purpose
-instructions execution result is a tuple of a register file, a heap, and a
+instructions execution results in a tuple of a register file, a heap, and a
 data stack. On the other
-hand, the branch instruction execution result is a pair of a new call stack
+hand, the branch instruction execution results in a pair of a new call stack
 state and next block to execute.
 Moreover, semantics of the block is described in the same manner:
 the execution result of the block is a pair of the new machine state and

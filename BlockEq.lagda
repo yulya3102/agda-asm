@@ -9,7 +9,7 @@
 статически слинкованной функции и динамически слинкованной функции. Но
 какие блоки кода должны считаться эквивалентными?
 }{
-This paper focuses on proving semantic equivalence of call of statically
+This paper focuses on proving the semantic equivalence of call of statically
 and dynamically linked functions.  But which blocks of code should be
 considered equivalent?
 }
@@ -28,8 +28,8 @@ considered equivalent?
 }{
 Functions \texttt{f} and \texttt{g} from Listing
 \ref{fig:eq-blocks-example} both store integer $1$ in the \texttt{rax}
-register. This functions are executed identically from big step
-semantics point of view: they transform machine state in an equivalent way,
+register. These functions are executed identically from big step
+semantics point of view: they transform machine state in an equivalent way
 producing equivalent results from equivalent initial machine states.
 Let us define function equivalence as the equivalence of their start blocks.
 }
@@ -258,7 +258,7 @@ S)$ are equivalent.
 The definition of blocks equivalence is shown in Listing
 \ref{fig:BlockEqAssuming}. Moreover, this definition allows using
 specified assumption to construct blocks equivalence. It is important
-because proof of semantic equivalence of statically and
+because the proof of semantic equivalence of statically and
 dynamically linked function calls relies on the assumption of a dynamic loader
 correctness.
 }

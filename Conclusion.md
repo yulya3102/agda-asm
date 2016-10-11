@@ -8,7 +8,7 @@
 }{
 This paper formalizes a simple model of dynamic linking in Agda. This model
 describes how linker changes the code of programs and libraries during the
-linking process. This formalization states following properties of the
+linking process. This formalization states the following properties of the
 dynamic linker:
 }
 
@@ -42,7 +42,7 @@ dynamic linker:
     функций на вызовы известных блоков PLT, выполнять link-time
     оптимизации.
 }{
-    Given function identifier (which in this formalization is simply an
+    Given a function identifier (which in this formalization is simply an
     offset in object file), the dynamic linker can get corresponding GOT
     and PLT elements. This
     information is available in link-time, therefore it can be used in a
@@ -123,7 +123,7 @@ to:
     оптимизации.
 }{
     Further work can have a significant impact on LTO, which to the best of
-    my knowledge currently does not have any formal semantics.
+    our knowledge currently does not have any formal semantics.
     Moreover, it can form toolchain with CompCert, which can cover not only
     translation phase but also linking and related optimizations.
 }

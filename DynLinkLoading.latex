@@ -18,8 +18,8 @@ Instead, it focuses on the program ABI which can be discussed without
 splitting a program into separate libraries. This paper focuses on the
 program code transformations performed by a dynamic linker and not the way
 that external symbols should be searched for. Keeping this in mind,
-formalization of splitting a program into separate libraries seems like
-extra complication.
+formalization of splitting a program into separate libraries seems as
+overcomplication.
 }
 
 \iftoggle{russian-draft}{
@@ -91,7 +91,7 @@ $f$ соответственно.
 }{
 Functions \F{plt}, \F{got} and \F{linked-symbol} from Listing
 \ref{fig:changeABI} allow to determine where PLT entry $plt.f$, GOT entry
-$got.f$ and original function $f$ \AgdaSymbol{=} \F{code} \V{\Gamma} \V{DS}
+$got.f$ and the original function $f$ \AgdaSymbol{=} \F{code} \V{\Gamma} \V{DS}
 \V{CS} will be stored in the dynamically linked program.
 }
 \iftoggle{russian-draft}{
@@ -142,8 +142,8 @@ functions and perform link-time optimizations.
 Код такого блока PLT, выраженный в используемой формализации языка
 ассемблера, приведен в листинге \ref{fig:plt-stub}.
 }{
-As stated earlier, PLT block should in runtime get the address of linked
-external function and continue execution with code from that address. The
+As stated earlier, PLT block should get the address of linked external
+function at runtime and continue execution with code from that address. The
 simplest PLT block looks like this: using specified in compile-time address
 of corresponding GOT entry, it executes indirect jump instruction
 \C{jmp[\_]} with address, stored in the GOT entry. As long as the dynamic

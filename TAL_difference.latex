@@ -19,7 +19,7 @@
 }{
 As stated earlier, Typed Assembly Language (TAL) is a great model for
 reasoning about low-level code semantics, so we will use an Agda
-formalization of a low-level language that is close to TAL. However, a full
+formalization of a low-level language that is similar to TAL. However, a full
 description of used formalization would be too big, complex and not really
 relevant to the main goal of this paper. So instead, we will specify
 how our formalization differs from the original Typed Assembly Language and
@@ -77,9 +77,9 @@ well as types from TAL. We will refer to types from Agda code as
 полиморфизме на уровне языка ассемблера и сложных типах данных, что ведет к
 удалению из языка параметров типов, кортежей и меток инициализированности.
 }{
-We greatly simplified the original TAL, which allowed us to simplify our
+We greatly simplified the original TAL which allowed us to simplify our
 formalization. The dynamic linker does not need complex data types and type
-polymorphism at assembly language level, so tuples, initialization flags,
+polymorphism at assembly language level, so, tuples, initialization flags,
 and type parameters are absent in our formalization.
 }
 
@@ -94,7 +94,7 @@ and type parameters are absent in our formalization.
 с регистр с помощью конструктора \C{atom}.
 }{
 All supported data types are shown in Listing \ref{fig:types}. In our
-formalization data types are described with two different Agda-types:
+formalization, data types are described with two different Agda-types:
 \F{WordType} and \F{ArbitraryType}. Agda-type \F{WordType} describes only
 register-sized types. It is used to correctly type instructions like
 \C{mov} from memory to register when the memory can contain arbitrary-sized
@@ -125,7 +125,7 @@ essential for our task. The constructor \C{\_*} from the Agda-type
 Essentially, this is the tuple type from the original TAL without the
 initialization flag, but with a fixed length.
 
-In addition, the dynamic linker adds intermedium code that is invoked when
+In addition, the dynamic linker adds intermediate code that is invoked when
 an external function is called. That code must not affect program
 semantics. Therefore it can not hide call stack in abstractions because it
 can be affected by additional procedure calls.
@@ -150,9 +150,7 @@ original TAL includes currently executed \emph{instruction sequence},
 formalization additionally includes stack, which is split into two parts:
 \emph{data stack} and \emph{call stack}. Aside from that, constructor
 \C{code} of Agda-type \F{ArbitraryType}, corresponding to the instruction
-sequence type, has additional arguments.
-Instruction sequence type from original TAL
-contained only expected \emph{register file type}, but in our
-formalization, it contains also types of expected data stack and call
-stack. This is another difference from original TAL.
+sequence type, has additional arguments: it contains not only expected
+\emph{register file type}, but also types of expected data stack and call
+stack.  This is another difference from original TAL.
 }

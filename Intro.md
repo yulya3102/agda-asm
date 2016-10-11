@@ -62,7 +62,7 @@ of failure is extremely high such as avionics or nuclear reactor control
 systems.
 
 Efforts are being made to develop verified toolchains, but it is still far
-from creation of completely reliable development tools. For example, VeLLVM
+from completely reliable development tools. For example, VeLLVM
 \citep{vellvm} formalizes LLVM intermediate language and performs formally
 correct optimizations. Another project, CompCert \citep{compcert}, is
 closer to realistic toolchains: it is a compiler of the C language that
@@ -85,10 +85,10 @@ registers and stack. Bedrock \citep{bedrock}, one of the most
 notable results in this area, is a Coq \citep{coq} library that allows
 writing code using abstractions associated with assembly language. Within the
 Bedrock project, support for linking with external libraries was
-implemented \citep{bedrocklinkers}, but there were no formalizations of
-widely used dynamic linking mechanisms.
+implemented \citep{bedrocklinkers}, but no formalizations of widely used
+dynamic linking mechanisms were presented.
 
-There is also an excellent formalization of assembly language — Typed Assembly
+There also exists an excellent formalization of assembly language — Typed Assembly
 Language (TAL) \citep{tal}. It describes low-level language with the static
 type system that
 supports high-level abstractions such as type variables and tuples. This
@@ -96,9 +96,10 @@ language has a variety of extensions that provide support for stack mechanisms
 (STAL) \citep{stal}, realistic x86 assembly language (TALx86)
 \citep{talx86} and even separate compilation and object files manipulation
 (MTAL) \citep{mtal}. The latter, modular
-assembly language, is based on Luca Cardelli's work \citep{cardelli} that
-formalizes mechanisms and algorithms of static linking for high-level
-programming languages. MTAL describes static linking of separate object
+assembly language, is based on Luca Cardelli's work \citep{cardelli} in
+which mechanisms and algorithms of static linking for high-level
+programming languages were formalized. MTAL describes static linking of
+separate object
 files, but as in Bedrock, it lacks dynamic linking formalizations.
 }
 
@@ -143,9 +144,9 @@ TAL is a great model for reasoning about execution of low-level code, but
 existing TAL tools are written in ML and all proofs about TAL programs
 appear in appendixes of the corresponding papers. This paper uses
 Agda \citep{agda} formalization of abstract language that is close to
-TALx86 and STAL. This paper formalizes what elements
-are appended to program code during the dynamic linking process, introduces
-definition of code blocks equivalence and proves that correct dynamic
+TALx86 and STAL. We formalize what elements are appended to program code
+during the dynamic linking process, introduce definition of code blocks
+equivalence and prove that correct dynamic
 loader implies the equivalence of statically and dynamically linked functions.
 }
 
