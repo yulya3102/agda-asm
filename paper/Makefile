@@ -43,7 +43,7 @@ checkall:
 	agda $(AGDA_INCLUDE) ../Linkers.lagda
 	agda $(AGDA_INCLUDE) ../BlockEqIsEq.lagda
 
-$(BUILD)/%.pdf: $(BUILD)/%.latex $(BUILD)/bib.bib $(BUILD)/agda.sty
+$(BUILD)/%.pdf: $(BUILD)/%.latex bib.bib $(BUILD)/agda.sty
 	xelatex \
 		-output-directory=$(BUILD) \
 		$<
