@@ -39,8 +39,8 @@ $(BUILD)/%.tex: %.lagda
 .PHONY: checkall
 
 checkall:
-	agda $(AGDA_INCLUDE) --allow-unsolved-metas Linkers.lagda
-	agda $(AGDA_INCLUDE) --allow-unsolved-metas BlockEqIsEq.lagda
+	agda $(AGDA_INCLUDE) Linkers.lagda
+	agda $(AGDA_INCLUDE) BlockEqIsEq.lagda
 
 $(BUILD)/%.pdf: $(BUILD)/%.latex bib.bib $(BUILD)/agda.sty
 	xelatex \
