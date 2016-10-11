@@ -1,8 +1,9 @@
 BUILD=build
+TEMPLATE = sigplanconf-template.tex
 
 all: $(BUILD)/main.pdf
 
-AGDA_INCLUDE = -i . -i ./agda-stdlib/src
+AGDA_INCLUDE = -i .. -i ../agda-stdlib/src
 
 SOURCES = \
 	$(BUILD)/Intro.latex \
@@ -25,13 +26,13 @@ SOURCES = \
 	$(BUILD)/Acknowledgements.latex
 
 INCLUDE_EXAMPLES = \
-	eq-blocks-example.asm \
-	eq-exblocks-example.asm
+	$(BUILD)/eq-blocks-example.asm \
+	$(BUILD)/eq-exblocks-example.asm
 
 $(BUILD)/agda.sty: agda.sty
 	cp $< $@
 
-$(BUILD)/%.tex: %.lagda
+$(BUILD)/%.tex: ../%.lagda
 	rm -f *.agdai && \
 		agda $(AGDA_INCLUDE) --latex --latex-dir $(BUILD) $<
 	rm -f $(BUILD)/agda.sty
@@ -39,10 +40,10 @@ $(BUILD)/%.tex: %.lagda
 .PHONY: checkall
 
 checkall:
-	agda $(AGDA_INCLUDE) Linkers.lagda
-	agda $(AGDA_INCLUDE) BlockEqIsEq.lagda
+	agda $(AGDA_INCLUDE) ../Linkers.lagda
+	agda $(AGDA_INCLUDE) ../BlockEqIsEq.lagda
 
-$(BUILD)/%.pdf: $(BUILD)/%.latex bib.bib $(BUILD)/agda.sty
+$(BUILD)/%.pdf: $(BUILD)/%.latex $(BUILD)/bib.bib $(BUILD)/agda.sty
 	xelatex \
 		-output-directory=$(BUILD) \
 		$<
@@ -66,9 +67,9 @@ $(BUILD)/%.latex: $(BUILD)/%.md
 		--natbib \
 		$^ -o $@
 
-$(BUILD)/main.latex: Makefile $(SOURCES) sigplanconf-template.tex $(BUILD)/Abstract.latex $(INCLUDE_EXAMPLES)
+$(BUILD)/main.latex: Makefile $(SOURCES) $(TEMPLATE) $(BUILD)/Abstract.latex $(INCLUDE_EXAMPLES)
 	pandoc \
 		-R \
-		--template=sigplanconf-template.tex \
+		--template=$(TEMPLATE) \
 		-o $@ \
 		$(SOURCES)
