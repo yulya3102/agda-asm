@@ -73,3 +73,9 @@ $(BUILD)/main.latex: Makefile $(SOURCES) $(TEMPLATE) $(BUILD)/Abstract.latex $(I
 		--template=$(TEMPLATE) \
 		-o $@ \
 		$(SOURCES)
+
+objfile.jpg:
+	wget -O $@ https://www.dropbox.com/s/f9umac2lo3c9b63/objfile.jpg?dl=0
+
+memory.jpg:
+	wget -O $@ https://www.dropbox.com/s/dtgodj9pjm0nm2y/memory.jpg?dl=0
