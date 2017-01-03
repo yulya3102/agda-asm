@@ -16,7 +16,7 @@
 This work does not consider object files and programs as actual files.
 Instead, it focuses on the program ABI which can be discussed without
 splitting a program into separate libraries. This paper focuses on the
-program code transformations performed by a dynamic linker and not the way
+program code transformations performed in pre-runtime phase and not the way
 that external symbols should be searched for. Keeping this in mind,
 formalization of splitting a program into separate libraries seems as
 overcomplication.
@@ -38,9 +38,9 @@ With simplification stated earlier, the notion of the ``external'' symbol is
 reduced to marking blocks that should have corresponding GOT and PLT
 elements. In order of simplicity, we will consider every code block as
 having its own GOT and PLT entries. Function \F{pltize} from Listing
-\ref{fig:changeABI} shows how the dynamic linker changes the layout of
-memory by adding new elements to it. Instead of every block $f$ from the
-original
+\ref{fig:changeABI} shows how the layout of memory is changed at the
+pre-runtime phase of dynamic linking by adding new elements to it. Instead
+of every block $f$ from the original
 program, that expects register state \V{Γ}, data stack \V{DS} and call
 stack \V{CS}, dynamically linked program will have three elements in
 memory:
@@ -105,12 +105,11 @@ $got.f$ and the original function $f$ \AgdaSymbol{=} \F{code} \V{\Gamma} \V{DS}
 \C{there}, говорит о том, что элемент лежит в хвосте списка, с помощью
 рекурсивно сконструированного отношения принадлежности концу списка.
 
-Таким образом, динамический линковщик знает, где в слинкованном объектном
-файле будет расположен какой-либо блок кода, и может указать, где будут
-находиться соответствующие ему элементы GOT и PLT. Эта информация известа в
-link-time и может быть использована в процессе линковки: например,
-линковщик может вставлять вызовы блоков PLT вместо вызовов самих функций и
-выполнять link-time optimizations.
+Как видно из вышесказанного, расположение какого-либо блока кода и
+соответствующих ему элементов GOT и PLT известно в фазу до запуска
+программы. Эта информация может быть использована в процессе линковки:
+например, вызовы блоков PLT могут быть подставлены вместо вызовов самих
+функций, и, кроме того, могут быть выполнены link-time optimizations.
 }{
 These functions take function addresses from unlinked program, which in our
 code are expressed with Agda-types of list membership showing that code
@@ -123,11 +122,10 @@ the list, which is constructed by \C{refl}. The latter, constructor
 that by recursively constructed relation of membership to the tail of the
 list.
 
-Therefore, the dynamic linker knows where the code block and corresponding
-GOT and PLT elements will be in the linked object file. This information is
-known at link-time and can be used in the linking process. For example, the
-dynamic linker can substitute calls to PLT block for calls to corresponding
-functions and perform link-time optimizations.
+As seen above, the locations of a code block and corresponding GOT and PLT
+elements are known at the pre-runtime phase and can be used in the linking
+process. For example, calls to PLT block can be substituted for calls to
+corresponding functions and link-time optimizations can be performed.
 }
 
 \iftoggle{russian-draft}{
@@ -175,7 +173,7 @@ semantics.
 его код всегда известен линковщику заранее. Это позволяет строить
 доказательства про семантику динамически слинкованного кода.
 }{
-Regardless of what PLT block is like, the dynamic linker knows its code in
-advance. Using this information, it can reason about the semantics of the
+Regardless of what PLT block is like, its code is known in advance. Using
+this information, the linker can reason about the semantics of the
 dynamically linked code.
 }

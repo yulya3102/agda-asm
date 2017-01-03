@@ -16,21 +16,21 @@ dynamic linker:
 \tightlist
 \item
 \iftoggle{russian-draft}{
-    Описано, как динамический линковщик меняет layout программы и какие
-    элементы он в нее добавляет.
+    Описано, как динамический линковщик меняет layout программы до загрузки
+    программы и какие элементы он в нее добавляет.
 }{
-    The dynamic linker changes layout of a program in a specific way, adding
+    The dynamic linker in pre-runtime phase changes the layout of a program in a specific way, adding
     certain elements to it.
 }
 \item
 \iftoggle{russian-draft}{
     Зная, по какому смещению в неслинкованном объектном файле располагался
-    некоторый блок кода, динамический линковщик может сказать, где этот
+    некоторый блок кода, динамический линковщик до загрузки программы может сказать, где этот
     блок кода будет располагаться в динамически слинкованной библиотеке.
 }{
-    The dynamic linker knows where the code block will be stored in a
+    The dynamic linker in pre-runtime phase knows where the code block will be stored in a
     linked object
-    file by its offset in non-linked object file.
+    file by its offset in the non-linked object file.
 }
 \item
 \iftoggle{russian-draft}{
@@ -62,12 +62,12 @@ dynamic linker:
 \item
 \iftoggle{russian-draft}{
     Корректность работы динамической линковки полагается на корректность
-    работы динамического загрузчика, при этом явно формулируется,
+    работы динамического линковщика при загрузке программы, при этом явно формулируется,
     выполнение каких свойств требуется в рантайме.
 }{
     The correctness of the dynamic linking relies on the correctness of the
-    dynamic loader.  The dynamic linker can explicitly state which
-    properties of the dynamic loader.
+    runtime part of the dynamic linker. Pre-runtime part of the dynamic linker can explicitly state which
+    properties of the runtime part of the dynamic linker it needs.
 }
 \item
 \iftoggle{russian-draft}{
