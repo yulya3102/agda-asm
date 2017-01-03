@@ -9,7 +9,7 @@
 и во-вторых, тулчейны являются частоиспользуемым ПО, в том числе и в сферах
 с высокой ценой ошибки.
 
-В настоящее время ведутся работы по созданию верифицированных тулчейнов, но
+Разные группы исследователей работают над созданием верифицированных тулчейнов, но
 пока человечество далеко от создания абсолютно надежного комплекса
 инструментов разработки программ. Например, есть VeLLVM \citep{vellvm},
 формализующий язык LLVM и производящий доказанно корректные оптимизации в
@@ -61,7 +61,7 @@ Moreover, toolchains are commonly used even in those areas where the cost
 of failure is extremely high such as avionics or nuclear reactor control
 systems.
 
-Efforts are being made to develop verified toolchains, but it is still far
+Different groups of researchers try to develop verified toolchains, but it is still far
 from completely reliable development tools. For example, VeLLVM
 \citep{vellvm} formalizes LLVM intermediate language and performs formally
 correct optimizations. Another project, CompCert \citep{compcert}, is
