@@ -1,6 +1,7 @@
 BUILD=build
 PREAMBLE = preamble.tex
-TEMPLATE = sigplanconf-template.tex
+TEMPLATE = bare_conf.tex
+BIBSTYLE_DIR = bibtex
 
 all: $(BUILD)/main.pdf
 
@@ -51,6 +52,7 @@ checkall:
 $(BUILD)/main.pdf: $(IMAGES) $(BUILD)/$(PREAMBLE)
 
 $(BUILD)/%.pdf: $(BUILD)/%.latex bib.bib $(BUILD)/agda.sty
+	texhash $(BIBSTYLE_DIR)
 	xelatex \
 		-output-directory=$(BUILD) \
 		$<
