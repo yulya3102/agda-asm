@@ -29,6 +29,10 @@ INCLUDE_EXAMPLES = \
 	$(BUILD)/eq-blocks-example.asm \
 	$(BUILD)/eq-exblocks-example.asm
 
+IMAGES = \
+	$(BUILD)/objfile.jpg \
+	$(BUILD)/memory.jpg
+
 $(BUILD)/agda.sty: agda.sty
 	cp $< $@
 
@@ -42,6 +46,8 @@ $(BUILD)/%.tex: ../%.lagda
 checkall:
 	agda $(AGDA_INCLUDE) ../Linkers.lagda
 	agda $(AGDA_INCLUDE) ../BlockEqIsEq.lagda
+
+$(BUILD)/main.pdf: $(IMAGES)
 
 $(BUILD)/%.pdf: $(BUILD)/%.latex bib.bib $(BUILD)/agda.sty
 	xelatex \
