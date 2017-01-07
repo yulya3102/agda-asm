@@ -33,59 +33,7 @@
 
 \newcommand{\cL}{{\cal L}}
 
-\usepackage{caption}
-\captionsetup[figure]{name=Listing}
-
-\usepackage{listings}
-\lstdefinestyle{asm}{
-  language=[x86masm]Assembler,
-  basicstyle=\ttfamily,
-}
-
-\usepackage{hyperref}
-
-\usepackage[bw]{agda}
-\newcommand{\ignore}[1]{}
-\providecommand{\C}{\AgdaInductiveConstructor}
-\renewcommand{\C}{\AgdaInductiveConstructor}
-\newcommand{\F}{\AgdaFunction}
-\newcommand{\V}{\AgdaBound}
-\newcommand{\labeledfigure}[3]{%
-\begin{figure}%
-\begin{center}%
-{#3}
-\caption{{#2}}
-\label{#1}
-\end{center}%
-\end{figure}%
-}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%                               %
-% REMOVE THIS AFTER TRANSLATION %
-%                               %
-\usepackage{fontspec}
-\setmainfont{Liberation Serif}
-\setsansfont{Liberation Sans}
-\newfontfamily{\cyrillicfonttt}{Liberation Mono}
-
-\usepackage{polyglossia}
-%\setmainlanguage{russian} \setotherlanguage{english}
-\setmainlanguage{english} \setotherlanguage{russian}
-
-\usepackage{etoolbox}
-\newtoggle{russian-draft}
-
-\usepackage{iflang}
-\IfLanguageName{russian}{
-\toggletrue{russian-draft}
-}{
-\togglefalse{russian-draft}
-}
-%                               %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\usepackage{graphicx}
+\include{preamble}
 
 \begin{document}
 

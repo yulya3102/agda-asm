@@ -1,4 +1,5 @@
 BUILD=build
+PREAMBLE = preamble.tex
 TEMPLATE = sigplanconf-template.tex
 
 all: $(BUILD)/main.pdf
@@ -47,7 +48,7 @@ checkall:
 	agda $(AGDA_INCLUDE) ../Linkers.lagda
 	agda $(AGDA_INCLUDE) ../BlockEqIsEq.lagda
 
-$(BUILD)/main.pdf: $(IMAGES)
+$(BUILD)/main.pdf: $(IMAGES) $(BUILD)/$(PREAMBLE)
 
 $(BUILD)/%.pdf: $(BUILD)/%.latex bib.bib $(BUILD)/agda.sty
 	xelatex \
