@@ -83,24 +83,47 @@ shows that linker verification should not be neglected.
 
 В связи с отсутствием верифицированного линковщика верифицированные
 компиляторы вынуждены либо ограничивать поддержку до только одномодульных
-программ (как это делают CerCo и CakeML), либо полагаться на системный
-линковщик (как это делает CompCert без недавних расширений). Тем не менее,
+программ (как это делают CerCo и CakeML), либо полностью или частично
+полагаться на системный линковщик, возможно, с последующей проверкой
+результата (как это делает CompCert без недавних расширений). Тем не менее,
 попытки расширить верифицированную компиляцию и включить в нее линковку уже
-предпринимались. **TODO**
+предпринимались. Так, в CompCert сторонним расширением была добавлена
+поддержка language-independent linking \citep{CompCompCert}. К сожалению,
+это расширение требовало серьезных изменений в основной кодовой базе
+CompCert. По этой причине была предпринята другая, менее heavyweight,
+попытка расширить CompCert, заявив поддержку только одного компилятора
+\citep{Lightweightverif}. Кроме CompCert и его расширений, раздельная
+компиляция была так же заявлена в \citep{bedrocklinkers}, где реализовали
+compositional компилятор из Cito, идеализированного C-подобного языка, в
+Bedrock. Что касается линковки без привязки к конкретным языкам, недавно
+была формализована \citep{elfsemantic} спецификация формата ELF (Executable
+and Linkable format), наиболее распространенного среди UNIX-like систем, с
+формализацией статической линковки файлов этого формата.
+
+Что касается формализации механизмов динамической линковки, ни в одной из
+указанных выше работ они не были представлены. Тем не менее, в формализации
+формата ELF было указано, что формализовать основные для динамической
+линковки механизмы GOT и PLT (их мы детально обсудим в секции
+\ref{sec:background}) как часть спецификации ELF несложно, в то время как
+их роль в процессе динамической загрузки требует куда больших усилий. В
+нашей работе мы рассматриваем, как эти механизмы обеспечивают правильную
+работу программы в рантайме.
 
 \iftoggle{russian-draft}{
 Линковщик — достаточно низкоуровневая программа, которая работает с
 скомпилированными в машинный код объектными файлами, а значит, для
 рассуждений про него необходима формализация низкоуровнего языка, очень
-близкого к машинному коду. Одной из заметных работ в этой области является
-Bedrock \citep{bedrock}, являющийся библиотекой на Coq \citep{coq},
-позволяющей оперировать абстракциями, ассоциированными с языком ассемблера,
-и писать код в рамках этих абстракций. В рамках проекта Bedrock была
-реализована поддержка линковки с внешними библиотеками \citep{bedrocklinkers},
-но не было формализовано механизмов динамической линковки, широко
-используемой в настоящее время.
+близкого к машинному коду.
+}{
+The linker is a low-level program that works with object files containing machine
+code. Therefore, to reason about it, we need a formalization of a low-level
+language that uses abstractions associated with the machine code, like
+registers and stack.
+}
 
-Так же существует формализация ассемблера — Typed Assembly
+Помимо указанного выше Bedrock,
+\iftoggle{russian-draft}{
+существует формализация ассемблера — Typed Assembly
 Language (TAL) \citep{tal}, описывающая некоторый низкоуровневый язык как
 типизированный язык, поддерживающий высокоуровневые абстракции, такие как
 переменные типов и кортежи. В этом направлении было сделано множество
@@ -111,20 +134,10 @@ Language (TAL) \citep{tal}, описывающая некоторый низко
 опирается на работу Luca Cardelli \citep{cardelli}, формализующую механизмы и
 алгоритмы статической линковки для высокоуровневых языков. В работе,
 описывающей MTAL, была описана статическая линковка различных объектных
-файлов, но формализации механизмов динамической линковки, как и в Bedrock,
-представлено не было.
+файлов, но формализации механизмов динамической линковки, как и в
+приведенных выше работах, представлено не было.
 }{
-The linker is a low-level program that works with object files containing machine
-code. Therefore, to reason about it, we need a formalization of a low-level
-language that uses abstractions associated with the machine code, like
-registers and stack. Bedrock \citep{bedrock}, one of the most
-notable results in this area, is a Coq \citep{coq} library that allows
-writing code using abstractions associated with assembly language. Within the
-Bedrock project, support for linking with external libraries was
-implemented \citep{bedrocklinkers}, but no formalizations of widely used
-dynamic linking mechanisms were presented.
-
-There also exists a formalization of assembly language — Typed Assembly
+there also exists a formalization of assembly language — Typed Assembly
 Language (TAL) \citep{tal}. It describes low-level language with the static
 type system that
 supports high-level abstractions such as type variables and tuples. This
@@ -136,9 +149,10 @@ assembly language, is based on Luca Cardelli's work \citep{cardelli} in
 which mechanisms and algorithms of static linking for high-level
 programming languages were formalized. MTAL describes static linking of
 separate object
-files, but as in Bedrock, it lacks dynamic linking formalizations.
+files, but as all of above, it lacks dynamic linking formalizations.
 }
 
+**TODO**
 \iftoggle{russian-draft}{
 Для написания proof-carrying code используются современные proof
 assistant-ы, опирающиеся на теорию типов и соответствие Карри-Говарда

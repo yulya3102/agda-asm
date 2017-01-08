@@ -1,4 +1,5 @@
 # Linking primer
+\label{sec:background}
 
 \iftoggle{russian-draft}{
 Данная работa формализует упрощенный вариант динамической линковки,
