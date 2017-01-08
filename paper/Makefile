@@ -23,7 +23,6 @@ SOURCES = \
 	$(BUILD)/Loader.latex \
 	$(BUILD)/Conclusion.latex \
 	$(BUILD)/Appendix.latex \
-	$(BUILD)/BlockEqIsEq.latex \
 	$(BUILD)/RuntimeEq.latex \
 	$(BUILD)/Acknowledgements.latex
 

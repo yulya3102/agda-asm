@@ -110,18 +110,19 @@ blocks equivalence}. It has three constructors, each for different case:
 
 \iftoggle{russian-draft}{
 Приведенное отношение действительно является отношением эквивалентности.
-Доказательство требуемых свойств приведено в приложении
-\ref{sec:is-equivalence}.
+}{
+This definition meets axioms for equivalence relation.
+}
+Формальное доказательство требуемых свойств можно найти в исходном коде
+нашей модели.
 
+\iftoggle{russian-draft}{
 Но приведенное отношение не является желаемым отношением эквивалентности,
 описанным ранее.
 Например, если правильно подобрать начальные состояния для блоков, то
 эквивалентными окажутся самые разные блоки. Такими, например, являются
 блоки \texttt{rax1} и \texttt{rbx2} из листинга \ref{fig:eq-exblocks-example}.
 }{
-This definition meets axioms for equivalence relation, as proven in
-Appendix \ref{sec:is-equivalence}.
-
 But this definition is not the desired definition of blocks equivalence,
 described earlier. For example, for some initial machine states completely
 different code blocks can be equivalent. For example, blocks \texttt{rax1}
