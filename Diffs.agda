@@ -15,27 +15,27 @@ module DiffDefinition
   {Chg : Ctx → Set}
   (chgapply : (Γ : Ctx) → Chg Γ → Ctx)
   where
-  data Diff (Γ : Ctx) : Set where
-    dempty  : Diff Γ
-    dchg    : (c : Chg Γ) → Diff (chgapply Γ c) → Diff Γ
+  data TypeDiff (Γ : Ctx) : Set where
+    dempty  : TypeDiff Γ
+    dchg    : (c : Chg Γ) → TypeDiff (chgapply Γ c) → TypeDiff Γ
 
-  dapply : (Γ : Ctx) → Diff Γ → Ctx
+  dapply : (Γ : Ctx) → TypeDiff Γ → Ctx
   dapply Γ dempty = Γ
   dapply Γ (dchg c d) = dapply (chgapply Γ c) d
 
-  dappend : ∀ {Γ} → (d : Diff Γ)
-          → Diff (dapply Γ d) → Diff Γ
+  dappend : ∀ {Γ} → (d : TypeDiff Γ)
+          → TypeDiff (dapply Γ d) → TypeDiff Γ
   dappend dempty b = b
   dappend (dchg c a) b = dchg c (dappend a b)
 
-  dappend-dempty-lemma : ∀ {Γ} → (d : Diff Γ)
+  dappend-dempty-lemma : ∀ {Γ} → (d : TypeDiff Γ)
                        → dappend d dempty ≡ d
   dappend-dempty-lemma dempty = refl
   dappend-dempty-lemma (dchg c d)
     rewrite dappend-dempty-lemma d = refl
 
-  dappend-dapply-lemma : ∀ S → (d₁ : Diff S)
-                       → (d₂ : Diff (dapply S d₁))
+  dappend-dapply-lemma : ∀ S → (d₁ : TypeDiff S)
+                       → (d₂ : TypeDiff (dapply S d₁))
                        → dapply S (dappend d₁ d₂)
                        ≡ dapply (dapply S d₁) d₂
   dappend-dapply-lemma S dempty d₂ = refl
@@ -108,17 +108,17 @@ data SmallChg (S : StateType) : Set where
   onlystack : DataStackChg S → SmallChg S
   regstack  : RegChg S → DataStackChg S → SmallChg S
 
-regChg : ∀ {S} → RegChg S → Diff S
+regChg : ∀ {S} → RegChg S → TypeDiff S
 regChg S = dchg (rchg S) dempty
 
-dsChg : ∀ {S} → DataStackChg S → Diff S
+dsChg : ∀ {S} → DataStackChg S → TypeDiff S
 dsChg S = dchg (dschg S) dempty
 
-sChg : ∀ {S} → SmallChg S → Diff S
+sChg : ∀ {S} → SmallChg S → TypeDiff S
 sChg (onlyreg r) = regChg r
 sChg (onlystack d) = dsChg d
 sChg (regstack r d) = dchg (rchg r) $ dchg (dschg d) dempty
 
-csChg : ∀ {S} → Maybe (CallStackChg S) → Diff S
+csChg : ∀ {S} → Maybe (CallStackChg S) → TypeDiff S
 csChg (just x) = dchg (cschg x) dempty
 csChg nothing = dempty

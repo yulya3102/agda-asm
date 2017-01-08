@@ -29,7 +29,7 @@ module Meta where
 
 \labeledfigure{fig:block}{Recursive definition of basic block}{
 \begin{code}
-    data Block (S : StateType) : Diff S → Set
+    data Block (S : StateType) : TypeDiff S → Set
       where
       ↝ : ∀ {c}
         → (i : BranchInstr S c)
@@ -44,7 +44,7 @@ module Meta where
 \ignore{
 \begin{code}
   module Values
-    (Block : (S : StateType) → Diff S → Set)
+    (Block : (S : StateType) → TypeDiff S → Set)
     where
 
     data RegValue (Ψ : HeapTypes) : WordType → Set where
@@ -58,7 +58,7 @@ module Meta where
             → Value Ψ (code Γ DS CS)
 
     unblock : ∀ {Ψ Γ DS CS} → Value Ψ (code Γ DS CS)
-            → Σ (Diff (sttype Γ Ψ DS CS))
+            → Σ (TypeDiff (sttype Γ Ψ DS CS))
                 (Block (sttype Γ Ψ DS CS))
     unblock (block b) = _ , b
 
@@ -115,7 +115,7 @@ module Meta where
     store {Ψ} {τ} = istore
 
     loadblock : ∀ {Ψ Γ CS DS} → Data Ψ → code Γ DS CS ∈ Ψ
-             → Σ (Diff (sttype Γ Ψ DS CS))
+             → Σ (TypeDiff (sttype Γ Ψ DS CS))
                  (Block (sttype Γ Ψ DS CS))
     loadblock Ψ f = unblock $ load Ψ f
 
@@ -214,7 +214,7 @@ module Meta where
                   (StateType.memory S)
                   (StateType.callstack
                     (Diffs.dapply S (Diffs.csChg c)))
-                 × Σ (Diffs.Diff
+                 × Σ (Diffs.TypeDiff
                        (Diffs.dapply S (Diffs.csChg c)))
                      (Blocks.Block BranchInstr Instr
                        (Diffs.dapply S (Diffs.csChg c))))
@@ -249,7 +249,7 @@ module Meta where
       mem-chg S (dschg x) = refl
       mem-chg S (cschg x) = refl
 
-      mem-diff : ∀ S → (d : Diff S)
+      mem-diff : ∀ S → (d : TypeDiff S)
                → StateType.memory S
                ≡ StateType.memory (dapply S d)
       mem-diff S DiffDefinition.dempty = refl
@@ -257,7 +257,7 @@ module Meta where
         rewrite mem-chg S c = mem-diff _ d
 
       dapply-dappend-sChg : ∀ {S} → (c : SmallChg S)
-                          → (d : Diff (dapply S (sChg c)))
+                          → (d : TypeDiff (dapply S (sChg c)))
                           → dapply S (dappend (sChg c) d)
                           ≡ dapply (dapply S (sChg c)) d
       dapply-dappend-sChg (onlyreg x) d = refl
@@ -268,7 +268,7 @@ module Meta where
 
     exec-block : ∀ {ST d} → State ST → Block ST d
                → State (dapply ST d)
-               × Σ (Diff (dapply ST d)) (Block (dapply ST d))
+               × Σ (TypeDiff (dapply ST d)) (Block (dapply ST d))
     exec-block {S} (state Γ Ψ DS CS) (Blocks.↝ {c} ci)
       with exec-branch (state Γ Ψ DS CS) ci
     ... | CS' , next-block

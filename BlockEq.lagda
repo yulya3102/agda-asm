@@ -16,10 +16,10 @@ open Meta
 
 \begin{code}
 module BlockEq
-  (Block : (S : StateType) → Diff S → Set)
+  (Block : (S : StateType) → TypeDiff S → Set)
   (exec-block : ∀ {ST d} → Values.State Block ST → Block ST d
               → Values.State Block (dapply ST d)
-              × Σ (Diff (dapply ST d)) (Block (dapply ST d)))
+              × Σ (TypeDiff (dapply ST d)) (Block (dapply ST d)))
   where
 \end{code}
 \begin{code}
@@ -33,7 +33,7 @@ module BlockEq
     where
     constructor block
     field
-      {exdiff} : Diff ST
+      {exdiff} : TypeDiff ST
       exblock  : Block ST exdiff
       exstate  : State ST
 \end{code}
@@ -45,14 +45,14 @@ module BlockEq
     exec-exblock = record { exblock = next-block ; exstate = next-state }
       where
       r : State (dapply ST exdiff) ×
-          Σ (Diff (dapply ST exdiff)) (Block (dapply ST exdiff))
+          Σ (TypeDiff (dapply ST exdiff)) (Block (dapply ST exdiff))
       r = exec-block exstate exblock
       next-state = proj₁ r
       next-block = proj₂ (proj₂ r)
   open ExecutableBlock
 
   exec-block-≡ : ∀ {ST}
-               → {d₁ : Diff ST}     → {d₂ : Diff (dapply ST d₁)}
+               → {d₁ : TypeDiff ST}     → {d₂ : TypeDiff (dapply ST d₁)}
                → (b₁ : Block ST d₁) → (b₂ : Block (dapply ST d₁) d₂)
                → (S₁ : State ST)    → (S₂ : State (dapply ST d₁))
                → exec-block S₁ b₁ ≡ (S₂ , d₂ , b₂)

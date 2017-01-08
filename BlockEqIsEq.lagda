@@ -20,10 +20,10 @@ open import Diffs
 open Meta
 
 module BlockEqIsEq
-  (Block : (S : StateType) → Diff S → Set)
+  (Block : (S : StateType) → TypeDiff S → Set)
   (exec-block : ∀ {ST d} → Values.State Block ST → Block ST d
               → Values.State Block (dapply ST d)
-              × Σ (Diff (dapply ST d)) (Block (dapply ST d)))
+              × Σ (TypeDiff (dapply ST d)) (Block (dapply ST d)))
   where
 
 open import BlockEq Block exec-block
