@@ -21,42 +21,72 @@ systems.
 \iftoggle{russian-draft}{
 Разные группы исследователей работают над созданием верифицированных тулчейнов, но
 пока человечество далеко от создания абсолютно надежного комплекса
-инструментов разработки программ. Например, есть VeLLVM \citep{vellvm},
-формализующий язык LLVM и производящий доказанно корректные оптимизации в
-нем. Есть более близкий к реальным тулчейнам проект, компилятор языка C
-CompCert \citep{compcert}, производящий оптимизации, доказанно сохраняющие
-семантику програмы. Тем не менее, даже CompCert не покрывает сборку
-программы целиком: он использует системный, не верифицированный, линковщик.
+инструментов разработки программ. Например,
 }{
 Different groups of researchers try to develop verified toolchains, but it is still far
-from completely reliable development tools. For example, VeLLVM
-\citep{vellvm} formalizes LLVM intermediate language and performs formally
-correct optimizations. Another project, CompCert \citep{compcert}, is
-closer to realistic toolchains: it is a compiler of the C language that
-performs optimizations which are proven to preserve the semantics of the
-compiled program. However, even CompCert does not cover all steps of
-compilation: for example, it uses a system linker which is not verified.
+from completely reliable development tools. For example,
+% VeLLVM
+% \citep{vellvm} formalizes LLVM intermediate language and performs formally
+% correct optimizations. Another project, CompCert \citep{compcert}, is
+% closer to realistic toolchains: it is a compiler of the C language that
+% performs optimizations which are proven to preserve the semantics of the
+% compiled program. However, even CompCert does not cover all steps of
+% compilation: for example, it uses a system linker which is not verified.
 }
+существует несколько верифицированных компиляторов: CompCert
+\citep{compcert} -- компилятор языка C, доказывающий сохранение семантики
+при оптимизациях, CerCo \citep{cerco} -- компилятор языка C, доказывающий
+сохранение вычислительной сложности программы, и CakeML \citep{cakeml} --
+верифицированная имплементация ML. Кроме того, существует несколько работ,
+не являющихся полноценными компиляторами, но тоже стоящих упоминания:
+VeLLVM \citep{vellvm}
+формализует язык LLVM и производит доказанно корректные оптимизации в
+нем, а BedRock \citep{bedrock} позволяет писать на Coq \citep{coq},
+оперируя абстракциями, ассоциированными с языком ассемблера.
 
+Но нужно ли верифицировать линковку? Линковщик занимается подстановкой
+символов и может таким образом влиять на семантику программы. Значит, если
+верифицированный компилятор полагается на не-верифицированный линковщик,
+семантика результирующей программы может быть нарушена. В этом случае
+полагаться на теоремы, предоставляемые верифицированным компилятором, стоит
+с большой осторожностью.
 \iftoggle{russian-draft}{
-Может показаться, что линковщик является достаточно простой программой, в
-которой трудно ошибиться. Возможно, так и было до тех пор, пока не начали
-производить оптимизации на этапе линковки. Эти оптимизации усложняют логику
-линковщика, и в итоге он перестает быть простой программой. Возможность
-наличия ошибок в коде линковщика подтверждается практикой: недавно
+Возможность
+наличия некорректного кода в линковщике подтверждается практикой: недавно
 проводилось исследование \citep{ltostress}, в котором делали стресс-тесты для
 линковщиков, и в итоге было найдено огромное количество ошибок на этапе
-оптимизаций во время линковки. Это показывает, что верификацией линковщиков
+оптимизаций во время линковки.
+}{
+% The linker might seem to be quite a simple program and it is hard to make a
+% mistake in its code. Probably, it has been that way until link-time
+% optimizations appeared. These optimizations make program logic more
+% complex, making it possible to introduce a bug in linker's source code.
+Recent research proves it: stress-testing for linkers revealed a myriad of
+bugs during link-time optimizations (LTO) phase \citep{ltostress}.
+}
+Кроме того, линковка сама по себе может служить источником уязвимостей.
+Например, Thompson в известной Turing Award Speech \citep{thompson}
+указывает, что целью подобной атаки может быть любая программа,
+манипулирующая другими программами, в том числе и линковщик. Недавнее
+исследование семантики динамической загрузки \citep{weirdmachines}
+показывает, что в качестве средства атаки могут быть использованы даже
+метаданные объектных файлов, обрабатываемые динамическим загрузчиком. That
+is to say, линковка является не менее серьезной и небезопасной операцией,
+что и компиляция.
+\iftoggle{russian-draft}{
+Это показывает, что верификацией линковщиков
 не стоит пренебрегать.
 }{
-The linker might seem to be quite a simple program and it is hard to make a
-mistake in its code. Probably, it has been that way until link-time
-optimizations appeared. These optimizations make program logic more
-complex, making it possible to introduce a bug in linker's source code.
-Recent research proves it: stress-testing for linkers revealed a myriad of
-bugs during link-time optimizations (LTO) phase \citep{ltostress}. It
+It
 shows that linker verification should not be neglected.
 }
+
+В связи с отсутствием верифицированного линковщика верифицированные
+компиляторы вынуждены либо ограничивать поддержку до только одномодульных
+программ (как это делают CerCo и CakeML), либо полагаться на системный
+линковщик (как это делает CompCert без недавних расширений). Тем не менее,
+попытки расширить верифицированную компиляцию и включить в нее линковку уже
+предпринимались. **TODO**
 
 \iftoggle{russian-draft}{
 Линковщик — достаточно низкоуровневая программа, которая работает с
