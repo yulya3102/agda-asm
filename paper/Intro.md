@@ -100,7 +100,7 @@ Bedrock \citep{bedrock}, являющийся библиотекой на Coq \c
 но не было формализовано механизмов динамической линковки, широко
 используемой в настоящее время.
 
-Так же существует отличная формализация ассемблера — Typed Assembly
+Так же существует формализация ассемблера — Typed Assembly
 Language (TAL) \citep{tal}, описывающая некоторый низкоуровневый язык как
 типизированный язык, поддерживающий высокоуровневые абстракции, такие как
 переменные типов и кортежи. В этом направлении было сделано множество
@@ -124,7 +124,7 @@ Bedrock project, support for linking with external libraries was
 implemented \citep{bedrocklinkers}, but no formalizations of widely used
 dynamic linking mechanisms were presented.
 
-There also exists an excellent formalization of assembly language — Typed Assembly
+There also exists a formalization of assembly language — Typed Assembly
 Language (TAL) \citep{tal}. It describes low-level language with the static
 type system that
 supports high-level abstractions such as type variables and tuples. This
@@ -178,7 +178,7 @@ TAL является хорошей моделью для рассуждений
 }{
 TAL is a great model for reasoning about execution of low-level code, but
 existing TAL tools are written in ML and all proofs about TAL programs
-appear in appendixes of the corresponding papers. This paper uses
+appear in appendices of the corresponding papers. This paper uses
 Agda \citep{agda} formalization of abstract language that is close to
 TALx86 and STAL. We formalize what elements are appended to program code
 during the dynamic linking process, introduce definition of code blocks

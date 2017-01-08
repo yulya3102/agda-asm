@@ -123,7 +123,7 @@ Constructor \C{\_∙\_} adds general-purpose instruction \V{i} with change
 \V{c} to the beginning of the block \V{b}. Type of block \V{b} must come
 out from the type of instruction \V{i} after applying change \V{c}
 corresponding to this instruction with function \F{dapply}, as shown in the
-type of the block \V{b}. This results into a block with \F{Diff} that
+type of the block \V{b}. This results in a block with \F{Diff} that
 consists of changes corresponding to instruction \V{i} and block \V{b},
 combined with the function \F{dappend}.  Expressions \F{csChg} \V{c} and
 \F{sChg} \V{c} of that constructors transform instruction-specific change
