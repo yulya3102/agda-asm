@@ -27,11 +27,11 @@ SOURCES = \
 	$(BUILD)/Acknowledgements.latex
 
 INCLUDE_EXAMPLES = \
+	$(BUILD)/shared-object.asm \
 	$(BUILD)/eq-blocks-example.asm \
 	$(BUILD)/eq-exblocks-example.asm
 
 IMAGES = \
-	$(BUILD)/objfile.jpg \
 	$(BUILD)/memory.jpg
 
 $(BUILD)/agda.sty: agda.sty

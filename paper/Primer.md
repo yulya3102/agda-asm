@@ -78,7 +78,7 @@ $plt.f$ procedure will lead to the execution of the function $f$.
 Figure \ref{fig:objfile}.
 
 \labeledfigure{fig:objfile}{Dynamically linked object file}{
-\includegraphics[width=0.5\textwidth]{objfile.jpg}
+\lstinputlisting[style=asm]{shared-object.asm}
 }
 
 \iftoggle{russian-draft}{
