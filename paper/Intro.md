@@ -152,11 +152,10 @@ separate object
 files, but as all of above, it lacks dynamic linking formalizations.
 }
 
-**TODO**
-
+TAL, как формальная система, выглядит наиболее интересным для доказательств
+свойств кода на языке ассемблера.
 \iftoggle{russian-draft}{
-TAL является хорошей моделью для рассуждений про исполнение низкоуровневого
-кода, но, к сожалению, существующие утилиты, реализуюущие работу с TAL,
+К сожалению, существующие утилиты, реализуюущие работу с TAL,
 написаны на ML, а все доказательства про работу программ на TAL приводились
 в виде приложений в соответствующих статьях. В этой статье используется
 формализация на Agda \citep{agda} абстрактного языка, близкого к TALx86 и STAL.
@@ -166,8 +165,7 @@ TAL является хорошей моделью для рассуждений
 загрузчике статически и динамически слинкованные функции оказываются
 эквивалентными.
 }{
-TAL is a great model for reasoning about execution of low-level code, but
-existing TAL tools are written in ML and all proofs about TAL programs
+Existing TAL tools are written in ML and all proofs about TAL programs
 appear in appendices of the corresponding papers. This paper uses
 Agda \citep{agda} formalization of abstract language that is close to
 TALx86 and STAL. We formalize what elements are appended to program code
@@ -178,16 +176,27 @@ loader implies the equivalence of statically and dynamically linked functions.
 
 \iftoggle{russian-draft}{
 Эту работу можно считать первыми шагами в области формализации динамической
-линковки, из чего впоследствии можно получить верифицированный линковщик,
-использующий внутри себя некоторую математическую модель, позволяющую
-говорить о корректности производимых линковщиком преобразований программы.
-
-Исходный код, описываемый в данной статье, находится по адресу
+линковки.
 }{
 This work can be considered as a first step in the area of dynamic linking
-formalization. It can eventually result in verified linker that allows to
+formalization.
+}
+Дополнив впоследствии данную работу реализацией маппинга объектных файлов в
+память и заполнением нужных ячеек GOT, можно получить модель простейшего
+динамического загрузчика, для которого доказано сохранение семантики
+программы.
+\iftoggle{russian-draft}{
+Из этого впоследствии можно получить верифицированный realistic линковщик,
+использующий внутри себя некоторую математическую модель, позволяющую
+говорить о корректности производимых линковщиком преобразований программы.
+}{
+It can eventually result in verified realistic linker that allows to
 reason about the correctness of performed program transformations.
+}
 
+\iftoggle{russian-draft}{
+Исходный код, описываемый в данной статье, находится по адресу
+}{
 The source codes used in this paper are available at
 }
 \url{https://github.com/yulya3102/agda-asm}.
