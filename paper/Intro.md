@@ -8,7 +8,17 @@
 разработки (тулчейны), потому что, во-первых, ошибки в них труднонаходимы,
 и во-вторых, тулчейны являются частоиспользуемым ПО, в том числе и в сферах
 с высокой ценой ошибки.
+}{
+Software verification can be difficult and therefore neglected. Despite the
+complexity of the task, it is worth verifying a certain range of software such
+as development tools (toolchains), because errors in toolchains are
+especially hard to find.
+Moreover, toolchains are commonly used even in those areas where the cost
+of failure is extremely high such as avionics or nuclear reactor control
+systems.
+}
 
+\iftoggle{russian-draft}{
 Разные группы исследователей работают над созданием верифицированных тулчейнов, но
 пока человечество далеко от создания абсолютно надежного комплекса
 инструментов разработки программ. Например, есть VeLLVM \citep{vellvm},
@@ -17,7 +27,18 @@
 CompCert \citep{compcert}, производящий оптимизации, доказанно сохраняющие
 семантику програмы. Тем не менее, даже CompCert не покрывает сборку
 программы целиком: он использует системный, не верифицированный, линковщик.
+}{
+Different groups of researchers try to develop verified toolchains, but it is still far
+from completely reliable development tools. For example, VeLLVM
+\citep{vellvm} formalizes LLVM intermediate language and performs formally
+correct optimizations. Another project, CompCert \citep{compcert}, is
+closer to realistic toolchains: it is a compiler of the C language that
+performs optimizations which are proven to preserve the semantics of the
+compiled program. However, even CompCert does not cover all steps of
+compilation: for example, it uses a system linker which is not verified.
+}
 
+\iftoggle{russian-draft}{
 Может показаться, что линковщик является достаточно простой программой, в
 которой трудно ошибиться. Возможно, так и было до тех пор, пока не начали
 производить оптимизации на этапе линковки. Эти оптимизации усложняют логику
@@ -27,7 +48,17 @@ CompCert \citep{compcert}, производящий оптимизации, до
 линковщиков, и в итоге было найдено огромное количество ошибок на этапе
 оптимизаций во время линковки. Это показывает, что верификацией линковщиков
 не стоит пренебрегать.
+}{
+The linker might seem to be quite a simple program and it is hard to make a
+mistake in its code. Probably, it has been that way until link-time
+optimizations appeared. These optimizations make program logic more
+complex, making it possible to introduce a bug in linker's source code.
+Recent research proves it: stress-testing for linkers revealed a myriad of
+bugs during link-time optimizations (LTO) phase \citep{ltostress}. It
+shows that linker verification should not be neglected.
+}
 
+\iftoggle{russian-draft}{
 Линковщик — достаточно низкоуровневая программа, которая работает с
 скомпилированными в машинный код объектными файлами, а значит, для
 рассуждений про него необходима формализация низкоуровнего языка, очень
@@ -53,31 +84,6 @@ Language (TAL) \citep{tal}, описывающая некоторый низко
 файлов, но формализации механизмов динамической линковки, как и в Bedrock,
 представлено не было.
 }{
-Software verification can be difficult and therefore neglected. Despite the
-complexity of the task, it is worth verifying a certain range of software such
-as development tools (toolchains), because errors in toolchains are
-especially hard to find.
-Moreover, toolchains are commonly used even in those areas where the cost
-of failure is extremely high such as avionics or nuclear reactor control
-systems.
-
-Different groups of researchers try to develop verified toolchains, but it is still far
-from completely reliable development tools. For example, VeLLVM
-\citep{vellvm} formalizes LLVM intermediate language and performs formally
-correct optimizations. Another project, CompCert \citep{compcert}, is
-closer to realistic toolchains: it is a compiler of the C language that
-performs optimizations which are proven to preserve the semantics of the
-compiled program. However, even CompCert does not cover all steps of
-compilation: for example, it uses a system linker which is not verified.
-
-The linker might seem to be quite a simple program and it is hard to make a
-mistake in its code. Probably, it has been that way until link-time
-optimizations appeared. These optimizations make program logic more
-complex, making it possible to introduce a bug in linker's source code.
-Recent research proves it: stress-testing for linkers revealed a myriad of
-bugs during link-time optimizations (LTO) phase \citep{ltostress}. It
-shows that linker verification should not be neglected.
-
 The linker is a low-level program that works with object files containing machine
 code. Therefore, to reason about it, we need a formalization of a low-level
 language that uses abstractions associated with the machine code, like
