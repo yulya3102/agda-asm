@@ -64,11 +64,7 @@ exblock-eq-proof f S p
 
 block-eq-proof : ∀ {Γ Ψ DS CS}
                → (f : code Γ DS CS ∈ Ψ)
-               → BlockEqAssuming
-                 (λ S → (GOT[ f ]-correctness
-                            (State.memory S))
-                      × (PLT[ f ]-correctness
-                            (State.memory S)))
+               → BlockEqAssuming (LoaderCorrectness f)
                  (plt f)
                  (linked-symbol f)
 block-eq-proof {Γ} {Ψ} {DS} {CS} f
