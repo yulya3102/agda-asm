@@ -153,30 +153,6 @@ files, but as all of above, it lacks dynamic linking formalizations.
 }
 
 **TODO**
-\iftoggle{russian-draft}{
-Для написания proof-carrying code используются современные proof
-assistant-ы, опирающиеся на теорию типов и соответствие Карри-Говарда
-\citep{sorensen2006lectures}. Среди них можно выделить Coq \citep{coq} и
-Agda \citep{agda}
-как наиболее близкие к высокоуровневым языкам программирования общего
-назначения.  Coq использовался в таких крупных работах, как доказательство
-теоремы о четырех красках \citep{gonthier2008formal} и компилятор языка C с
-доказанно корректными оптимизациями \citep{compcert}, в то время как Agda
-зачастую используется в работах, формализующих языки и их свойства
-\citep{danielsson2006formalisation} \citep{hancock2013small}
-\citep{mcbridedjinn}.
-}{
-Proof-carrying code is written with modern proof assistants which are
-based on type theory and Curry-Howard correspondence
-\citep{sorensen2006lectures}. Coq \citep{coq} and Agda \citep{agda} may be
-noted as the closest to general purpose programming languages. Coq was used
-to get significant results such as four color theorem proof
-\citep{gonthier2008formal} and compiler of the C language that performs
-formally correct optimizations \citep{compcert}. On the other hand, Agda is
-used to formalize languages and their properties
-\citep{danielsson2006formalisation} \citep{hancock2013small}
-\citep{mcbridedjinn}.
-}
 
 \iftoggle{russian-draft}{
 TAL является хорошей моделью для рассуждений про исполнение низкоуровневого
