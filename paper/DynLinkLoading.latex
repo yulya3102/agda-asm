@@ -82,46 +82,26 @@ GOT and PLT entries together.
 }
 
 \iftoggle{russian-draft}{
-Определенные дальше в листинге \ref{fig:changeABI} функции \F{plt}, \F{got}
-и \F{linked-symbol} позволяют, зная, по
-какому адресу находилась функция \AgdaBound{f} \AgdaSymbol{=} \F{code} \AgdaBound{\Gamma} \AgdaBound{DS} \AgdaBound{CS} в неслинкованной программе, определить,
+Зная, по какому адресу находилась функция \AgdaBound{f} в неслинкованной
+программе, можно определить,
 по каким адресам будут расположены в слинкованной программе соответствующие
 этой функции элемент PLT $plt.f$, элемент GOT $got.f$ и сама функция
-$f$ соответственно.
+$f$.
 }{
-Functions \F{plt}, \F{got} and \F{linked-symbol} from Listing
-\ref{fig:changeABI} allow to determine where PLT entry $plt.f$, GOT entry
-$got.f$ and the original function $f$ \AgdaSymbol{=} \F{code} \V{\Gamma} \V{DS}
-\V{CS} will be stored in the dynamically linked program.
+Knowing where function \V{f} is located in non-linked program, it is
+possible to determine where PLT entry $plt.f$, GOT entry $got.f$ and the
+original function $f$ will be stored in the dynamically linked program.
 }
-\iftoggle{russian-draft}{
-Аргументами этих функций являются адреса функций в неслинкованной
-программе, которые в нашей формализации выражены Agda-типами принадлежности
-блока кода \C{code} \V{\Gamma} \V{DS} \V{CS} списку типов памяти \V{\Psi}.
-Конструкторами такого отношения принадлежности являются \C{here} и
-\C{there}. Первый из них говорит, что элемент лежит в начале данного
-списка, и предоставляет доказательство равенства искомого элемента и
-начала списка, конструируемое с помощью \C{refl}. Второй конструктор,
-\C{there}, говорит о том, что элемент лежит в хвосте списка, с помощью
-рекурсивно сконструированного отношения принадлежности концу списка.
+Для получения этих адресов определены функции
+\F{plt}, \F{got} и \F{linked-symbol} соответственно.
 
+\iftoggle{russian-draft}{
 Как видно из вышесказанного, расположение какого-либо блока кода и
 соответствующих ему элементов GOT и PLT известно в фазу до запуска
 программы. Эта информация может быть использована в процессе линковки:
 например, вызовы блоков PLT могут быть подставлены вместо вызовов самих
 функций, и, кроме того, могут быть выполнены link-time optimizations.
 }{
-These functions take function addresses from unlinked program, which in our
-code are expressed with Agda-types of list membership showing that code
-block \C{code} \V{\Gamma} \V{DS} \V{CS} is a member of memory types list
-\V{\Psi}. \C{here} and \C{there} are the constructors of this membership
-relation. The former states that specified element is at the beginning of
-the list and provides a proof of equality of specified element and the head of
-the list, which is constructed by \C{refl}. The latter, constructor
-\C{there}, states that the element belongs to the tail of the list, proving
-that by recursively constructed relation of membership to the tail of the
-list.
-
 As seen above, the locations of a code block and corresponding GOT and PLT
 elements are known at the pre-runtime phase and can be used in the linking
 process. For example, calls to PLT block can be substituted for calls to

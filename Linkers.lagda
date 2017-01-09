@@ -21,12 +21,16 @@ pltize : HeapTypes → HeapTypes
 pltize [] = []
 pltize (atom x ∷ Ψ) = atom x ∷ pltize Ψ
 pltize ((code Γ DS CS) ∷ Ψ)
-  = plt-f ∷ (got-f ∷ (f ∷ pltize Ψ))
+  = plt-f ∷ (got-f ∷ (linked-symbol-f ∷ pltize Ψ))
   where
-    f = code Γ DS CS
-    plt-f = f
-    got-f = atom (f *)
+    linked-symbol-f = code Γ DS CS
+    plt-f = code Γ DS CS
+    got-f = atom (linked-symbol-f *)
+\end{code}
+}
 
+\ignore{
+\begin{code}
 plt : ∀ {Γ Ψ DS CS} → code Γ DS CS ∈ Ψ
     → code Γ DS CS ∈ pltize Ψ
 plt (here refl) = here refl
