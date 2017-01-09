@@ -28,7 +28,11 @@ PLT[_]-correctness : ∀ {Γ Ψ DS CS}
                    → Set
 PLT[ f ]-correctness H
     = loadblock H (plt f) ≡ (dempty , plt-stub (got f))
+\end{code}
+}
 
+\ignore{
+\begin{code}
 LoaderCorrectness : ∀ {Γ Ψ DS CS}
                   → (f : code Γ DS CS ∈ Ψ)
                   → State (sttype Γ (pltize Ψ) DS CS)

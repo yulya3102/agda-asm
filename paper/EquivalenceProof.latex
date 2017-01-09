@@ -20,6 +20,11 @@ states that corresponding to function $f$ GOT element contains the address
 of the function $f$. Assumption \F{PLT[ f ]-correctness} states that the
 address corresponding to appropriate PLT function contains the PLT block.
 }
+Второе предположение необходимо, так как динамический загрузчик может
+неправильно замапить объектный файл в память, и тогда по адресу \F{plt} \V{f}
+будет находиться не тот блок кода, что нужен. Для удобства эти два
+предположения объединены в общий тип \F{LoaderCorrectness}, который
+встретится позднее в листингах.
 
 \iftoggle{russian-draft}{
 Таким образом, работающая до загрузки программы часть динамического
