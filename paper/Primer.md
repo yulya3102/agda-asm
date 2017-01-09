@@ -103,7 +103,7 @@ As a result, dynamically linked object file looks like shown in Figure
 }
 
 \labeledfigure{fig:objfile}{Dynamically linked object file}{
-\includegraphics[width=0.5\textwidth]{objfile.png}
+\includegraphics[width=0.5\textwidth]{objfile.pdf}
 }
 
 \iftoggle{russian-draft}{
@@ -125,7 +125,7 @@ instructions in runtime.
 }
 
 \labeledfigure{fig:dynmem}{External function call in dynamically linked memory}{
-\includegraphics[height=0.5\textwidth,angle=90]{memory.png}
+\includegraphics[height=0.5\textwidth,angle=90]{memory.pdf}
 }
 
 \iftoggle{russian-draft}{

@@ -31,10 +31,12 @@ INCLUDE_EXAMPLES = \
 	$(BUILD)/eq-blocks-example.asm \
 	$(BUILD)/eq-exblocks-example.asm
 
+IMAGES_FORMAT = svg
+
 IMAGES = \
-	objfile.png \
-	memory.png \
-	exblock-eq-proof.png
+	objfile.pdf \
+	memory.pdf \
+	exblock-eq-proof.pdf
 
 $(BUILD)/agda.sty: agda.sty
 	cp $< $@
@@ -84,8 +86,11 @@ $(BUILD)/main.latex: Makefile $(SOURCES) $(TEMPLATE) $(BUILD)/Abstract.latex $(I
 		-o $@ \
 		$(SOURCES)
 
-%.png: %.dot
-	dot -Tpng -o $@ $<
+%.$(IMAGES_FORMAT): %.dot
+	dot -T$(IMAGES_FORMAT) -o $@ $<
+
+%.pdf: %.$(IMAGES_FORMAT)
+	inkscape --export-area-drawing --without-gui --file=$< --export-pdf=$@
 
 objfile.jpg:
 	wget -O $@ https://www.dropbox.com/s/f9umac2lo3c9b63/objfile.jpg?dl=0
