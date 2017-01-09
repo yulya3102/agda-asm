@@ -12,6 +12,11 @@
 что в элементе GOT, соответстующем функции $f$, находится адрес функции $f$, а
 предположение \F{PLT[ f ]-correctness} утверждает, что по адресу,
 соответствующему нужному блоку PLT, действительно находится блок PLT.
+Второе предположение необходимо, так как динамический загрузчик может
+неправильно замапить объектный файл в память, и тогда по адресу \F{plt} \V{f}
+будет находиться не тот блок кода, что нужен. Для удобства эти два
+предположения объединены в общий тип \F{LoaderCorrectness}, который
+встретится позднее в типе последнего доказательства.
 }{
 The proof of equivalence of PLT block and corresponding functions relies on
 assumptions of the correctness of dynamic loader. These assumptions are shown
@@ -19,12 +24,12 @@ in Listing \ref{fig:correctness}. Assumption \F{GOT[ f ]-correctness}
 states that corresponding to function $f$ GOT element contains the address
 of the function $f$. Assumption \F{PLT[ f ]-correctness} states that the
 address corresponding to appropriate PLT function contains the PLT block.
+The second assumption is necessary, because the dynamic loader can map the
+object file in a wrong way, so that the \F{plt} \V{f} address would store
+some other block of code instead of the proper PLT block. For the
+convenience these two properties are stored in one Agda-type
+\F{LoaderCorrectness} which will appear in the Agda-type of the last proof.
 }
-Второе предположение необходимо, так как динамический загрузчик может
-неправильно замапить объектный файл в память, и тогда по адресу \F{plt} \V{f}
-будет находиться не тот блок кода, что нужен. Для удобства эти два
-предположения объединены в общий тип \F{LoaderCorrectness}, который
-встретится позднее в типе последнего доказательства.
 
 \iftoggle{russian-draft}{
 Таким образом, работающая до загрузки программы часть динамического
@@ -45,16 +50,23 @@ they both use the exact same properties.
 \iftoggle{russian-draft}{
 Код доказательства эквивалентности функции $f$ и ее блока PLT приведен в
 приложении \ref{sec:proof}.
-}{
-The code of the proof of the equivalence of function $f$ and its PLT block is
-shown in Appendix \ref{sec:proof}.
-}
 Первая лемма, \F{exec-plt} доказывает, что в любом состоянии исполнителя с
 корректно заполненным GOT исполнение блока PLT функции $f$ сохранит состояние
 исполнителя таким, какое оно было. Это значит, что блок PLT не испортит
 ни стек, ни регистры, ни память. Кроме того, после блока PLT исполнение
 передастся слинкованной функции. Эта лемма опирается на корректность GOT и
 семантику инструкции непрямого перехода.
+}{
+The code of the proof of the equivalence of function $f$ and its PLT block is
+shown in Appendix \ref{sec:proof}.
+The first lemma, \F{exec-plt} proves that in any machine state with correct
+GOT execution of the function $f$ will not change the machine state. That
+is to say, the PLT block does not affect the stack, does not erase values
+in the registers and does not write anything to the memory. Aside from
+that, this lemma shows that execution of the PLT block will lead to
+execution of the linked function $f$. These properties are implied by the
+indirect jump semantics and the GOT correctness.
+}
 
 \labeledfigure{fig:exblock-eq-proof}{Idea of the executable blocks equivalence proof}{
 \includegraphics[width=0.5\textwidth]{eqproof.png}
@@ -64,15 +76,20 @@ shown in Appendix \ref{sec:proof}.
 Затем лемма \F{exblock-eq-proof}, используя предыдущую лемму,
 конструирует отношение эквивалентности исполняемых блоков для блока PLT
 функции $f$ и ее самой для одного и того же состояния исполнителя $S$.
-}{
-Then lemma \F{exblock-eq-proof}, using previous lemma, constructs the
-executable blocks equivalence for the PLT block of some function $f$ and
-function $f$ itself for some machine state $S$.
-}
 Два исполняемых блока, \V{plt-block} и \V{f-block} приводятся к одному и тому
 же исполняемому блоку \V{f-block}, как показано на Figure
 \ref{fig:exblock-eq-proof}. Левый из блоков приводится к \V{f-block} с
 помощью применения леммы \F{exec-plt}, а правый уже равен нужному блоку.
+}{
+Then lemma \F{exblock-eq-proof}, using previous lemma, constructs the
+executable blocks equivalence for the PLT block of some function $f$ and
+function $f$ itself for some machine state $S$.
+Two executable blocks \V{plt-block} and \V{f-block} are converge to the
+executable block \V{f-block}, as shown in Figure
+\ref{fig:exblock-eq-proof}. Left of them steps using the lemma \F{exec-plt}
+into the desired executable block, and the right of them is already in the
+desired condition.
+}
 
 \iftoggle{russian-draft}{
 После этого \F{block-eq-proof} обобщает этот результат, построив искомое

@@ -88,6 +88,9 @@ as the word ``block'', referring to the first block of a function.
 некоторым описанием того, как этот блок меняет тип состояния
 исполнителя. Это описание хранится в Agda-типе
 \F{TypeDiff},
+который можно воспринимать как список атомарных изменений
+типа исполнителя (запись в регистр со сменой типа, добавление или удаление
+элемента из стека).
 }{
 To ensure that function $g$ call at the end of the basic block
 $f$ is correct, we have to know how block $f$
@@ -96,11 +99,10 @@ can transform machine state type $S_f$ to machine state type $S_g$ expected
 by function $g$. To achieve that, Agda-type corresponding to the block is
 indexed by a description of how this
 block changes different parts of the machine state type. This description is
-stored in Agda-type \F{TypeDiff},
+stored in Agda-type \F{TypeDiff}, which can be viewed as a list of ``atomic
+changes'' to the machine state type. ``Atomic change'' can refer to change
+of register type, adding or removing elements from the stack.
 }
-который можно воспринимать как список атомарных изменений
-типа исполнителя (запись в регистр со сменой типа, добавление или удаление
-элемента из стека).
 
 \iftoggle{russian-draft}{
 Семантика приведенного языка ассемблера определяется двумя функциями,
@@ -114,6 +116,10 @@ stored in Agda-type \F{TypeDiff},
 управляющих инструкций является пара из нового состояния стека вызовов и
 следующего блока, который
 нужно исполнить.
+Семантика инструкций поделена на две разные функции, чтобы нельзя было
+"случайно" определить невалидную семантику, например, инструкцию jump,
+которая при переходе на другой блок затирает значения регистров.
+Семантика блока кода
 }{
 Semantics of this assembly language is defined by two functions describing
 semantics of general-purpose instructions and branch instructions
@@ -126,11 +132,12 @@ instructions execution results in a tuple of a register file, a heap, and a
 data stack. On the other
 hand, the branch instruction execution results in a pair of a new call stack
 state and next block to execute.
+Semantics of instructions is split into two different functions to ensure
+that instructions with obviously invalid semantics can not be defined, like
+jump instruction that erases values in registers.
+Semantics of the code block
 }
-Семантика инструкций поделена на две разные функции, чтобы нельзя было
-"случайно" определить невалидную семантику, например, инструкцию jump,
-которая при переходе на другой блок затирает значения регистров.
-Семантика блока кода is composed out of these two functions and it looks
+is composed out of these two functions and it looks
 like traditional small-step semantics for programming languages:
 \iftoggle{russian-draft}{
 результатом исполнения блока является пара из нового состояния

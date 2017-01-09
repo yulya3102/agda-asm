@@ -110,11 +110,12 @@ blocks equivalence}. It has three constructors, each for different case:
 
 \iftoggle{russian-draft}{
 Приведенное отношение действительно является отношением эквивалентности.
-}{
-This definition meets axioms for equivalence relation.
-}
 Формальное доказательство требуемых свойств можно найти в исходном коде
 нашей модели.
+}{
+This definition meets axioms for equivalence relation.
+The proof of these properties can be found in the sources of our model.
+}
 
 \iftoggle{russian-draft}{
 Но приведенное отношение не является желаемым отношением эквивалентности,

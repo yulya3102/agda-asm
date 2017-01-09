@@ -87,15 +87,18 @@ GOT and PLT entries together.
 по каким адресам будут расположены в слинкованной программе соответствующие
 этой функции элемент PLT $plt.f$, элемент GOT $got.f$ и сама функция
 $f$.
-}{
-Knowing where function \V{f} is located in non-linked program, it is
-possible to determine where PLT entry $plt.f$, GOT entry $got.f$ and the
-original function $f$ will be stored in the dynamically linked program.
-}
 Для получения этих адресов определены функции
 \F{plt}, \F{got} и \F{linked-symbol} соответственно. Эти функции
 впоследствии используются в листингах \ref{fig:correctness} и
 \ref{sec:proof}.
+}{
+Knowing where function \V{f} is located in non-linked program, it is
+possible to determine where PLT entry $plt.f$, GOT entry $got.f$ and the
+original function $f$ will be stored in the dynamically linked program.
+The functions \F{plt}, \F{got}, and \F{linked-symbol} can get these
+elements respectively. These functions will be used later in Listing
+\ref{fig:correctness} and Appendix.
+}
 
 \iftoggle{russian-draft}{
 Как видно из вышесказанного, расположение какого-либо блока кода и
