@@ -95,6 +95,7 @@ It
 shows that linker verification should not be neglected.
 }
 
+\iftoggle{russian-draft}{
 В связи с отсутствием верифицированного линковщика верифицированные
 компиляторы вынуждены либо ограничивать поддержку до только одномодульных
 программ (как это делают CerCo и CakeML), либо полностью или частично
@@ -113,7 +114,28 @@ Bedrock. Что касается линковки без привязки к к�
 была формализована \citep{elfsemantic} спецификация формата ELF (Executable
 and Linkable format), наиболее распространенного среди UNIX-like систем, с
 формализацией статической линковки файлов этого формата.
+}{
+Due to the lack of the verified linker, verified compilers are compelled to
+either restrict acceptable input to single-module programs as CerCo and
+CakeML do, or rely on the non-verified linker with possibly subsequent
+sanity check as CompCert does. However, there were several attempts to
+extend verified compilation and to include verified linking. Compositional
+CompCert \citep{CompCompCert}, a third-party extension to CompCert, added
+support for language-independent linking. Unfortunately, this extension
+required significant changes to the main CompCert code. For that reason,
+SepCompCert \citep{lightweightverif}, another third-party extension of
+CompCert, was developed. It is much more lightweight compared to
+Compositional CompCert, but it supports separate compilation only for one
+compiler. Aside from CompCert and its extensions, the Bedrock project
+implemented a compositional compiler from idealistic C-like language
+into Bedrock language which supports separate compilation
+\citep{bedrocklinkers}. As for the linking itself not being tied to
+specific language, recent research formalized \citep{elfsemantic} ELF
+(Executable and Linkable Format) specification and static linking within
+it.
+}
 
+\iftoggle{russian-draft}{
 Что касается формализации механизмов динамической линковки, ни в одной из
 указанных выше работ они не были представлены. Тем не менее, в формализации
 формата ELF \citep{elfsemantic} было указано, что формализовать основные для динамической
@@ -122,6 +144,16 @@ and Linkable format), наиболее распространенного сре
 их роль в процессе динамической загрузки требует куда больших усилий. В
 нашей работе мы рассматриваем, как эти механизмы обеспечивают правильную
 работу программы в рантайме.
+}{
+As for formalization of dynamic linking mechanisms, they were not presented
+in projects mentioned above. However, in the ELF formalization
+\citep{elfsemantic} it was noted that formalization of GOT and PLT (which
+we will discuss in details in section \ref{sec:background}) as part of ELF
+specification is rather simple, while formalization of their role in the
+dynamic linking process requires much more effort. In contrast, in this
+paper we formalize how these mechanisms ensure correct execution of the
+program in runtime.
+}
 
 \iftoggle{russian-draft}{
 Линковщик — достаточно низкоуровневая программа, которая работает с
@@ -135,8 +167,8 @@ language that uses abstractions associated with the machine code, like
 registers and stack.
 }
 
-Помимо указанного выше Bedrock,
 \iftoggle{russian-draft}{
+Помимо указанного выше Bedrock,
 существует формализация ассемблера — Typed Assembly
 Language (TAL) \citep{tal}, описывающая некоторый низкоуровневый язык как
 типизированный язык, поддерживающий высокоуровневые абстракции, такие как
@@ -151,6 +183,7 @@ Language (TAL) \citep{tal}, описывающая некоторый низко
 файлов, но формализации механизмов динамической линковки, как и в
 приведенных выше работах, представлено не было.
 }{
+Aside from the Bedrock which was already mentioned,
 there also exists a formalization of assembly language — Typed Assembly
 Language (TAL) \citep{tal}. It describes low-level language with the static
 type system that
@@ -166,9 +199,9 @@ separate object
 files, but as all of above, it lacks dynamic linking formalizations.
 }
 
+\iftoggle{russian-draft}{
 TAL, как формальная система, выглядит наиболее интересным для доказательств
 свойств кода на языке ассемблера.
-\iftoggle{russian-draft}{
 К сожалению, существующие утилиты, реализуюущие работу с TAL,
 написаны на ML, а все доказательства про работу программ на TAL приводились
 в виде приложений в соответствующих статьях. В этой статье используется
@@ -179,6 +212,8 @@ TAL, как формальная система, выглядит наиболе
 загрузчике статически и динамически слинкованные функции оказываются
 эквивалентными.
 }{
+As a formal system, TAL looks the most interesting to be used in proofs
+of assembly code properties.
 Existing TAL tools are written in ML and all proofs about TAL programs
 appear in appendices of the corresponding papers. This paper uses
 Agda \citep{agda} formalization of abstract language that is close to
@@ -191,14 +226,17 @@ loader implies the equivalence of statically and dynamically linked functions.
 \iftoggle{russian-draft}{
 Эту работу можно считать первыми шагами в области формализации динамической
 линковки.
-}{
-This work can be considered as a first step in the area of dynamic linking
-formalization.
-}
 Дополнив впоследствии данную работу реализацией маппинга объектных файлов в
 память и заполнением нужных ячеек GOT, можно получить модель простейшего
 динамического загрузчика, для которого доказано сохранение семантики
 программы.
+}{
+This work can be considered as a first step in the area of dynamic linking
+formalization.
+By adding formalizations of memory mapping and filling GOT elements, this
+formalization can be extended to the model of simple dynamic loader which
+is proven to preserve program semantics.
+}
 \iftoggle{russian-draft}{
 Из этого впоследствии можно получить верифицированный realistic линковщик,
 использующий внутри себя некоторую математическую модель, позволяющую
