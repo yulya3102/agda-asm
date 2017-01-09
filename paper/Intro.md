@@ -22,17 +22,6 @@ systems.
 Разные группы исследователей работают над созданием верифицированных тулчейнов, но
 пока человечество далеко от создания абсолютно надежного комплекса
 инструментов разработки программ. Например,
-}{
-Different groups of researchers try to develop verified toolchains, but it is still far
-from completely reliable development tools. For example,
-% VeLLVM
-% \citep{vellvm} formalizes LLVM intermediate language and performs formally
-% correct optimizations. Another project, CompCert \citep{compcert}, is
-% closer to realistic toolchains: it is a compiler of the C language that
-% performs optimizations which are proven to preserve the semantics of the
-% compiled program. However, even CompCert does not cover all steps of
-% compilation: for example, it uses a system linker which is not verified.
-}
 существует несколько верифицированных компиляторов: CompCert
 \citep{compcert} -- компилятор языка C, доказывающий сохранение семантики
 при оптимизациях, CerCo \citep{cerco} -- компилятор языка C, доказывающий
@@ -43,27 +32,45 @@ VeLLVM \citep{vellvm}
 формализует язык LLVM и производит доказанно корректные оптимизации в
 нем, а BedRock \citep{bedrock} позволяет писать на Coq \citep{coq},
 оперируя абстракциями, ассоциированными с языком ассемблера.
+}{
+Different groups of researchers try to develop verified toolchains, but it is still far
+from completely reliable development tools. For example,
+CompCert \citep{compcert} is a compiler of the C language which proves to
+preserve program semantics after optimizations. Another compiler of the C
+language, CerCo \citep{cerco}, proves to preserve the complexity of the
+program. Not only compilers of the C language are verified: CakeML
+\citep{cakeml} is a verified implementation of ML, both compiler and
+runtime. Aside from that, there are several non-compiler projects worth noting:
+VeLLVM
+\citep{vellvm} formalizes LLVM intermediate language and performs formally
+correct optimizations, and Bedrock \citep{bedrock} allows to write
+verified code in Coq \citep{Coq} using low-level abstractions such as stack
+and registers.
+}
 
+\iftoggle{russian-draft}{
 Но нужно ли верифицировать линковку? Линковщик занимается подстановкой
 символов и может таким образом влиять на семантику программы. Значит, если
 верифицированный компилятор полагается на не-верифицированный линковщик,
 семантика результирующей программы может быть нарушена. В этом случае
 полагаться на теоремы, предоставляемые верифицированным компилятором, стоит
 с большой осторожностью.
-\iftoggle{russian-draft}{
 Возможность
 наличия некорректного кода в линковщике подтверждается практикой: недавно
 проводилось исследование \citep{ltostress}, в котором делали стресс-тесты для
 линковщиков, и в итоге было найдено огромное количество ошибок на этапе
 оптимизаций во время линковки.
 }{
-% The linker might seem to be quite a simple program and it is hard to make a
-% mistake in its code. Probably, it has been that way until link-time
-% optimizations appeared. These optimizations make program logic more
-% complex, making it possible to introduce a bug in linker's source code.
-Recent research proves it: stress-testing for linkers revealed a myriad of
+But should we verify linkers? Linker does a lot of things aside from symbol
+substitution, but even with only symbol substitution it can affect program
+semantics. That is to say, if the verified compiler relies on non-verified
+linker, the semantics of the program can be broken. In this case, the user
+should rely on theorems provided by the compiler with great caution.
+Recent research proves that linkers can break program semantics:
+stress-testing for linkers revealed a myriad of
 bugs during link-time optimizations (LTO) phase \citep{ltostress}.
 }
+\iftoggle{russian-draft}{
 Кроме того, линковка сама по себе может служить источником уязвимостей.
 Например, Thompson в известной Turing Award Speech \citep{thompson}
 указывает, что целью подобной атаки может быть любая программа,
@@ -73,10 +80,17 @@ bugs during link-time optimizations (LTO) phase \citep{ltostress}.
 метаданные объектных файлов, обрабатываемые динамическим загрузчиком. That
 is to say, линковка является не менее серьезной и небезопасной операцией,
 что и компиляция.
-\iftoggle{russian-draft}{
 Это показывает, что верификацией линковщиков
 не стоит пренебрегать.
 }{
+Aside from that, the linking can be the source of vulnerability by itself.
+For example, well-known Thompson's Turing Award speech \citep{thompson}
+notes that any program that manipulates other programs can be the target of
+a similar attack. Another example, recent research on dynamic linking in
+\citep{weirdmachines} shows that attack can be orchestrated even by the
+metadata of object files which are handled by the dynamic loader. That is
+to say, the linking is no less serious and unsafe than the compilation
+itself.
 It
 shows that linker verification should not be neglected.
 }
