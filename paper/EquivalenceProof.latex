@@ -39,31 +39,20 @@ they both use the exact same properties.
 
 \iftoggle{russian-draft}{
 Код доказательства эквивалентности функции $f$ и ее блока PLT приведен в
-приложении \ref{sec:proof}. Сперва, используя семантику инструкции
-\C{jmp[\_]}, лемма \F{exec-ijmp} показывает, что в результате исполнения
-блока с этой инструкцией
-состояние исполнителя \AgdaBound{S} не изменится, а исполнение передастся
-на блок, загруженный из адреса, записаного в ячейке памяти \AgdaBound{p},
-переданной аргументом в \C{jmp[\_]}.
+приложении \ref{sec:proof}.
 }{
 The code of the proof of the equivalence of function $f$ and its PLT block is
-shown in Appendix \ref{sec:proof}. First, using instruction \C{jmp[\_]}
-semantics, lemma \F{exec-ijmp} states that execution of block with this
-instruction does not change machine state \V{S}. It also states that
-execution continues with block loaded from the address from the variable \V{p}
-which is an argument of that \C{jmp[\_]} instruction.
+shown in Appendix \ref{sec:proof}.
 }
+Первая лемма, \F{exec-plt} доказывает, что в любом состоянии исполнителя с
+корректно заполненным GOT исполнение блока PLT функции $f$ сохранит состояние
+исполнителя таким, какое оно было. Это значит, что блок PLT не испортит
+ни стек, ни регистры, ни память. Кроме того, после блока PLT исполнение
+передастся слинкованной функции. Эта лемма опирается на корректность GOT и
+семантику инструкции непрямого перехода.
 
-\iftoggle{russian-draft}{
-Вторая лемма, \F{exec-plt}, используя предположение о корректности GOT
-и лемму \F{exec-ijmp}, показывает, что исполнение блока PLT, ссылающегося на
-GOT некоторой функции $f$, приводит к исполнению функции $f$ в исходном
-состоянии исполнителя.
-}{
-The second lemma, \F{exec-plt}, uses the assumption of GOT correctness and
-lemma \F{exec-ijmp}. It states that the execution of the PLT block
-referring to the GOT of some function $f$ leads to the execution of the
-function $f$ in the same machine state.
+\labeledfigure{fig:exblock-eq-proof}{Idea of the executable blocks equivalence proof}{
+\includegraphics[width=0.5\textwidth]{eqproof.png}
 }
 
 \iftoggle{russian-draft}{
@@ -75,15 +64,21 @@ Then lemma \F{exblock-eq-proof}, using previous lemma, constructs the
 executable blocks equivalence for the PLT block of some function $f$ and
 function $f$ itself for some machine state $S$.
 }
+Два исполняемых блока, $plt-block$ и $f-block$ приводятся к одному и тому
+же исполняемому блоку $f-block$, как показано на Figure
+\ref{fig:exblock-eq-proof}. Левый из блоков приводится к $f-block$ с
+помощью применения леммы \F{exec-plt}, а правый уже равен нужному блоку.
 
 \iftoggle{russian-draft}{
-После этого \F{block-eq-proof} строит искомое отношение эквивалентности
+После этого \F{block-eq-proof} обобщает этот результат, построив искомое
+отношение эквивалентности
 блоков для произвольных одинаковых состояний исполнителя, удовлетворяющих
 предположениям о корректности работы динамического загрузчика.
 Полученное доказательство говорит о том, что динамическая линковка не
 меняет семантику программы.
 }{
-After that \F{block-eq-proof} constructs desired block equivalence relation
+After that \F{block-eq-proof} generalizes that result, constructing desired
+block equivalence relation
 for arbitrary machine state that meets assumptions of the correctness of
 dynamic loader's work result.
 This proof shows that the dynamic linking does not change the program

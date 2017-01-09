@@ -24,33 +24,19 @@ open import Loader
 }
 
 \begin{code}
-exec-ijmp : ∀ {ST} → (S : State ST)
-          → (p : atom (code
-               (StateType.registers ST)
-               (StateType.datastack ST)
-               (StateType.callstack ST)
-             *) ∈ StateType.memory ST)
-          → exec-block S (↝ jmp[ p ])
-          ≡ (S
-          , loadblock
-            (State.memory S)
-            (loadptr (State.memory S) p))
-exec-ijmp (state Γ Ψ DS CS) p = refl
-
 exec-plt : ∀ {Γ Ψ DS CS}
          → (f : code Γ DS CS ∈ Ψ)
          → (S : State (sttype Γ (pltize Ψ) DS CS))
          → GOT[ f ]-correctness (State.memory S)
          → exec-block S (plt-stub (got f))
          ≡ (S , loadblock (State.memory S) (linked-symbol f))
-exec-plt f S p rewrite sym p = exec-ijmp S (got f)
+exec-plt f (state R H D C) p rewrite sym p = refl
+
 
 exblock-eq-proof : ∀ {Γ Ψ DS CS}
                  → (f : code Γ DS CS ∈ Ψ)
-                 → (S : State
-                        (sttype Γ (pltize Ψ) DS CS))
-                 → GOT[ f ]-correctness
-                    (State.memory S)
+                 → (S : State (sttype Γ (pltize Ψ) DS CS))
+                 → GOT[ f ]-correctness (State.memory S)
                  → ExBlockEq
                    (block (plt-stub (got f)) S)
                    (block
@@ -58,17 +44,24 @@ exblock-eq-proof : ∀ {Γ Ψ DS CS}
                                         (linked-symbol f))
                      S)
 exblock-eq-proof f S p
-  = left (exec-block-≡ (plt-stub (got f)) _ S S
-                       (exec-plt f S p))
-         equal
+  = left
+    (exec-block-≡
+      plt-block S
+      f-block S
+      (exec-plt f S p))
+    equal
+  where
+  plt-block = plt-stub (got f)
+  f-block = proj₂ $ loadblock (State.memory S)
+                              (linked-symbol f)
 
 block-eq-proof : ∀ {Γ Ψ DS CS}
                → (f : code Γ DS CS ∈ Ψ)
-               → BlockEqAssuming (LoaderCorrectness f)
+               → BlockEq (LoaderCorrectness f)
                  (plt f)
                  (linked-symbol f)
 block-eq-proof {Γ} {Ψ} {DS} {CS} f
-  = block-eq-assuming lemma
+  = block-eq lemma
   where
     ST = sttype Γ Ψ DS CS
     lemma : (S : State $ pltize-state ST)

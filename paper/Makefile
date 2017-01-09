@@ -19,8 +19,8 @@ SOURCES = \
 	$(BUILD)/Linkers.latex \
 	$(BUILD)/BlockEqDefinition.latex \
 	$(BUILD)/BlockEq.latex \
-	$(BUILD)/EquivalenceProof.latex \
 	$(BUILD)/Loader.latex \
+	$(BUILD)/EquivalenceProof.latex \
 	$(BUILD)/Conclusion.latex \
 	$(BUILD)/Appendix.latex \
 	$(BUILD)/RuntimeEq.latex \
@@ -32,7 +32,8 @@ INCLUDE_EXAMPLES = \
 	$(BUILD)/eq-exblocks-example.asm
 
 IMAGES = \
-	$(BUILD)/memory.jpg
+	$(BUILD)/memory.jpg \
+	$(BUILD)/eqproof.png
 
 $(BUILD)/agda.sty: agda.sty
 	cp $< $@
@@ -87,3 +88,6 @@ objfile.jpg:
 
 memory.jpg:
 	wget -O $@ https://www.dropbox.com/s/dtgodj9pjm0nm2y/memory.jpg?dl=0
+
+eqproof.png:
+	wget -O $@ https://www.dropbox.com/s/psip1woa1vt03k4/eqproof.png?dl=0

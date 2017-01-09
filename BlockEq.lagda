@@ -53,8 +53,10 @@ module BlockEq
 
   exec-block-≡ : ∀ {ST}
                → {d₁ : TypeDiff ST}     → {d₂ : TypeDiff (dapply ST d₁)}
-               → (b₁ : Block ST d₁) → (b₂ : Block (dapply ST d₁) d₂)
-               → (S₁ : State ST)    → (S₂ : State (dapply ST d₁))
+               → (b₁ : Block ST d₁)
+               → (S₁ : State ST)
+               → (b₂ : Block (dapply ST d₁) d₂)
+               → (S₂ : State (dapply ST d₁))
                → exec-block S₁ b₁ ≡ (S₂ , d₂ , b₂)
                → exec-exblock (block b₁ S₁) ≡ block b₂ S₂
   exec-block-≡ _ _ _ _ refl = refl
@@ -96,7 +98,7 @@ module BlockEq
 
 \labeledfigure{fig:BlockEqAssuming}{Blocks equivalence definition}{
 \begin{code}
-  record BlockEqAssuming
+  record BlockEq
     {Γ : RegFileTypes}
     {Ψ : HeapTypes}
     {DS : DataStackType}
@@ -107,7 +109,7 @@ module BlockEq
     (B : code Γ DS CS ∈ Ψ)
     : Set₁
     where
-    constructor block-eq-assuming
+    constructor block-eq
     field
       eq : (S : State (sttype Γ Ψ DS CS))
          → assumption S
@@ -119,21 +121,6 @@ module BlockEq
 
 \ignore{
 \begin{code}
-  open BlockEqAssuming public
-
-  BlockEq : {ST : StateType}
-          → (A : IPST ST)
-          → (B : IPST ST)
-          → Set₁
-  BlockEq A B = BlockEqAssuming (λ S → ⊤) A B
-
-  block-eq : {ST : StateType}
-           → {A : IPST ST}
-           → {B : IPST ST}
-           → ((S : State ST)
-             → ExBlockEq (block (proj₂ $ loadblock (State.memory S) A) S)
-                         (block (proj₂ $ loadblock (State.memory S) B) S))
-           → BlockEq A B
-  block-eq eq = block-eq-assuming (λ S _ → eq S)
+  open BlockEq public
 \end{code}
 }
