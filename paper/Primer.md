@@ -103,7 +103,7 @@ As a result, dynamically linked object file looks like shown in Figure
 }
 
 \labeledfigure{fig:objfile}{Dynamically linked object file}{
-\lstinputlisting[style=asm]{shared-object.asm}
+\includegraphics[width=0.5\textwidth]{objfile.png}
 }
 
 \iftoggle{russian-draft}{
@@ -125,7 +125,7 @@ instructions in runtime.
 }
 
 \labeledfigure{fig:dynmem}{External function call in dynamically linked memory}{
-\includegraphics[width=0.5\textwidth]{memory.jpg}
+\includegraphics[height=0.5\textwidth,angle=90]{memory.png}
 }
 
 \iftoggle{russian-draft}{

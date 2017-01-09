@@ -1,0 +1,14 @@
+digraph G {
+    edge [ arrowsize = 0.5, fontname = mono, fontsize = 9 ]
+    node [ fontname = mono, shape = rect ]
+    plt [ label = "plt-block" ]
+    f   [ label = "f-block" ]
+    plt -> f [ taillabel = "\nleft", headlabel = "exec-plt f  " ]
+    f   -> f [ label = " equal" ]
+    subgraph in {
+        node [ style = invis, shape = point ]
+        in_plt -> plt
+        in_f -> f
+        in_plt -> in_f [ style = invis, constraint = false ]
+    }
+}

@@ -1,0 +1,10 @@
+digraph objfile {
+    rankdir = LR
+    node [ shape = rect, fontname = mono ]
+    nonlinked [ label
+        = "extern f\nsection .text\n...\ncall f\n..." ]
+    linked [ label
+        = "section .plt\nplt.f: jmp [got.f]\n\nsection .text\n...\ncall plt.f\n...\n\nsection .got\ngot.f dd 0x0"
+        ]
+    nonlinked -> linked [ style = dashed ]
+}

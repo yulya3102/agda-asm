@@ -1,0 +1,21 @@
+digraph memory {
+    rankdir = LR
+    node [ shape = record ]
+    memory [ fontname = mono, label
+        = "|<plt> section .plt\n
+                  plt.f: jmp[got.f]
+           |<text>section .text\n
+                  ...\n
+                  call plt.f\n
+                  ...
+           |<got> section .got\n
+                  got.f dd 0x0
+           |
+           |<f>   f: ...
+           |"
+        ]
+    memory:plt -> memory:f
+    memory:text -> memory:plt
+    memory:got -> memory:f [ style = dashed ]
+    memory:plt -> memory:got [ style = dashed ]
+}

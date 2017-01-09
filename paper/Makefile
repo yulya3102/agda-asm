@@ -32,8 +32,9 @@ INCLUDE_EXAMPLES = \
 	$(BUILD)/eq-exblocks-example.asm
 
 IMAGES = \
-	$(BUILD)/memory.jpg \
-	$(BUILD)/eqproof.png
+	objfile.png \
+	memory.png \
+	exblock-eq-proof.png
 
 $(BUILD)/agda.sty: agda.sty
 	cp $< $@
@@ -83,11 +84,14 @@ $(BUILD)/main.latex: Makefile $(SOURCES) $(TEMPLATE) $(BUILD)/Abstract.latex $(I
 		-o $@ \
 		$(SOURCES)
 
+%.png: %.dot
+	dot -Tpng -o $@ $<
+
 objfile.jpg:
 	wget -O $@ https://www.dropbox.com/s/f9umac2lo3c9b63/objfile.jpg?dl=0
 
 memory.jpg:
 	wget -O $@ https://www.dropbox.com/s/dtgodj9pjm0nm2y/memory.jpg?dl=0
 
-eqproof.png:
+eqproof.jpg:
 	wget -O $@ https://www.dropbox.com/s/psip1woa1vt03k4/eqproof.png?dl=0

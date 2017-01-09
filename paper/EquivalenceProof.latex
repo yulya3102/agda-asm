@@ -69,7 +69,7 @@ indirect jump semantics and the GOT correctness.
 }
 
 \labeledfigure{fig:exblock-eq-proof}{Idea of the executable blocks equivalence proof}{
-\includegraphics[width=0.5\textwidth]{eqproof.png}
+    \includegraphics[width=0.5\textwidth]{exblock-eq-proof.png}
 }
 
 \iftoggle{russian-draft}{
