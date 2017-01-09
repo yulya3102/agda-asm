@@ -18,7 +18,7 @@ TAL и STAL, описываются отображением из имен ре�
 }{
 \textbf{\emph{Machine state}} is the part of the \emph{program state} that does not
 contain \emph{instruction sequence}. Definition of Agda-type \F{StateType}
-that describes type of machine state is shown in Listing
+that describes the type of machine state is shown in Listing
 \ref{fig:statetype}.
 Types of registers, described by Agda-type \F{RegFileTypes}, as in original
 TAL and STAL, are represented as a mapping from register names to
@@ -26,10 +26,10 @@ corresponding types. In the same manner, types of memory elements,
 described by Agda-type \F{HeapTypes}, are a mapping from pointers (labels)
 to corresponding types. Types of data stack are described by Agda-type
 \F{DataStackType} and, as in STAL, are described by the list of types
-corresponding to elements on the stack. Types of call stack, described by
+corresponding to elements on the stack. Types of the call stack, described by
 Agda-type \F{CallStackType}, are described by a similar list defining
 types of return address pointers.
-This paper focuses on description of dynamic linking semantics, so we omit
+This paper focuses on the description of dynamic linking semantics, so we omit
 the implementations of these mappings.
 }
 
@@ -132,10 +132,10 @@ instructions execution results in a tuple of a register file, a heap, and a
 data stack. On the other
 hand, the branch instruction execution results in a pair of a new call stack
 state and next block to execute.
-Semantics of instructions is split into two different functions to ensure
+The semantics of instructions is split into two different functions to ensure
 that instructions with obviously invalid semantics can not be defined, like
 jump instruction that erases values in registers.
-Semantics of the code block
+The semantics of the code block
 }
 is composed out of these two functions and it looks
 like traditional small-step semantics for programming languages:
@@ -146,7 +146,7 @@ like traditional small-step semantics for programming languages:
 the execution result of the block is a pair of the new machine state and
 next block to execute.
 }
-Semantics of the block is denoted by the function \F{exec-block} which will
+The semantics of the block is denoted by the function \F{exec-block} which will
 appear later in listings.
 
 \iftoggle{russian-draft}{
@@ -166,8 +166,8 @@ To describe dynamic linking semantics we only need semantics of the
 indirect jump instruction \C{jmp[\_]}. Therefore, semantics of other
 instructions is not described here.
 Semantics for the \C{jmp[\_]} instruction is defined like this:
-execution of indirect jump to the pointer \AgdaBound{p} in machine state
-\AgdaBound{S} does not change call stack \F{State.callstack} \AgdaBound{S},
+execution of the indirect jump to the pointer \AgdaBound{p} in machine state
+\AgdaBound{S} does not change call stack \F{State.callstack} \AgdaBound{S}
 and execution will be continued from the block loaded from
 \F{State.memory} \AgdaBound{S} by the pointer loaded from memory by
 \AgdaBound{p}.

@@ -51,13 +51,13 @@ Agda-типа \emph{исполняемого блока} приведено в �
 Let us introduce several auxiliary definitions.
 
 \textbf{\emph{Executable block}} is a pair of block and machine state of
-corresponding type.
+the corresponding type.
 
 The main benefit of this definition is that execution of executable block
 can produce exactly one result, even if there is a conditional execution in
 the block. The uniqueness of the block execution result allows us to reason
 about
-executable blocks. Definition of \emph{executable block} is shown in Listing
+executable blocks. Definition of the \emph{executable block} is shown in Listing
 \ref{fig:ExecutableBlock}.
 }
 
@@ -87,7 +87,7 @@ blocks equivalence}. It has three constructors, each for different case:
 \iftoggle{russian-draft}{
     \C{equal} - исполняемый блок $A$ эквивалентнен сам себе;
 }{
-    \C{equal} - executable block $A$ is equivalent to itself;
+    \C{equal} - the executable block $A$ is equivalent to itself;
 }
 \item
 \iftoggle{russian-draft}{
@@ -157,7 +157,7 @@ Blocks \texttt{f} and \texttt{g} from Listing \ref{fig:eq-blocks-example}
 are equivalent for any equivalent initial machine states. Let us define
 blocks equivalence using executable blocks equivalence.
 
-\textbf{\emph{Blocks equivalence}}. Two blocks $f$ and $g$ are equivalent,
+\textbf{\emph{Blocks equivalence}}. Two blocks $f$ and $g$ are equivalent
 if for any initial machine state $S$ executable blocks $(f, S)$ and $(g,
 S)$ are equivalent.
 

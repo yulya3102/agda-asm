@@ -24,10 +24,10 @@ in Listing \ref{fig:correctness}. Assumption \F{GOT[ f ]-correctness}
 states that corresponding to function $f$ GOT element contains the address
 of the function $f$. Assumption \F{PLT[ f ]-correctness} states that the
 address corresponding to appropriate PLT function contains the PLT block.
-The second assumption is necessary, because the dynamic loader can map the
-object file in a wrong way, so that the \F{plt} \V{f} address would store
+The second assumption is necessary because the dynamic loader can map the
+object file in a wrong way so that the \F{plt} \V{f} address would store
 some other block of code instead of the proper PLT block. For the
-convenience these two properties are stored in one Agda-type
+convenience, these two properties are stored in one Agda-type
 \F{LoaderCorrectness} which will appear in the Agda-type of the last proof.
 }
 
@@ -63,7 +63,7 @@ The first lemma, \F{exec-plt} proves that in any machine state with correct
 GOT execution of the function $f$ will not change the machine state. That
 is to say, the PLT block does not affect the stack, does not erase values
 in the registers and does not write anything to the memory. Aside from
-that, this lemma shows that execution of the PLT block will lead to
+that, this lemma shows that execution of the PLT block will lead to the
 execution of the linked function $f$. These properties are implied by the
 indirect jump semantics and the GOT correctness.
 }
@@ -81,10 +81,10 @@ indirect jump semantics and the GOT correctness.
 \ref{fig:exblock-eq-proof}. Левый из блоков приводится к \V{f-block} с
 помощью применения леммы \F{exec-plt}, а правый уже равен нужному блоку.
 }{
-Then lemma \F{exblock-eq-proof}, using previous lemma, constructs the
+Then lemma \F{exblock-eq-proof}, using the previous lemma, constructs the
 executable blocks equivalence for the PLT block of some function $f$ and
 function $f$ itself for some machine state $S$.
-Two executable blocks \V{plt-block} and \V{f-block} are converge to the
+Two executable blocks \V{plt-block} and \V{f-block} are converged to the
 executable block \V{f-block}, as shown in Figure
 \ref{fig:exblock-eq-proof}. Left of them steps using the lemma \F{exec-plt}
 into the desired executable block, and the right of them is already in the

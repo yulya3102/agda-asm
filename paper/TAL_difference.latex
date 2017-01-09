@@ -146,11 +146,11 @@ can be affected by additional procedure calls.
 }{
 \emph{Program state} of
 original TAL includes currently executed \emph{instruction sequence},
-\emph{register files} and \emph{heaps}. Our
+\emph{register files}, and \emph{heaps}. Our
 formalization additionally includes stack, which is split into two parts:
 \emph{data stack} and \emph{call stack}. Aside from that, constructor
 \C{code} of Agda-type \F{ArbitraryType}, corresponding to the instruction
 sequence type, has additional arguments: it contains not only expected
-\emph{register file type}, but also types of expected data stack and call
+\emph{register file type} but also types of expected data stack and call
 stack.  This is another difference from original TAL.
 }

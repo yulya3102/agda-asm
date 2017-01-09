@@ -92,8 +92,8 @@ $f$.
 впоследствии используются в листингах \ref{fig:correctness} и
 \ref{sec:proof}.
 }{
-Knowing where function \V{f} is located in non-linked program, it is
-possible to determine where PLT entry $plt.f$, GOT entry $got.f$ and the
+Knowing where the function \V{f} is located in the non-linked program, it is
+possible to determine where PLT entry $plt.f$, GOT entry $got.f$, and the
 original function $f$ will be stored in the dynamically linked program.
 The functions \F{plt}, \F{got}, and \F{linked-symbol} can get these
 elements respectively. These functions will be used later in Listing
@@ -127,7 +127,7 @@ corresponding functions and link-time optimizations can be performed.
 }{
 As stated earlier, PLT block should get the address of linked external
 function at runtime and continue execution with code from that address. The
-simplest PLT block looks like this: using specified in compile-time address
+simplest PLT block looks like this: using specified in the compile-time address
 of corresponding GOT entry, it executes indirect jump instruction
 \C{jmp[\_]} with address, stored in the GOT entry. As long as the dynamic
 loader correctly fills corresponding GOT elements after loading an external
@@ -148,7 +148,7 @@ Here \F{↝} denotes last instruction in the executable block.
 }{
 As noted in Section \ref{sec:asm-review}, Agda type of a block is
 indexed by a description of machine state changes performed by this block.
-For the \F{plt-stub} block it is an empty change \C{dempty}, because this
+For the \F{plt-stub} block, it is an empty change \C{dempty}, because this
 block does not change anything. Otherwise, function call through the
 corresponding PLT block would be noticeable and would change the program
 semantics.

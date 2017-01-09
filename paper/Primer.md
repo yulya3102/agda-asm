@@ -32,13 +32,13 @@ the reader to the basic terms of the dynamic linking.
 In the source code function are used by their symbolic names which are
 substituted with addresses of corresponding \emph{symbols} during
 compilation. References to external functions are left empty and should be
-filled by linker. These empty references to external functions are called
+filled by the linker. These empty references to external functions are called
 \emph{relocations}. More details about these terms can be found in
 \citep{levine}.
 
 Dynamic linking can be split into two steps. The first of them takes place
 before runtime and consists of preparing the object file for the act of
-dynamic linking. During this step the object file is extended with several
+dynamic linking. During this step, the object file is extended with several
 sections and metadata which ensure correct execution of the program. The
 second step is the act of dynamic linking itself which consists of dynamic
 loader filling relocations in runtime.
@@ -51,7 +51,7 @@ loader filling relocations in runtime.
 участвующие в вызове внешних функций.
 }{
 We discuss the details of the new object file sections below.
-The GOT (Global Offset Table) and PLT (Procedure Linkage Table) are the most interesting for us among them, as they are directly involved into the external function calls.
+The GOT (Global Offset Table) and PLT (Procedure Linkage Table) are the most interesting for us among them, as they are directly involved in the external function calls.
 }
 \iftoggle{russian-draft}{
 В секции GOT
@@ -64,7 +64,7 @@ The GOT (Global Offset Table) and PLT (Procedure Linkage Table) are the most int
 In GOT section for
 every extern function $f$ variable $got.f$ is created in static memory. This
 section should be filled in runtime by dynamic loader.
-After the runtime linking GOT elements should contain the addresses of
+After the runtime linking, GOT elements should contain the addresses of
 corresponding symbols which were loaded by dynamic loader.
 }
 \iftoggle{russian-draft}{
@@ -83,7 +83,7 @@ procedure address.
 себя
 }{
 Procedures $plt.f$ added to the PLT section consist of
-the code that allows to continue the execution by the address stored in
+the code that allows continuing the execution by the address stored in
 the corresponding GOT element. In the simplest case this code consists of
 }
 \iftoggle{russian-draft}{
@@ -96,7 +96,7 @@ Figure \ref{fig:objfile}.
 }{
 a single
 instruction: indirect jump by the $got.f$ pointer. If the $got.f$ contains
-correct address of function $f$ loaded to memory, then the execution of the
+the correct address of function $f$ loaded to memory, then the execution of the
 $plt.f$ procedure will lead to the execution of the function $f$.
 As a result, dynamically linked object file looks like shown in Figure
 \ref{fig:objfile}.
@@ -142,7 +142,7 @@ instructions in runtime.
 вызываться прямо из кода в PLT для загрузки отсутствующих библиотек.
 }{
 After the dynamic loader filled the GOT elements, the external function
-call looks like shown on the Figure \ref{fig:dynmem}. Bold arrows indicate
+call looks like shown in Figure \ref{fig:dynmem}. Bold arrows indicate
 the transfer of execution, and the dashed arrows indicate memory
 references.
 
@@ -165,11 +165,11 @@ right from the PLT code.
 \citep{levine}.
 }{
 This paper presents the formalization of the described version of the
-dynamic linking, and answers this questions.
+dynamic linking and answers this questions.
 In this simplified version of dynamic linking, we only support linking of
 external functions and do not
 support external variables.
-There are difficulties with the linking of external variables caused by use
+There are difficulties with the linking of external variables caused by the use
 of the copy relocations. More information on that can be found in
 \citep{levine}.
 }
