@@ -43,7 +43,7 @@ program. Not only compilers of the C language are verified: CakeML
 runtime. Aside from that, there are several non-compiler projects worth noting:
 VeLLVM
 \citep{vellvm} formalizes LLVM intermediate language and performs formally
-correct optimizations, and Bedrock \citep{bedrock} allows to write
+correct optimizations and Bedrock \citep{bedrock} allows to write
 verified code in Coq \citep{Coq} using low-level abstractions such as stack
 and registers.
 }
@@ -61,9 +61,9 @@ and registers.
 линковщиков, и в итоге было найдено огромное количество ошибок на этапе
 оптимизаций во время линковки.
 }{
-But should we verify linkers? Linker does a lot of things aside from symbol
+But should we verify linkers? The linker does a lot of things aside from symbol
 substitution, but even with only symbol substitution it can affect program
-semantics. That is to say, if the verified compiler relies on non-verified
+semantics. That is to say, if the verified compiler relies on the non-verified
 linker, the semantics of the program can be broken. In this case, the user
 should rely on theorems provided by the compiler with great caution.
 Recent research proves that linkers can break program semantics:
@@ -151,7 +151,7 @@ in projects mentioned above. However, in the ELF formalization
 we will discuss in details in section \ref{sec:background}) as part of ELF
 specification is rather simple, while formalization of their role in the
 dynamic linking process requires much more effort. In contrast, in this
-paper we formalize how these mechanisms ensure correct execution of the
+paper, we formalize how these mechanisms ensure correct execution of the
 program in runtime.
 }
 
@@ -218,7 +218,7 @@ Existing TAL tools are written in ML and all proofs about TAL programs
 appear in appendices of the corresponding papers. This paper uses
 Agda \citep{agda} formalization of abstract language that is close to
 TALx86 and STAL. We formalize what elements are appended to program code
-during the dynamic linking process, introduce definition of code blocks
+during the dynamic linking process, introduce the definition of code blocks
 equivalence and prove that correct dynamic
 loader implies the equivalence of statically and dynamically linked functions.
 }
@@ -234,7 +234,7 @@ loader implies the equivalence of statically and dynamically linked functions.
 This work can be considered as a first step in the area of dynamic linking
 formalization.
 By adding formalizations of memory mapping and filling GOT elements, this
-formalization can be extended to the model of simple dynamic loader which
+formalization can be extended to the model of the simple dynamic loader which
 is proven to preserve program semantics.
 }
 \iftoggle{russian-draft}{
