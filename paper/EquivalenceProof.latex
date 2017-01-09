@@ -24,7 +24,7 @@ address corresponding to appropriate PLT function contains the PLT block.
 неправильно замапить объектный файл в память, и тогда по адресу \F{plt} \V{f}
 будет находиться не тот блок кода, что нужен. Для удобства эти два
 предположения объединены в общий тип \F{LoaderCorrectness}, который
-встретится позднее в листингах.
+встретится позднее в типе последнего доказательства.
 
 \iftoggle{russian-draft}{
 Таким образом, работающая до загрузки программы часть динамического
@@ -69,9 +69,9 @@ Then lemma \F{exblock-eq-proof}, using previous lemma, constructs the
 executable blocks equivalence for the PLT block of some function $f$ and
 function $f$ itself for some machine state $S$.
 }
-Два исполняемых блока, $plt-block$ и $f-block$ приводятся к одному и тому
-же исполняемому блоку $f-block$, как показано на Figure
-\ref{fig:exblock-eq-proof}. Левый из блоков приводится к $f-block$ с
+Два исполняемых блока, \V{plt-block} и \V{f-block} приводятся к одному и тому
+же исполняемому блоку \V{f-block}, как показано на Figure
+\ref{fig:exblock-eq-proof}. Левый из блоков приводится к \V{f-block} с
 помощью применения леммы \F{exec-plt}, а правый уже равен нужному блоку.
 
 \iftoggle{russian-draft}{

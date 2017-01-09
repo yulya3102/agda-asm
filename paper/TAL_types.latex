@@ -84,13 +84,10 @@ as the word ``block'', referring to the first block of a function.
 Для обеспечения корректности вызова функции $g$ в конце
 базового блока $f$ необходимо понимать, как блок $f$ типа $S_f$ меняет
 типы регистров и стеков и может ли он к концу своего исполнения получить
-ожидаемый функцией $g$ тип $S_g$. Для этого Agda-тип блока индексирован
+ожидаемый функцией $g$ тип $S_g$. Для этого Agda-тип блока \F{Block} индексирован
 некоторым описанием того, как этот блок меняет тип состояния
 исполнителя. Это описание хранится в Agda-типе
-\F{TypeDiff}, параметром которого является тип состояния исполнителя, к
-которому может применяться это изменение.
-Индуктивное определение Agda-типа \emph{блока кода} приведено в листинге
-\ref{fig:block}.
+\F{TypeDiff},
 }{
 To ensure that function $g$ call at the end of the basic block
 $f$ is correct, we have to know how block $f$
@@ -99,41 +96,16 @@ can transform machine state type $S_f$ to machine state type $S_g$ expected
 by function $g$. To achieve that, Agda-type corresponding to the block is
 indexed by a description of how this
 block changes different parts of the machine state type. This description is
-stored in Agda-type \F{TypeDiff}, which takes as a parameter machine state type
-that can be changed by this \F{TypeDiff}. Recursive definition of the Agda-type of
-\emph{basic block} is shown in Listing \ref{fig:block}.
+stored in Agda-type \F{TypeDiff},
 }
-\iftoggle{russian-draft}{
-Конструктор \C{↝} позволяет получить блок, состоящий из
-одной инструкции перехода \V{i}, применяющей изменение стека вызовов типа
-\V{c}. Конструктор \C{\_∙\_} добавляет инструкцию общего назначения
-\AgdaBound{i} с изменением \AgdaBound{c} к началу блока \AgdaBound{b}, при
-этом тип блока \AgdaBound{b} должен получаться из типа инструкции
-\AgdaBound{i} после применения к нему соответствующего этой инструкции
-изменения \V{c} с помощью функции \F{dapply}, что показано в типе блока
-\V{b}. В результате получается блок с изменением, составленным с помощью
-функции \F{dappend} из изменений инструкции \AgdaBound{i} и блока
-\AgdaBound{b}. Выражения же \F{csChg} \V{c} и \F{sChg} \V{c}
-преобразовывают специфичное для инструкции \V{i} изменение \V{c} в общее
-изменение состояния исполнителя, описываемое Agda-типом \F{TypeDiff}.
-}{
-Constructor \C{↝} allows constructing a block consisting of a single branch
-instruction \V{i} that changes type of the call stack by change \V{c}.
-Constructor \C{\_∙\_} adds general-purpose instruction \V{i} with change
-\V{c} to the beginning of the block \V{b}. Type of block \V{b} must come
-out from the type of instruction \V{i} after applying change \V{c}
-corresponding to this instruction with function \F{dapply}, as shown in the
-type of the block \V{b}. This results in a block with \F{TypeDiff} that
-consists of changes corresponding to instruction \V{i} and block \V{b},
-combined with the function \F{dappend}.  Expressions \F{csChg} \V{c} and
-\F{sChg} \V{c} of that constructors transform instruction-specific change
-\V{c} to common \F{TypeDiff} of machine state.
-}
+который можно воспринимать как список атомарных изменений
+типа исполнителя (запись в регистр со сменой типа, добавление или удаление
+элемента из стека).
 
 \iftoggle{russian-draft}{
 Семантика приведенного языка ассемблера определяется двумя функциями,
-описывающими семантику инструкций общего назначения \F{Instr} и инструкций
-перехода \F{BranchInstr}. Каждому виду инструкций разрешено менять только
+описывающими семантику инструкций общего назначения и инструкций
+перехода. Каждому виду инструкций разрешено менять только
 часть \emph{состояния программы} \F{State}. Соответственно, эти функции
 принимают на вход \emph{состояние программы} и возвращают новое состояние
 той части состояния программы, которую им разрешено менять.  Так, для
@@ -141,13 +113,11 @@ combined with the function \F{dappend}.  Expressions \F{csChg} \V{c} and
 состояния регистров, памяти и стека данных, а результатом исполнения
 управляющих инструкций является пара из нового состояния стека вызовов и
 следующего блока, который
-нужно исполнить. Кроме того, семантика блока кода описывается похожим
-образом: результатом исполнения блока является пара из нового состояния
-исполнителя и блока, который нужно исполнить следующим.
+нужно исполнить.
 }{
 Semantics of this assembly language is defined by two functions describing
-semantics of general-purpose instructions \F{Instr} and branch instructions
-\F{BranchInstr}. Each kind of instruction is allowed to change only part of
+semantics of general-purpose instructions and branch instructions
+. Each kind of instruction is allowed to change only part of
 the \emph{program state} \F{State}.  Therefore, these functions take as a
 parameter a \emph{program state} and
 return a new state of the part of the program state that they are allowed
@@ -156,10 +126,21 @@ instructions execution results in a tuple of a register file, a heap, and a
 data stack. On the other
 hand, the branch instruction execution results in a pair of a new call stack
 state and next block to execute.
-Moreover, semantics of the block is described in the same manner:
+}
+Семантика инструкций поделена на две разные функции, чтобы нельзя было
+"случайно" определить невалидную семантику, например, инструкцию jump,
+которая при переходе на другой блок затирает значения регистров.
+Семантика блока кода is composed out of these two functions and it looks
+like traditional small-step semantics for programming languages:
+\iftoggle{russian-draft}{
+результатом исполнения блока является пара из нового состояния
+исполнителя и блока, который нужно исполнить следующим.
+}{
 the execution result of the block is a pair of the new machine state and
 next block to execute.
 }
+Semantics of the block is denoted by the function \F{exec-block} which will
+appear later in listings.
 
 \iftoggle{russian-draft}{
 Для описания семантики динамической линковки необходима семантика только

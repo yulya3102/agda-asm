@@ -25,9 +25,7 @@ module Meta where
     where
     infixr 10 _∙_
 \end{code}
-}
 
-\labeledfigure{fig:block}{Recursive definition of basic block}{
 \begin{code}
     data Block (S : StateType) : TypeDiff S → Set
       where

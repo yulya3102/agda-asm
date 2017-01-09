@@ -93,7 +93,9 @@ possible to determine where PLT entry $plt.f$, GOT entry $got.f$ and the
 original function $f$ will be stored in the dynamically linked program.
 }
 Для получения этих адресов определены функции
-\F{plt}, \F{got} и \F{linked-symbol} соответственно.
+\F{plt}, \F{got} и \F{linked-symbol} соответственно. Эти функции
+впоследствии используются в листингах \ref{fig:correctness} и
+\ref{sec:proof}.
 
 \iftoggle{russian-draft}{
 Как видно из вышесказанного, расположение какого-либо блока кода и
@@ -130,6 +132,7 @@ library, the execution of specified PLT block will lead to the execution of
 the function itself. The code of such PLT block in our formalization of the
 assembly language is shown in Listing \ref{fig:plt-stub}.
 }
+Here \F{↝} denotes last instruction in the executable block.
 
 \iftoggle{russian-draft}{
 Как было сказано в секции \ref{sec:asm-review}, индексом Agda-типа блока
